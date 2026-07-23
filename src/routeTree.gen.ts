@@ -10,17 +10,30 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TrackingRouteImport } from './routes/tracking'
+import { Route as SearchRouteImport } from './routes/search'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AssistantRouteImport } from './routes/assistant'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProductIdRouteImport } from './routes/product.$id'
 
 const TrackingRoute = TrackingRouteImport.update({
   id: '/tracking',
   path: '/tracking',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HomeRoute = HomeRouteImport.update({
@@ -48,6 +61,11 @@ const AssistantRoute = AssistantRouteImport.update({
   path: '/assistant',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -61,32 +79,41 @@ const ProductIdRoute = ProductIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/assistant': typeof AssistantRoute
   '/auth': typeof AuthRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/home': typeof HomeRoute
+  '/profile': typeof ProfileRoute
+  '/search': typeof SearchRoute
   '/tracking': typeof TrackingRoute
   '/product/$id': typeof ProductIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/assistant': typeof AssistantRoute
   '/auth': typeof AuthRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/home': typeof HomeRoute
+  '/profile': typeof ProfileRoute
+  '/search': typeof SearchRoute
   '/tracking': typeof TrackingRoute
   '/product/$id': typeof ProductIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/assistant': typeof AssistantRoute
   '/auth': typeof AuthRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/home': typeof HomeRoute
+  '/profile': typeof ProfileRoute
+  '/search': typeof SearchRoute
   '/tracking': typeof TrackingRoute
   '/product/$id': typeof ProductIdRoute
 }
@@ -94,42 +121,54 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/assistant'
     | '/auth'
     | '/cart'
     | '/checkout'
     | '/home'
+    | '/profile'
+    | '/search'
     | '/tracking'
     | '/product/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
     | '/assistant'
     | '/auth'
     | '/cart'
     | '/checkout'
     | '/home'
+    | '/profile'
+    | '/search'
     | '/tracking'
     | '/product/$id'
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/assistant'
     | '/auth'
     | '/cart'
     | '/checkout'
     | '/home'
+    | '/profile'
+    | '/search'
     | '/tracking'
     | '/product/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
   AssistantRoute: typeof AssistantRoute
   AuthRoute: typeof AuthRoute
   CartRoute: typeof CartRoute
   CheckoutRoute: typeof CheckoutRoute
   HomeRoute: typeof HomeRoute
+  ProfileRoute: typeof ProfileRoute
+  SearchRoute: typeof SearchRoute
   TrackingRoute: typeof TrackingRoute
   ProductIdRoute: typeof ProductIdRoute
 }
@@ -141,6 +180,20 @@ declare module '@tanstack/react-router' {
       path: '/tracking'
       fullPath: '/tracking'
       preLoaderRoute: typeof TrackingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/home': {
@@ -178,6 +231,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AssistantRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -197,11 +257,14 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
   AssistantRoute: AssistantRoute,
   AuthRoute: AuthRoute,
   CartRoute: CartRoute,
   CheckoutRoute: CheckoutRoute,
   HomeRoute: HomeRoute,
+  ProfileRoute: ProfileRoute,
+  SearchRoute: SearchRoute,
   TrackingRoute: TrackingRoute,
   ProductIdRoute: ProductIdRoute,
 }
