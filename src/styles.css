@@ -40,10 +40,10 @@
   --color-surface-elevated: var(--surface-elevated);
   --color-ink: var(--ink);
   --color-ink-muted: var(--ink-muted);
-  --shadow-soft: 0 1px 2px rgb(16 24 40 / 0.04), 0 1px 3px rgb(16 24 40 / 0.06);
-  --shadow-card: 0 4px 12px -2px rgb(16 24 40 / 0.06), 0 2px 6px -2px rgb(16 24 40 / 0.04);
-  --shadow-pop: 0 20px 40px -12px rgb(16 24 40 / 0.12), 0 8px 16px -8px rgb(16 24 40 / 0.08);
-  --shadow-emerald: 0 10px 30px -10px oklch(0.62 0.16 155 / 0.5);
+  --shadow-soft: 0 1px 2px rgb(58 46 32 / 0.04), 0 1px 3px rgb(58 46 32 / 0.06);
+  --shadow-card: 0 4px 12px -2px rgb(58 46 32 / 0.06), 0 2px 6px -2px rgb(58 46 32 / 0.04);
+  --shadow-pop: 0 20px 40px -12px rgb(58 46 32 / 0.12), 0 8px 16px -8px rgb(58 46 32 / 0.08);
+  --shadow-emerald: 0 10px 30px -10px oklch(0.48 0.05 140 / 0.45);
 }
 
 :root {
