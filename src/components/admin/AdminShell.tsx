@@ -7,14 +7,24 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const nav = [
+type NavItem = {
+  to: string;
+  icon: typeof LayoutDashboard;
+  label: string;
+  exact?: boolean;
+  badge?: string;
+  tone?: "warn";
+};
+type NavGroup = { section: string; items: NavItem[] };
+
+const nav: NavGroup[] = [
   { section: "Overview", items: [
     { to: "/admin", icon: LayoutDashboard, label: "Dashboard", exact: true },
   ]},
   { section: "Commerce", items: [
     { to: "/admin/orders", icon: ShoppingBag, label: "Orders", badge: "12" },
     { to: "/admin/products", icon: Package, label: "Products" },
-    { to: "/admin/inventory", icon: Boxes, label: "Inventory", badge: "3", tone: "warn" as const },
+    { to: "/admin/inventory", icon: Boxes, label: "Inventory", badge: "3", tone: "warn" },
     { to: "/admin/customers", icon: Users, label: "Customers" },
   ]},
   { section: "Growth", items: [
