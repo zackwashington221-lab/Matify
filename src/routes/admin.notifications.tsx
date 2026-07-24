@@ -1,71 +1,81 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AdminMobileShell, AdminTopBar, SectionTitle } from "@/components/app/AdminMobileShell";
-import { AlertTriangle, ShoppingBag, Sparkles, Users, CheckCheck } from "lucide-react";
+import { PageHeader, PageBody, StatCard, StatusBadge, ToolbarButton } from "@/components/admin/primitives";
+import { DataTable, type Column } from "@/components/admin/DataTable";
+import { Bell, Mail, MessageSquare, Plus, Smartphone, Sparkles } from "lucide-react";
+import { notificationTemplates, type NotificationTemplate } from "@/lib/admin-mock";
 
 export const Route = createFileRoute("/admin/notifications")({
   head: () => ({
     meta: [
       { title: "Notifications — Freshly Admin" },
-      { name: "description", content: "Store alerts, AI signals and operational notifications for your team." },
+      { name: "description", content: "Push, email, SMS and in-app templates with audience targeting and analytics." },
     ],
   }),
-  component: Notifications,
+  component: NotificationsAdmin,
 });
 
-const groups = [
-  {
-    label: "Today",
-    items: [
-      { icon: AlertTriangle, tone: "bg-amber-100 text-amber-700", t: "Salmon may sell out in 6h", d: "12 left · 40/h velocity", time: "2m" },
-      { icon: ShoppingBag, tone: "bg-sky-100 text-sky-700", t: "Large order · #FR-4820", d: "Priya Patel · $104.10 · 24 items", time: "8m" },
-      { icon: Sparkles, tone: "bg-emerald-100 text-emerald-700", t: "AI reorder ready to send", d: "3 SKUs · est. $2.4k protected sales", time: "22m" },
-      { icon: Users, tone: "bg-violet-100 text-violet-700", t: "New Platinum customer", d: "Yuki Sato reached $4k LTV", time: "1h" },
-    ],
-  },
-  {
-    label: "Yesterday",
-    items: [
-      { icon: ShoppingBag, tone: "bg-rose-100 text-rose-700", t: "Return processed · #FR-4788", d: "Mika Tanaka · $71.90 refunded", time: "1d" },
-      { icon: Sparkles, tone: "bg-emerald-100 text-emerald-700", t: "Weekly AI report ready", d: "Fresh score up 1.8 points", time: "1d" },
-    ],
-  },
-];
+const channelIcon = { push: Bell, email: Mail, sms: MessageSquare, "in-app": Smartphone } as const;
+const statusTone = { active: "success", paused: "warning", draft: "muted" } as const;
 
-function Notifications() {
-  return (
-    <AdminMobileShell>
-      <AdminTopBar
-        title="Notifications"
-        subtitle="6 unread"
-        back="/admin/mobile"
-        right={<button className="text-[12px] font-semibold text-primary inline-flex items-center gap-1"><CheckCheck className="size-4" />Read all</button>}
-      />
-
-      <div className="px-5 mt-4 flex gap-2 overflow-x-auto no-scrollbar">
-        {["All", "Alerts", "Orders", "AI", "Team"].map((c, i) => (
-          <button key={c} className={`whitespace-nowrap text-[12px] font-semibold rounded-full px-3 py-1.5 border ${i === 0 ? "bg-primary text-primary-foreground border-primary" : "bg-card text-foreground border-border"}`}>{c}</button>
-        ))}
-      </div>
-
-      {groups.map((g) => (
-        <div key={g.label}>
-          <SectionTitle>{g.label}</SectionTitle>
-          <div className="px-5 space-y-2">
-            {g.items.map((n, i) => (
-              <div key={i} className="flex items-start gap-3 rounded-2xl bg-card border border-border p-4">
-                <div className={`size-10 rounded-2xl flex items-center justify-center shrink-0 ${n.tone}`}>
-                  <n.icon className="size-4" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-[13px] font-semibold leading-tight">{n.t}</div>
-                  <div className="text-[11px] text-muted-foreground mt-0.5">{n.d}</div>
-                </div>
-                <div className="text-[10px] text-muted-foreground shrink-0">{n.time}</div>
-              </div>
-            ))}
+function NotificationsAdmin() {
+  const columns: Column<NotificationTemplate>[] = [
+    {
+      key: "name", header: "Template", sortable: true, sortAccessor: (n) => n.name,
+      render: (n) => {
+        const Icon = channelIcon[n.channel];
+        return (
+          <div className="flex items-center gap-3">
+            <div className="size-9 rounded-xl bg-secondary flex items-center justify-center"><Icon className="size-4 text-muted-foreground" /></div>
+            <div>
+              <div className="font-medium">{n.name}</div>
+              <div className="text-[11px] text-muted-foreground capitalize">{n.channel}</div>
+            </div>
           </div>
+        );
+      },
+    },
+    { key: "audience", header: "Audience", render: (n) => <span className="text-muted-foreground">{n.audience}</span> },
+    { key: "status", header: "Status", render: (n) => <StatusBadge tone={statusTone[n.status]}>{n.status}</StatusBadge> },
+    { key: "sent", header: "Sent", sortable: true, sortAccessor: (n) => n.sent, align: "right", render: (n) => <span className="tabular-nums">{n.sent.toLocaleString()}</span> },
+    { key: "openRate", header: "Open rate", align: "right", render: (n) => <span className="tabular-nums">{n.openRate}</span> },
+    { key: "ctr", header: "CTR", align: "right", render: (n) => <span className="tabular-nums">{n.ctr}</span> },
+  ];
+
+  return (
+    <>
+      <PageHeader
+        title="Notifications"
+        description="Push, email, SMS and in-app templates with AI-generated copy and audience targeting."
+        actions={
+          <>
+            <ToolbarButton variant="secondary"><Sparkles className="size-3.5" /> AI compose</ToolbarButton>
+            <ToolbarButton variant="primary"><Plus className="size-3.5" /> New template</ToolbarButton>
+          </>
+        }
+      />
+      <PageBody>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard label="Delivered · 7d" value="124,820" delta="+8%" deltaDir="up" />
+          <StatCard label="Avg open rate" value="48%" delta="+3pp" deltaDir="up" />
+          <StatCard label="Avg CTR" value="14%" delta="+1pp" deltaDir="up" />
+          <StatCard label="Active templates" value="18" hint="3 paused" />
         </div>
-      ))}
-    </AdminMobileShell>
+
+        <DataTable<NotificationTemplate>
+          data={notificationTemplates}
+          columns={columns}
+          rowKey={(n) => n.id}
+          searchAccessor={(n) => `${n.name} ${n.audience} ${n.channel}`}
+          searchPlaceholder="Search templates…"
+          exportFilename="notification-templates.csv"
+          bulkActions={(sel) => (
+            <>
+              <ToolbarButton variant="secondary">Pause ({sel.length})</ToolbarButton>
+              <ToolbarButton variant="secondary">Duplicate</ToolbarButton>
+            </>
+          )}
+        />
+      </PageBody>
+    </>
   );
 }

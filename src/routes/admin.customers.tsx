@@ -1,72 +1,123 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { AdminMobileShell, AdminTopBar, AdminSearchBar, SectionTitle } from "@/components/app/AdminMobileShell";
-import { ChevronRight, Crown } from "lucide-react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
+import { PageHeader, PageBody, StatCard, StatusBadge, Tabs, ToolbarButton } from "@/components/admin/primitives";
+import { DataTable, type Column } from "@/components/admin/DataTable";
+import { Crown, Mail, Sparkles, UserPlus, Users } from "lucide-react";
+import { customers, type Customer } from "@/lib/admin-mock";
 
 export const Route = createFileRoute("/admin/customers")({
   head: () => ({
     meta: [
       { title: "Customers — Freshly Admin" },
-      { name: "description", content: "Segmented customer list with lifetime value, tier and AI churn signals." },
+      { name: "description", content: "Customer directory with LTV, tiers, segments and AI churn signals." },
     ],
   }),
   component: Customers,
 });
 
-const customers = [
-  { id: "1", n: "Alex Morgan", tier: "Gold", orders: 34, ltv: "$1,240", risk: "low", tone: "from-amber-300 to-rose-400" },
-  { id: "2", n: "Priya Patel", tier: "Platinum", orders: 78, ltv: "$3,910", risk: "low", tone: "from-violet-300 to-indigo-400" },
-  { id: "3", n: "James Chen", tier: "Silver", orders: 12, ltv: "$482", risk: "medium", tone: "from-sky-300 to-cyan-400" },
-  { id: "4", n: "Sofia Rossi", tier: "Gold", orders: 22, ltv: "$914", risk: "low", tone: "from-emerald-300 to-teal-400" },
-  { id: "5", n: "Mika Tanaka", tier: "New", orders: 2, ltv: "$74", risk: "high", tone: "from-rose-300 to-pink-400" },
-  { id: "6", n: "Diego Alvarez", tier: "Silver", orders: 9, ltv: "$318", risk: "medium", tone: "from-amber-300 to-orange-400" },
-  { id: "7", n: "Yuki Sato", tier: "Platinum", orders: 92, ltv: "$4,520", risk: "low", tone: "from-fuchsia-300 to-pink-400" },
-];
+const tierTone = { New: "info", Silver: "muted", Gold: "warning", Platinum: "success" } as const;
+const riskTone = { low: "success", medium: "warning", high: "danger" } as const;
 
 function Customers() {
-  return (
-    <AdminMobileShell>
-      <AdminTopBar title="Customers" subtitle="12,482 total" back="/admin/mobile" />
-      <AdminSearchBar placeholder="Search by name, email, phone…" />
+  const [tab, setTab] = useState<string>("all");
+  const navigate = useNavigate();
 
-      <div className="px-5 mt-4 grid grid-cols-3 gap-2">
-        {[
-          { l: "New · 7d", v: "342" },
-          { l: "Active", v: "8.1k" },
-          { l: "At risk", v: "128", warn: true },
-        ].map((k) => (
-          <div key={k.l} className="rounded-2xl bg-card border border-border p-3">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{k.l}</div>
-            <div className={`text-lg font-bold font-display tabular-nums mt-0.5 ${k.warn ? "text-amber-600" : ""}`}>{k.v}</div>
+  const filtered = tab === "all" ? customers
+    : tab === "risk" ? customers.filter((c) => c.risk !== "low")
+    : customers.filter((c) => c.tier.toLowerCase() === tab);
+
+  const columns: Column<Customer>[] = [
+    {
+      key: "name", header: "Customer", sortable: true, sortAccessor: (c) => c.name,
+      render: (c) => {
+        const initials = c.name.split(" ").map((s) => s[0]).join("");
+        return (
+          <div className="flex items-center gap-3">
+            <div className="size-9 rounded-full bg-gradient-to-br from-accent to-primary text-primary-foreground font-semibold flex items-center justify-center text-[11px]">{initials}</div>
+            <div>
+              <div className="font-medium inline-flex items-center gap-1">{c.name}{c.tier === "Platinum" && <Crown className="size-3.5 text-violet-500" />}</div>
+              <div className="text-[11px] text-muted-foreground">{c.email}</div>
+            </div>
           </div>
-        ))}
-      </div>
+        );
+      },
+    },
+    { key: "location", header: "Location", render: (c) => <span className="text-muted-foreground">{c.location}</span> },
+    { key: "tier", header: "Tier", render: (c) => <StatusBadge tone={tierTone[c.tier]}>{c.tier}</StatusBadge> },
+    {
+      key: "orders", header: "Orders", sortable: true, sortAccessor: (c) => c.orders, align: "right",
+      render: (c) => <span className="tabular-nums">{c.orders}</span>,
+    },
+    {
+      key: "aov", header: "AOV", sortable: true, sortAccessor: (c) => c.aov, align: "right",
+      render: (c) => <span className="tabular-nums">${c.aov.toFixed(2)}</span>,
+    },
+    {
+      key: "ltv", header: "LTV", sortable: true, sortAccessor: (c) => c.ltv, align: "right",
+      render: (c) => <span className="tabular-nums font-semibold">${c.ltv.toFixed(0)}</span>,
+    },
+    { key: "risk", header: "Churn risk", render: (c) => <StatusBadge tone={riskTone[c.risk]}>{c.risk}</StatusBadge> },
+  ];
 
-      <SectionTitle>Segments</SectionTitle>
-      <div className="px-5 flex gap-2 overflow-x-auto no-scrollbar">
-        {["All", "Platinum", "Gold", "Silver", "New", "Churn risk"].map((s, i) => (
-          <button key={s} className={`whitespace-nowrap text-[12px] font-semibold rounded-full px-3 py-1.5 border ${i === 0 ? "bg-primary text-primary-foreground border-primary" : "bg-card text-foreground border-border"}`}>{s}</button>
-        ))}
-      </div>
+  const counts = {
+    all: customers.length,
+    platinum: customers.filter((c) => c.tier === "Platinum").length,
+    gold: customers.filter((c) => c.tier === "Gold").length,
+    silver: customers.filter((c) => c.tier === "Silver").length,
+    new: customers.filter((c) => c.tier === "New").length,
+    risk: customers.filter((c) => c.risk !== "low").length,
+  };
 
-      <SectionTitle>Directory</SectionTitle>
-      <div className="px-5 space-y-2 pb-2">
-        {customers.map((c) => (
-          <Link key={c.id} to="/admin/customer/$id" params={{ id: c.id }} className="flex items-center gap-3 rounded-2xl bg-card border border-border p-3">
-            <div className={`size-11 rounded-full bg-gradient-to-br ${c.tone} text-white font-semibold flex items-center justify-center text-[13px]`}>
-              {c.n.split(" ").map(s => s[0]).join("")}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1.5">
-                <div className="text-[13px] font-semibold truncate">{c.n}</div>
-                {c.tier === "Platinum" && <Crown className="size-3.5 text-violet-500" />}
-              </div>
-              <div className="text-[11px] text-muted-foreground">{c.tier} · {c.orders} orders · LTV {c.ltv}</div>
-            </div>
-            {c.risk === "high" && <span className="text-[9px] font-bold uppercase tracking-wider text-rose-700 bg-rose-100 rounded px-1.5 py-0.5">Risk</span>}
-            <ChevronRight className="size-4 text-muted-foreground" />
-          </Link>
-        ))}
-      </div>
-    </AdminMobileShell>
+  return (
+    <>
+      <PageHeader
+        title="Customers"
+        description="Full CRM view: lifetime value, tiers, retention scores and AI segmentation."
+        actions={
+          <>
+            <ToolbarButton variant="secondary"><Mail className="size-3.5" /> Broadcast</ToolbarButton>
+            <ToolbarButton variant="primary"><UserPlus className="size-3.5" /> Add customer</ToolbarButton>
+          </>
+        }
+      />
+
+      <PageBody>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard label="Total customers" value="12,482" delta="+3.6%" deltaDir="up" icon={<Users className="size-4" />} />
+          <StatCard label="New · 7d" value="342" delta="+18%" deltaDir="up" />
+          <StatCard label="Active buyers" value="8.1k" hint="last 30d" />
+          <StatCard label="At-risk (AI)" value="128" delta="Retain" deltaDir="down" />
+        </div>
+
+        <Tabs
+          value={tab}
+          onChange={setTab}
+          items={[
+            { value: "all", label: "All", count: counts.all },
+            { value: "platinum", label: "Platinum", count: counts.platinum },
+            { value: "gold", label: "Gold", count: counts.gold },
+            { value: "silver", label: "Silver", count: counts.silver },
+            { value: "new", label: "New", count: counts.new },
+            { value: "risk", label: "Churn risk", count: counts.risk },
+          ]}
+        />
+
+        <DataTable<Customer>
+          data={filtered}
+          columns={columns}
+          rowKey={(c) => c.id}
+          searchAccessor={(c) => `${c.name} ${c.email} ${c.location}`}
+          searchPlaceholder="Search by name, email, city…"
+          onRowClick={(c) => navigate({ to: "/admin/customer/$id", params: { id: c.id } })}
+          exportFilename="customers.csv"
+          bulkActions={(sel) => (
+            <>
+              <ToolbarButton variant="secondary"><Sparkles className="size-3.5" /> AI segment ({sel.length})</ToolbarButton>
+              <ToolbarButton variant="secondary"><Mail className="size-3.5" /> Message</ToolbarButton>
+            </>
+          )}
+        />
+      </PageBody>
+    </>
   );
 }
