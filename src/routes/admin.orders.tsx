@@ -1,62 +1,131 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { AdminMobileShell, AdminTopBar, AdminSearchBar } from "@/components/app/AdminMobileShell";
-import { SlidersHorizontal, ChevronRight } from "lucide-react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
+import { PageHeader, PageBody, StatCard, StatusBadge, Tabs, ToolbarButton } from "@/components/admin/primitives";
+import { DataTable, type Column } from "@/components/admin/DataTable";
+import { Archive, Ban, Plus, Printer, Send, ShoppingBag } from "lucide-react";
+import { orders, statusTone, paymentTone, type Order, type OrderStatus } from "@/lib/admin-mock";
 
 export const Route = createFileRoute("/admin/orders")({
   head: () => ({
     meta: [
       { title: "Orders — Freshly Admin" },
-      { name: "description", content: "Live orders queue with statuses, filters and delivery tracking." },
+      { name: "description", content: "Full order lifecycle: pending, packing, shipped, delivered, refunds and returns." },
     ],
   }),
   component: Orders,
 });
 
-const orders = [
-  { id: "FR-4821", n: "Alex Morgan", items: 12, t: "$37.32", s: "On the way", tone: "bg-sky-100 text-sky-700", time: "2m ago" },
-  { id: "FR-4820", n: "Priya Patel", items: 24, t: "$104.10", s: "Preparing", tone: "bg-amber-100 text-amber-700", time: "8m ago" },
-  { id: "FR-4819", n: "James Chen", items: 6, t: "$52.80", s: "Delivered", tone: "bg-emerald-100 text-emerald-700", time: "22m ago" },
-  { id: "FR-4818", n: "Sofia Rossi", items: 9, t: "$28.45", s: "Delivered", tone: "bg-emerald-100 text-emerald-700", time: "34m ago" },
-  { id: "FR-4817", n: "Mika Tanaka", items: 15, t: "$71.90", s: "Returned", tone: "bg-rose-100 text-rose-700", time: "51m ago" },
-  { id: "FR-4816", n: "Diego Alvarez", items: 4, t: "$18.20", s: "Cancelled", tone: "bg-stone-200 text-stone-700", time: "1h ago" },
-  { id: "FR-4815", n: "Yuki Sato", items: 21, t: "$142.40", s: "On the way", tone: "bg-sky-100 text-sky-700", time: "1h ago" },
-];
+const formatDate = (iso: string) =>
+  new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 
 function Orders() {
+  const [tab, setTab] = useState<"all" | OrderStatus>("all");
+  const navigate = useNavigate();
+
+  const filtered = tab === "all" ? orders : orders.filter((o) => o.status === tab);
+  const totals = {
+    pending: orders.filter((o) => o.status === "pending").length,
+    packing: orders.filter((o) => o.status === "packing").length,
+    shipped: orders.filter((o) => o.status === "shipped").length,
+    delivered: orders.filter((o) => o.status === "delivered").length,
+  };
+
+  const revenue = orders.reduce((s, o) => s + o.total, 0);
+
+  const columns: Column<Order>[] = [
+    {
+      key: "id", header: "Order", sortable: true, sortAccessor: (o) => o.id,
+      render: (o) => <span className="font-semibold tabular-nums">#{o.id}</span>,
+    },
+    {
+      key: "customer", header: "Customer", sortable: true, sortAccessor: (o) => o.customer,
+      render: (o) => (
+        <div>
+          <div className="font-medium">{o.customer}</div>
+          <div className="text-[11px] text-muted-foreground">{o.email}</div>
+        </div>
+      ),
+    },
+    {
+      key: "items", header: "Items", sortable: true, sortAccessor: (o) => o.items,
+      align: "right",
+      render: (o) => <span className="tabular-nums">{o.items}</span>,
+    },
+    {
+      key: "status", header: "Status",
+      render: (o) => <StatusBadge tone={statusTone[o.status]}>{o.status}</StatusBadge>,
+    },
+    {
+      key: "payment", header: "Payment",
+      render: (o) => <StatusBadge tone={paymentTone[o.payment]}>{o.payment}</StatusBadge>,
+    },
+    {
+      key: "channel", header: "Channel",
+      render: (o) => <span className="text-muted-foreground capitalize">{o.channel}</span>,
+    },
+    {
+      key: "placedAt", header: "Placed", sortable: true, sortAccessor: (o) => o.placedAt,
+      render: (o) => <span className="text-muted-foreground">{formatDate(o.placedAt)}</span>,
+    },
+    {
+      key: "total", header: "Total", sortable: true, sortAccessor: (o) => o.total,
+      align: "right",
+      render: (o) => <span className="tabular-nums font-semibold">${o.total.toFixed(2)}</span>,
+    },
+  ];
+
   return (
-    <AdminMobileShell>
-      <AdminTopBar
+    <>
+      <PageHeader
         title="Orders"
-        subtitle="1,284 today"
-        back="/admin/mobile"
-        right={<button className="size-10 rounded-full bg-secondary flex items-center justify-center"><SlidersHorizontal className="size-4" /></button>}
+        description="Every order across app, web and kiosk channels with live status and AI fraud signals."
+        actions={
+          <>
+            <ToolbarButton variant="secondary"><Printer className="size-3.5" /> Print</ToolbarButton>
+            <ToolbarButton variant="primary"><Plus className="size-3.5" /> New order</ToolbarButton>
+          </>
+        }
       />
-      <AdminSearchBar placeholder="Search order or customer…" />
 
-      <div className="px-5 mt-4 flex gap-2 overflow-x-auto no-scrollbar">
-        {["All 1284", "Preparing 42", "On the way 128", "Delivered 1102", "Returned 8", "Cancelled 4"].map((c, i) => (
-          <button key={c} className={`whitespace-nowrap text-[12px] font-semibold rounded-full px-3 py-1.5 border ${i === 0 ? "bg-primary text-primary-foreground border-primary" : "bg-card text-foreground border-border"}`}>{c}</button>
-        ))}
-      </div>
+      <PageBody>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard label="Revenue · this batch" value={`$${revenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}`} delta="+12.4%" deltaDir="up" icon={<ShoppingBag className="size-4" />} />
+          <StatCard label="Pending fulfillment" value={String(totals.pending + totals.packing)} delta="6 urgent" deltaDir="flat" />
+          <StatCard label="In transit" value={String(totals.shipped)} hint="avg 28min ETA" />
+          <StatCard label="Delivered · today" value="248" delta="+8.1%" deltaDir="up" />
+        </div>
 
-      <div className="px-5 mt-4 space-y-2">
-        {orders.map((o) => (
-          <Link key={o.id} to="/admin/orders/$id" params={{ id: o.id }} className="flex items-center gap-3 rounded-2xl bg-card border border-border p-4">
-            <div className="size-11 rounded-2xl bg-primary-soft text-accent-foreground flex items-center justify-center font-display font-bold text-[13px]">{o.n.split(" ").map(s => s[0]).join("")}</div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <div className="text-[13px] font-semibold tabular-nums">#{o.id}</div>
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${o.tone}`}>{o.s}</span>
-              </div>
-              <div className="text-[12px] text-muted-foreground truncate mt-0.5">{o.n} · {o.items} items · {o.time}</div>
-            </div>
-            <div className="text-right">
-              <div className="text-[13px] font-semibold tabular-nums">{o.t}</div>
-              <ChevronRight className="size-4 text-muted-foreground inline-block mt-1" />
-            </div>
-          </Link>
-        ))}
-      </div>
-    </AdminMobileShell>
+        <Tabs
+          value={tab}
+          onChange={(v) => setTab(v as typeof tab)}
+          items={[
+            { value: "all", label: "All", count: orders.length },
+            { value: "pending", label: "Pending", count: totals.pending },
+            { value: "packing", label: "Packing", count: totals.packing },
+            { value: "shipped", label: "Shipped", count: totals.shipped },
+            { value: "delivered", label: "Delivered", count: totals.delivered },
+            { value: "cancelled", label: "Cancelled" },
+            { value: "refunded", label: "Refunded" },
+          ]}
+        />
+
+        <DataTable<Order>
+          data={filtered}
+          columns={columns}
+          rowKey={(o) => o.id}
+          searchAccessor={(o) => `${o.id} ${o.customer} ${o.email}`}
+          searchPlaceholder="Search orders, customers, emails…"
+          onRowClick={(o) => navigate({ to: "/admin/orders/$id", params: { id: o.id } })}
+          exportFilename="orders.csv"
+          bulkActions={(sel) => (
+            <>
+              <ToolbarButton variant="secondary"><Send className="size-3.5" /> Notify ({sel.length})</ToolbarButton>
+              <ToolbarButton variant="secondary"><Archive className="size-3.5" /> Archive</ToolbarButton>
+              <ToolbarButton variant="secondary"><Ban className="size-3.5" /> Cancel</ToolbarButton>
+            </>
+          )}
+        />
+      </PageBody>
+    </>
   );
 }

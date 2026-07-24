@@ -1,111 +1,158 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AdminMobileShell, AdminTopBar, SectionTitle } from "@/components/app/AdminMobileShell";
-import { ArrowUpRight, TrendingUp } from "lucide-react";
+import { PageHeader, PageBody, StatCard, SectionCard, Tabs, ToolbarButton } from "@/components/admin/primitives";
+import { Download, Calendar, Sparkles } from "lucide-react";
+import { useState } from "react";
+import {
+  Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer,
+  Tooltip, XAxis, YAxis, Line, LineChart, Pie, PieChart, Cell,
+} from "recharts";
+import { revenueSeries, weeklyBars, categoryShare } from "@/lib/admin-mock";
 
 export const Route = createFileRoute("/admin/analytics")({
   head: () => ({
     meta: [
       { title: "Analytics — Freshly Admin" },
-      { name: "description", content: "Revenue, conversion and cohort analytics with AI trend detection." },
+      { name: "description", content: "Enterprise analytics: revenue, orders, retention, funnels, cohorts and geography." },
     ],
   }),
   component: Analytics,
 });
 
 function Analytics() {
+  const [tab, setTab] = useState("revenue");
+
+  const funnel = [
+    { stage: "Visitors", value: 48200, pct: 100 },
+    { stage: "Added to cart", value: 12400, pct: 26 },
+    { stage: "Checkout started", value: 5820, pct: 12 },
+    { stage: "Purchased", value: 3240, pct: 6.7 },
+  ];
+
   return (
-    <AdminMobileShell>
-      <AdminTopBar title="Analytics" subtitle="Last 7 days" back="/admin/mobile" />
+    <>
+      <PageHeader
+        title="Analytics"
+        description="Revenue, retention, funnels and cohorts across every channel."
+        actions={
+          <>
+            <ToolbarButton variant="secondary"><Calendar className="size-3.5" /> Last 30 days</ToolbarButton>
+            <ToolbarButton variant="secondary"><Download className="size-3.5" /> Schedule report</ToolbarButton>
+          </>
+        }
+        tabs={
+          <Tabs
+            value={tab}
+            onChange={setTab}
+            items={[
+              { value: "revenue", label: "Revenue" },
+              { value: "orders", label: "Orders" },
+              { value: "customers", label: "Customers" },
+              { value: "products", label: "Products" },
+              { value: "geo", label: "Geography" },
+              { value: "ai", label: "AI Performance" },
+            ]}
+          />
+        }
+      />
 
-      <div className="px-5 mt-4 inline-flex bg-card border border-border rounded-2xl p-1 text-[11px] font-medium shadow-soft">
-        {["Today", "7d", "30d", "Quarter", "Year"].map((t, i) => (
-          <button key={t} className={`px-3 py-1.5 rounded-xl ${i === 1 ? "bg-secondary text-foreground" : "text-muted-foreground"}`}>{t}</button>
-        ))}
-      </div>
-
-      <div className="mx-5 mt-4 rounded-3xl bg-card border border-border p-5">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Revenue</div>
-            <div className="font-display text-2xl font-bold tabular-nums mt-1">$48,290</div>
-          </div>
-          <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold rounded-full px-2 py-0.5 bg-emerald-100 text-emerald-700">
-            <ArrowUpRight className="size-3" /> +12.4%
-          </span>
+      <PageBody>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard label="Revenue · 30d" value="$482,910" delta="+18.4%" deltaDir="up" />
+          <StatCard label="Orders" value="12,840" delta="+11.2%" deltaDir="up" />
+          <StatCard label="Conversion" value="6.7%" delta="+0.4pp" deltaDir="up" />
+          <StatCard label="Retention · 30d" value="58%" delta="+2pp" deltaDir="up" />
         </div>
-        <div className="mt-4 h-40">
-          <BarChart />
-        </div>
-      </div>
 
-      <SectionTitle>Breakdown</SectionTitle>
-      <div className="px-5 grid grid-cols-2 gap-3">
-        {[
-          { l: "Orders", v: "1,284", d: "+8.1%", up: true },
-          { l: "Basket", v: "$37.60", d: "-2.3%", up: false },
-          { l: "New buyers", v: "342", d: "+18%", up: true },
-          { l: "Retention", v: "72.4%", d: "+1.2%", up: true },
-        ].map((k) => (
-          <div key={k.l} className="rounded-2xl bg-card border border-border p-4">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{k.l}</div>
-            <div className="text-xl font-bold font-display tabular-nums mt-1">{k.v}</div>
-            <div className={`text-[11px] font-semibold mt-1 inline-flex items-center gap-0.5 ${k.up ? "text-emerald-600" : "text-rose-600"}`}>
-              <TrendingUp className={`size-3 ${k.up ? "" : "rotate-180"}`} />{k.d}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <SectionCard className="lg:col-span-2" title="Revenue trend">
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={revenueSeries}>
+                  <defs>
+                    <linearGradient id="rev2" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.35} />
+                      <stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
+                  <XAxis dataKey="day" fontSize={11} stroke="var(--color-muted-foreground)" tickLine={false} axisLine={false} />
+                  <YAxis fontSize={11} stroke="var(--color-muted-foreground)" tickLine={false} axisLine={false} />
+                  <Tooltip contentStyle={{ background: "var(--color-card)", border: "1px solid var(--color-border)", borderRadius: 12, fontSize: 12 }} />
+                  <Area type="monotone" dataKey="revenue" stroke="var(--color-primary)" strokeWidth={2} fill="url(#rev2)" />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
-          </div>
-        ))}
-      </div>
+          </SectionCard>
 
-      <SectionTitle>Funnel</SectionTitle>
-      <div className="mx-5 rounded-3xl bg-card border border-border p-5 space-y-3">
-        {[
-          { l: "Visited", v: "48,201", w: 100 },
-          { l: "Added to cart", v: "12,840", w: 62 },
-          { l: "Checkout", v: "4,120", w: 32 },
-          { l: "Purchased", v: "1,284", w: 18 },
-        ].map((s) => (
-          <div key={s.l}>
-            <div className="flex justify-between text-[12px] mb-1"><span className="font-medium">{s.l}</span><span className="tabular-nums text-muted-foreground">{s.v}</span></div>
-            <div className="h-2 rounded-full bg-secondary overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full" style={{ width: `${s.w}%` }} />
+          <SectionCard title="Category mix">
+            <div className="h-48">
+              <ResponsiveContainer>
+                <PieChart>
+                  <Pie data={categoryShare} dataKey="value" nameKey="name" innerRadius={45} outerRadius={80} paddingAngle={2}>
+                    {categoryShare.map((c, i) => <Cell key={i} fill={c.color} />)}
+                  </Pie>
+                  <Tooltip contentStyle={{ background: "var(--color-card)", border: "1px solid var(--color-border)", borderRadius: 12, fontSize: 12 }} />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
-          </div>
-        ))}
-      </div>
-
-      <SectionTitle>Top products</SectionTitle>
-      <div className="px-5 space-y-2 pb-2">
-        {[
-          { e: "🥑", n: "Hass Avocados", v: "$4,220" },
-          { e: "🥛", n: "Oat Milk Barista", v: "$3,180" },
-          { e: "🥖", n: "Artisan Sourdough", v: "$2,940" },
-          { e: "🍓", n: "Organic Strawberries", v: "$2,410" },
-        ].map((p, i) => (
-          <div key={p.n} className="flex items-center gap-3 rounded-2xl bg-card border border-border p-3">
-            <div className="size-6 text-[11px] font-bold text-muted-foreground tabular-nums text-center">{i + 1}</div>
-            <div className="size-10 rounded-xl bg-secondary flex items-center justify-center text-lg">{p.e}</div>
-            <div className="flex-1 text-[13px] font-semibold">{p.n}</div>
-            <div className="text-[13px] font-semibold tabular-nums">{p.v}</div>
-          </div>
-        ))}
-      </div>
-    </AdminMobileShell>
-  );
-}
-
-function BarChart() {
-  const bars = [42, 55, 48, 68, 74, 62, 88];
-  const days = ["M", "T", "W", "T", "F", "S", "S"];
-  return (
-    <div className="h-full flex items-end justify-between gap-2">
-      {bars.map((b, i) => (
-        <div key={i} className="flex-1 flex flex-col items-center gap-2">
-          <div className="w-full flex items-end justify-center h-32">
-            <div className="w-full max-w-[18px] rounded-t-lg bg-gradient-to-t from-emerald-500 to-emerald-400" style={{ height: `${b}%` }} />
-          </div>
-          <div className="text-[10px] text-muted-foreground font-medium">{days[i]}</div>
+            <ul className="space-y-2 mt-2">
+              {categoryShare.map((c) => (
+                <li key={c.name} className="flex items-center justify-between text-[12px]">
+                  <span className="inline-flex items-center gap-2"><span className="size-2 rounded-full" style={{ background: c.color }} />{c.name}</span>
+                  <span className="tabular-nums font-semibold">{c.value}%</span>
+                </li>
+              ))}
+            </ul>
+          </SectionCard>
         </div>
-      ))}
-    </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <SectionCard title="Conversion funnel">
+            <ul className="space-y-3">
+              {funnel.map((f) => (
+                <li key={f.stage}>
+                  <div className="flex items-center justify-between text-[13px] mb-1.5">
+                    <span className="font-medium">{f.stage}</span>
+                    <span className="tabular-nums text-muted-foreground">{f.value.toLocaleString()} · {f.pct}%</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-secondary overflow-hidden">
+                    <div className="h-full rounded-full bg-primary" style={{ width: `${f.pct}%` }} />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </SectionCard>
+
+          <SectionCard title="Weekly orders">
+            <div className="h-56">
+              <ResponsiveContainer>
+                <BarChart data={weeklyBars}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
+                  <XAxis dataKey="day" fontSize={11} stroke="var(--color-muted-foreground)" tickLine={false} axisLine={false} />
+                  <YAxis fontSize={11} stroke="var(--color-muted-foreground)" tickLine={false} axisLine={false} />
+                  <Tooltip contentStyle={{ background: "var(--color-card)", border: "1px solid var(--color-border)", borderRadius: 12, fontSize: 12 }} />
+                  <Bar dataKey="thisWeek" fill="var(--color-primary)" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </SectionCard>
+        </div>
+
+        <SectionCard title={<div className="inline-flex items-center gap-1.5 text-sm font-semibold"><Sparkles className="size-4 text-primary" />AI forecast</div>}>
+          <div className="h-56">
+            <ResponsiveContainer>
+              <LineChart data={revenueSeries}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
+                <XAxis dataKey="day" fontSize={11} stroke="var(--color-muted-foreground)" tickLine={false} axisLine={false} />
+                <YAxis fontSize={11} stroke="var(--color-muted-foreground)" tickLine={false} axisLine={false} />
+                <Tooltip contentStyle={{ background: "var(--color-card)", border: "1px solid var(--color-border)", borderRadius: 12, fontSize: 12 }} />
+                <Line type="monotone" dataKey="revenue" stroke="var(--color-primary)" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="orders" stroke="var(--color-accent)" strokeWidth={2} strokeDasharray="5 5" dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </SectionCard>
+      </PageBody>
+    </>
   );
 }

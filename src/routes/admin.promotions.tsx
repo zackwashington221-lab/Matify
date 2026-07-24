@@ -1,74 +1,87 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AdminMobileShell, AdminTopBar, SectionTitle } from "@/components/app/AdminMobileShell";
-import { Plus, Sparkles, Calendar, Percent } from "lucide-react";
+import { PageHeader, PageBody, StatCard, StatusBadge, ToolbarButton } from "@/components/admin/primitives";
+import { DataTable, type Column } from "@/components/admin/DataTable";
+import { Megaphone, Plus, Sparkles, Trash2 } from "lucide-react";
+import { campaigns, type Campaign } from "@/lib/admin-mock";
 
 export const Route = createFileRoute("/admin/promotions")({
   head: () => ({
     meta: [
       { title: "Promotions — Freshly Admin" },
-      { name: "description", content: "Design promo codes, bundles and AI-personalized offers for shoppers." },
+      { name: "description", content: "Campaigns, coupons, flash sales, bundles, referrals and cashback with AI targeting." },
     ],
   }),
   component: Promotions,
 });
 
-const promos = [
-  { n: "Weekend Fresh Fridays", code: "FRESH20", status: "Live", tone: "bg-emerald-100 text-emerald-700", off: "20%", uses: "1,248", ends: "in 3d", grad: "from-emerald-400 to-teal-500" },
-  { n: "Sunday Basket Boost", code: "BASKET10", status: "Scheduled", tone: "bg-sky-100 text-sky-700", off: "$10", uses: "—", ends: "starts 21 Nov", grad: "from-sky-400 to-indigo-500" },
-  { n: "New shopper welcome", code: "HELLO15", status: "Live", tone: "bg-emerald-100 text-emerald-700", off: "15%", uses: "312", ends: "always", grad: "from-amber-400 to-orange-500" },
-  { n: "Meal-plan bundle", code: "MEAL5", status: "Paused", tone: "bg-stone-200 text-stone-700", off: "$5", uses: "84", ends: "paused", grad: "from-rose-400 to-pink-500" },
-];
+const statusTone = { live: "success", scheduled: "info", ended: "muted", draft: "warning" } as const;
+const typeTone = { coupon: "info", flash: "danger", bundle: "success", referral: "warning", cashback: "muted" } as const;
+
+const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
 function Promotions() {
-  return (
-    <AdminMobileShell>
-      <AdminTopBar
-        title="Promotions"
-        subtitle="4 active · $12k lift"
-        back="/admin/mobile"
-        right={<button className="size-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-emerald"><Plus className="size-4" /></button>}
-      />
-
-      <div className="px-5 mt-4">
-        <div className="rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white p-5 shadow-emerald">
-          <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-emerald-100 font-semibold"><Sparkles className="size-3.5" />AI suggestion</div>
-          <div className="mt-2 text-[14px] font-semibold leading-snug">Tuesday demand dips 18%. A 12% produce bundle for Gold tier could recover $1,850/wk.</div>
-          <div className="mt-4 flex gap-2">
-            <button className="flex-1 h-10 rounded-xl bg-white text-emerald-700 text-[12px] font-semibold">Launch draft</button>
-            <button className="h-10 px-3 rounded-xl bg-white/15 text-white text-[12px] font-semibold">Later</button>
-          </div>
+  const columns: Column<Campaign>[] = [
+    {
+      key: "name", header: "Campaign", sortable: true, sortAccessor: (c) => c.name,
+      render: (c) => (
+        <div>
+          <div className="font-medium">{c.name}</div>
+          <div className="text-[11px] text-muted-foreground">{c.discount}</div>
         </div>
-      </div>
+      ),
+    },
+    { key: "type", header: "Type", render: (c) => <StatusBadge tone={typeTone[c.type]}>{c.type}</StatusBadge> },
+    { key: "code", header: "Code", render: (c) => c.code ? <code className="text-[11px] bg-secondary rounded px-1.5 py-0.5">{c.code}</code> : <span className="text-muted-foreground">—</span> },
+    { key: "status", header: "Status", render: (c) => <StatusBadge tone={statusTone[c.status]}>{c.status}</StatusBadge> },
+    {
+      key: "redemptions", header: "Redemptions", sortable: true, sortAccessor: (c) => c.redemptions, align: "right",
+      render: (c) => <span className="tabular-nums">{c.redemptions.toLocaleString()}</span>,
+    },
+    {
+      key: "revenue", header: "Revenue", sortable: true, sortAccessor: (c) => c.revenue, align: "right",
+      render: (c) => <span className="tabular-nums font-semibold">${c.revenue.toLocaleString()}</span>,
+    },
+    {
+      key: "window", header: "Window",
+      render: (c) => <span className="text-muted-foreground text-[12px]">{fmtDate(c.startsAt)} → {fmtDate(c.endsAt)}</span>,
+    },
+  ];
 
-      <SectionTitle>Active campaigns</SectionTitle>
-      <div className="px-5 space-y-3 pb-2">
-        {promos.map((p) => (
-          <div key={p.code} className="rounded-3xl bg-card border border-border overflow-hidden">
-            <div className={`h-24 bg-gradient-to-br ${p.grad} p-4 flex items-start justify-between text-white`}>
-              <div>
-                <div className="text-[10px] uppercase tracking-wider opacity-90 font-semibold">Promo code</div>
-                <div className="font-display font-bold text-lg mt-0.5 tracking-wider">{p.code}</div>
-              </div>
-              <div className="size-14 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-lg font-bold leading-none">{p.off}</div>
-                  <div className="text-[9px] uppercase tracking-wider">off</div>
-                </div>
-              </div>
-            </div>
-            <div className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="text-[13px] font-semibold">{p.n}</div>
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${p.tone}`}>{p.status}</span>
-              </div>
-              <div className="mt-2 flex items-center gap-4 text-[11px] text-muted-foreground">
-                <span className="inline-flex items-center gap-1"><Percent className="size-3" />{p.uses} uses</span>
-                <span className="inline-flex items-center gap-1"><Calendar className="size-3" />{p.ends}</span>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </AdminMobileShell>
+  return (
+    <>
+      <PageHeader
+        title="Promotions"
+        description="Campaigns, coupons, flash sales, bundles, referrals and cashback with AI-suggested targeting."
+        actions={
+          <>
+            <ToolbarButton variant="secondary"><Sparkles className="size-3.5" /> AI suggest</ToolbarButton>
+            <ToolbarButton variant="primary"><Plus className="size-3.5" /> New campaign</ToolbarButton>
+          </>
+        }
+      />
+      <PageBody>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard label="Live campaigns" value="6" icon={<Megaphone className="size-4" />} />
+          <StatCard label="Redemptions · 7d" value="8,650" delta="+22%" deltaDir="up" />
+          <StatCard label="Attributed revenue" value="$121k" delta="+14%" deltaDir="up" />
+          <StatCard label="ROI" value="4.8×" delta="+0.3" deltaDir="up" />
+        </div>
+
+        <DataTable<Campaign>
+          data={campaigns}
+          columns={columns}
+          rowKey={(c) => c.id}
+          searchAccessor={(c) => `${c.name} ${c.code ?? ""} ${c.type}`}
+          searchPlaceholder="Search campaigns, codes…"
+          exportFilename="campaigns.csv"
+          bulkActions={(sel) => (
+            <>
+              <ToolbarButton variant="secondary">Pause ({sel.length})</ToolbarButton>
+              <ToolbarButton variant="secondary"><Trash2 className="size-3.5" /> Archive</ToolbarButton>
+            </>
+          )}
+        />
+      </PageBody>
+    </>
   );
 }

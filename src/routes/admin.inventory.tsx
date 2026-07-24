@@ -1,86 +1,167 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { AdminMobileShell, AdminTopBar, AdminSearchBar, SectionTitle } from "@/components/app/AdminMobileShell";
-import { Plus, TrendingUp, AlertTriangle } from "lucide-react";
+import { createFileRoute } from "@tanstack/react-router";
+import { PageHeader, PageBody, StatCard, SectionCard, StatusBadge, ToolbarButton } from "@/components/admin/primitives";
+import { DataTable, type Column } from "@/components/admin/DataTable";
+import { AlertTriangle, ArrowUp, ArrowDown, Boxes, Plus, RefreshCw, Sparkles, Upload } from "lucide-react";
+import { products, type Product } from "@/lib/mock-data";
+import { cn } from "@/lib/utils";
+import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from "recharts";
+import { revenueSeries } from "@/lib/admin-mock";
 
 export const Route = createFileRoute("/admin/inventory")({
   head: () => ({
     meta: [
       { title: "Inventory — Freshly Admin" },
-      { name: "description", content: "Real-time inventory levels, restock forecasts and low-stock alerts." },
+      { name: "description", content: "Real-time stock, forecasting, low-stock alerts and AI auto-reorder." },
     ],
   }),
   component: Inventory,
 });
 
-const items = [
-  { e: "🥑", n: "Hass Avocados", c: "Produce", p: "$1.49", s: 42, cap: 100, t: "+18%", up: true },
-  { e: "🐟", n: "Wild Atlantic Salmon", c: "Seafood", p: "$14.99", s: 12, cap: 60, t: "+42%", up: true, low: true },
-  { e: "🥖", n: "Artisan Sourdough", c: "Bakery", p: "$6.50", s: 18, cap: 40, t: "+9%", up: true, low: true },
-  { e: "🥛", n: "Oat Milk Barista", c: "Dairy", p: "$4.99", s: 88, cap: 120, t: "+3%", up: true },
-  { e: "🍓", n: "Organic Strawberries", c: "Produce", p: "$4.99", s: 24, cap: 80, t: "-4%", up: false },
-  { e: "🥬", n: "Organic Kale", c: "Produce", p: "$2.99", s: 8, cap: 50, t: "+15%", up: true, low: true },
-  { e: "🍫", n: "Dark Chocolate 72%", c: "Snacks", p: "$4.50", s: 44, cap: 80, t: "+2%", up: true },
-  { e: "🍝", n: "Bronze-Cut Pasta", c: "Pantry", p: "$5.99", s: 70, cap: 100, t: "+6%", up: true },
-];
+type InventoryRow = Product & { cap: number; velocity: number; forecast: string };
 
 function Inventory() {
-  return (
-    <AdminMobileShell>
-      <AdminTopBar
-        title="Inventory"
-        subtitle="632 SKUs · 3 low"
-        back="/admin/mobile"
-        right={<button className="size-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-emerald"><Plus className="size-4" /></button>}
-      />
-      <AdminSearchBar placeholder="Search product or SKU…" />
+  const rows: InventoryRow[] = products.map((p) => ({
+    ...p,
+    cap: p.stock < 20 ? 50 : Math.max(p.stock * 1.4, 80),
+    velocity: Math.round(2 + Math.random() * 40),
+    forecast: p.stock < 20 ? "6h" : p.stock < 40 ? "2d" : "7d+",
+  }));
 
-      <div className="px-5 mt-4 grid grid-cols-3 gap-2">
-        {[
-          { l: "In stock", v: "612" },
-          { l: "Low", v: "17", warn: true },
-          { l: "Out", v: "3", warn: true },
-        ].map((k) => (
-          <div key={k.l} className="rounded-2xl bg-card border border-border p-3">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{k.l}</div>
-            <div className={`text-lg font-bold font-display tabular-nums mt-0.5 ${k.warn ? "text-amber-600" : ""}`}>{k.v}</div>
+  const columns: Column<InventoryRow>[] = [
+    {
+      key: "name", header: "SKU", sortable: true, sortAccessor: (r) => r.name,
+      render: (r) => (
+        <div className="flex items-center gap-3">
+          <div className={cn("size-10 rounded-xl bg-gradient-to-br flex items-center justify-center text-xl shrink-0", r.gradient)}>{r.emoji}</div>
+          <div>
+            <div className="font-medium">{r.name}</div>
+            <div className="text-[11px] text-muted-foreground capitalize">{r.category} · {r.brand}</div>
           </div>
-        ))}
-      </div>
-
-      <SectionTitle>Restock alerts</SectionTitle>
-      <div className="mx-5 rounded-3xl bg-amber-50 border border-amber-200 p-4 flex items-start gap-3">
-        <AlertTriangle className="size-5 text-amber-600 shrink-0 mt-0.5" />
-        <div className="flex-1">
-          <div className="text-[13px] font-semibold text-amber-900">3 items may sell out in 6h</div>
-          <div className="text-[11px] text-amber-800/80 mt-0.5">AI reorder can save ~$2.4k in lost sales.</div>
         </div>
-        <Link to="/admin/ai" className="text-[11px] font-semibold bg-amber-600 text-white rounded-xl px-3 py-2">Auto-reorder</Link>
-      </div>
+      ),
+    },
+    {
+      key: "stock", header: "Stock", sortable: true, sortAccessor: (r) => r.stock,
+      render: (r) => {
+        const pct = Math.min(100, (r.stock / r.cap) * 100);
+        const low = r.stock < 20;
+        return (
+          <div className="min-w-[140px]">
+            <div className="flex items-center justify-between text-[12px] mb-1">
+              <span className={cn("tabular-nums font-semibold", low && "text-amber-700")}>{r.stock}/{Math.round(r.cap)}</span>
+              {low && <StatusBadge tone="warning">Low</StatusBadge>}
+            </div>
+            <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
+              <div className={cn("h-full rounded-full", low ? "bg-amber-500" : "bg-emerald-500")} style={{ width: `${pct}%` }} />
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      key: "velocity", header: "Velocity", sortable: true, sortAccessor: (r) => r.velocity, align: "right",
+      render: (r) => <span className="tabular-nums">{r.velocity}/hr</span>,
+    },
+    { key: "forecast", header: "Stockout ETA", render: (r) => <span className="text-muted-foreground">{r.forecast}</span> },
+    {
+      key: "price", header: "Price", sortable: true, sortAccessor: (r) => r.price, align: "right",
+      render: (r) => <span className="tabular-nums font-semibold">${r.price.toFixed(2)}</span>,
+    },
+    {
+      key: "trend", header: "Trend", align: "right",
+      render: () => {
+        const up = Math.random() > 0.3;
+        const v = (Math.random() * 40 + 2).toFixed(1);
+        return (
+          <span className={cn("inline-flex items-center gap-0.5 tabular-nums text-[12px] font-semibold", up ? "text-emerald-600" : "text-rose-600")}>
+            {up ? <ArrowUp className="size-3" /> : <ArrowDown className="size-3" />}{v}%
+          </span>
+        );
+      },
+    },
+  ];
 
-      <SectionTitle action={<button className="text-[12px] font-semibold text-muted-foreground">Sort</button>}>All SKUs</SectionTitle>
-      <div className="px-5 space-y-2 pb-2">
-        {items.map((p) => (
-          <Link key={p.n} to="/admin/product/$id" params={{ id: p.n.toLowerCase().replace(/\s+/g, "-") }} className="flex items-center gap-3 rounded-2xl bg-card border border-border p-3">
-            <div className="size-11 rounded-2xl bg-secondary flex items-center justify-center text-xl shrink-0">{p.e}</div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <div className="text-[13px] font-semibold truncate">{p.n}</div>
-                {p.low && <span className="text-[9px] font-bold uppercase tracking-wider text-amber-700 bg-amber-100 rounded px-1.5 py-0.5">Low</span>}
-              </div>
-              <div className="text-[11px] text-muted-foreground">{p.c} · {p.p}</div>
-              <div className="mt-1.5 flex items-center gap-2">
-                <div className="flex-1 h-1.5 rounded-full bg-secondary overflow-hidden max-w-[120px]">
-                  <div className={`h-full rounded-full ${p.low ? "bg-amber-500" : "bg-emerald-500"}`} style={{ width: `${Math.min(100, (p.s / p.cap) * 100)}%` }} />
-                </div>
-                <span className="text-[11px] tabular-nums text-muted-foreground">{p.s}/{p.cap}</span>
-              </div>
+  return (
+    <>
+      <PageHeader
+        title="Inventory"
+        description="Live stock levels, velocity, AI forecasts and auto-reorder rules."
+        actions={
+          <>
+            <ToolbarButton variant="secondary"><Upload className="size-3.5" /> Import</ToolbarButton>
+            <ToolbarButton variant="secondary"><RefreshCw className="size-3.5" /> Adjust</ToolbarButton>
+            <ToolbarButton variant="primary"><Plus className="size-3.5" /> Add SKU</ToolbarButton>
+          </>
+        }
+      />
+
+      <PageBody>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard label="Total SKUs" value="632" icon={<Boxes className="size-4" />} />
+          <StatCard label="In stock" value="612" delta="97%" deltaDir="up" />
+          <StatCard label="Low stock" value="17" delta="Restock" deltaDir="down" />
+          <StatCard label="Out of stock" value="3" delta="~$2.4k risk" deltaDir="down" />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <SectionCard
+            className="lg:col-span-2"
+            title="Stock movement · 30 days"
+          >
+            <div className="h-56">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={revenueSeries}>
+                  <defs>
+                    <linearGradient id="stockGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.3} />
+                      <stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
+                  <XAxis dataKey="day" fontSize={11} stroke="var(--color-muted-foreground)" tickLine={false} axisLine={false} />
+                  <YAxis fontSize={11} stroke="var(--color-muted-foreground)" tickLine={false} axisLine={false} />
+                  <Tooltip contentStyle={{ background: "var(--color-card)", border: "1px solid var(--color-border)", borderRadius: 12, fontSize: 12 }} />
+                  <Area type="monotone" dataKey="orders" stroke="var(--color-primary)" strokeWidth={2} fill="url(#stockGrad)" />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
-            <div className={`text-[11px] font-semibold ${p.up ? "text-emerald-600" : "text-rose-600"} inline-flex items-center gap-0.5`}>
-              <TrendingUp className={`size-3 ${p.up ? "" : "rotate-180"}`} />{p.t}
+          </SectionCard>
+
+          <SectionCard title={<div className="inline-flex items-center gap-1.5"><AlertTriangle className="size-4 text-amber-600" /> <span className="text-sm font-semibold">Restock alerts</span></div>}>
+            <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 mb-3">
+              <div className="text-[13px] font-semibold text-amber-900">3 items may sell out in 6h</div>
+              <div className="text-[11px] text-amber-800/80 mt-0.5">AI reorder can save ~$2.4k in lost sales.</div>
+              <button className="mt-3 h-8 px-3 rounded-lg bg-amber-600 text-white text-[12px] font-semibold inline-flex items-center gap-1.5">
+                <Sparkles className="size-3" /> Auto-reorder
+              </button>
             </div>
-          </Link>
-        ))}
-      </div>
-    </AdminMobileShell>
+            <ul className="space-y-2 text-[12px]">
+              {rows.filter((r) => r.stock < 20).map((r) => (
+                <li key={r.id} className="flex items-center gap-2">
+                  <span className="text-lg">{r.emoji}</span>
+                  <span className="flex-1 truncate">{r.name}</span>
+                  <span className="tabular-nums text-amber-700 font-semibold">{r.stock}</span>
+                </li>
+              ))}
+            </ul>
+          </SectionCard>
+        </div>
+
+        <DataTable<InventoryRow>
+          data={rows}
+          columns={columns}
+          rowKey={(r) => r.id}
+          searchAccessor={(r) => `${r.name} ${r.brand} ${r.category}`}
+          searchPlaceholder="Search SKU, brand, category…"
+          exportFilename="inventory.csv"
+          bulkActions={(sel) => (
+            <>
+              <ToolbarButton variant="secondary"><RefreshCw className="size-3.5" /> Reorder ({sel.length})</ToolbarButton>
+              <ToolbarButton variant="secondary">Set min stock</ToolbarButton>
+            </>
+          )}
+        />
+      </PageBody>
+    </>
   );
 }
