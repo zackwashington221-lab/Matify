@@ -74,7 +74,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
               </div>
               <div className="space-y-0.5">
                 {group.items.map((n) => {
-                  const active = isActive(n.to, "exact" in n ? n.exact : false);
+                  const active = isActive(n.to, n.exact);
                   const Icon = n.icon;
                   return (
                     <Link
@@ -92,7 +92,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
                       {n.badge && (
                         <span className={cn(
                           "text-[10px] font-semibold rounded-full px-1.5 py-0.5 tabular-nums",
-                          "tone" in n && n.tone === "warn"
+                          n.tone === "warn"
                             ? "bg-amber-100 text-amber-700"
                             : active ? "bg-white/60 text-accent-foreground" : "bg-secondary text-foreground"
                         )}>{n.badge}</span>
