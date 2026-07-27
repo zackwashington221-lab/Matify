@@ -21,20 +21,34 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as ProductIdRouteImport } from './routes/product.$id'
+import { Route as AdminTeamRouteImport } from './routes/admin.team'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
+import { Route as AdminRolesRouteImport } from './routes/admin.roles'
+import { Route as AdminReturnsRouteImport } from './routes/admin.returns'
+import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminPromotionsRouteImport } from './routes/admin.promotions'
 import { Route as AdminProductsRouteImport } from './routes/admin.products'
 import { Route as AdminOrdersRouteImport } from './routes/admin.orders'
 import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
 import { Route as AdminMobileRouteImport } from './routes/admin.mobile'
 import { Route as AdminInventoryRouteImport } from './routes/admin.inventory'
+import { Route as AdminIntegrationsRouteImport } from './routes/admin.integrations'
+import { Route as AdminFunnelsRouteImport } from './routes/admin.funnels'
 import { Route as AdminCustomersRouteImport } from './routes/admin.customers'
+import { Route as AdminCohortsRouteImport } from './routes/admin.cohorts'
 import { Route as AdminBannersRouteImport } from './routes/admin.banners'
+import { Route as AdminAuditRouteImport } from './routes/admin.audit'
+import { Route as AdminApiKeysRouteImport } from './routes/admin.api-keys'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminAiRouteImport } from './routes/admin.ai'
+import { Route as AdminPromotionNewRouteImport } from './routes/admin.promotion.new'
+import { Route as AdminProductNewRouteImport } from './routes/admin.product.new'
 import { Route as AdminProductIdRouteImport } from './routes/admin.product.$id'
 import { Route as AdminOrdersIdRouteImport } from './routes/admin.orders.$id'
+import { Route as AdminNotificationNewRouteImport } from './routes/admin.notification.new'
 import { Route as AdminCustomerIdRouteImport } from './routes/admin.customer.$id'
+import { Route as AdminBannerNewRouteImport } from './routes/admin.banner.new'
+import { Route as AdminAiAgentNewRouteImport } from './routes/admin.ai-agent.new'
 
 const TrackingRoute = TrackingRouteImport.update({
   id: '/tracking',
@@ -96,9 +110,29 @@ const ProductIdRoute = ProductIdRouteImport.update({
   path: '/product/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminTeamRoute = AdminTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminRolesRoute = AdminRolesRouteImport.update({
+  id: '/roles',
+  path: '/roles',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminReturnsRoute = AdminReturnsRouteImport.update({
+  id: '/returns',
+  path: '/returns',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminReportsRoute = AdminReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminPromotionsRoute = AdminPromotionsRouteImport.update({
@@ -131,14 +165,39 @@ const AdminInventoryRoute = AdminInventoryRouteImport.update({
   path: '/inventory',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminIntegrationsRoute = AdminIntegrationsRouteImport.update({
+  id: '/integrations',
+  path: '/integrations',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminFunnelsRoute = AdminFunnelsRouteImport.update({
+  id: '/funnels',
+  path: '/funnels',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminCustomersRoute = AdminCustomersRouteImport.update({
   id: '/customers',
   path: '/customers',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminCohortsRoute = AdminCohortsRouteImport.update({
+  id: '/cohorts',
+  path: '/cohorts',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminBannersRoute = AdminBannersRouteImport.update({
   id: '/banners',
   path: '/banners',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAuditRoute = AdminAuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminApiKeysRoute = AdminApiKeysRouteImport.update({
+  id: '/api-keys',
+  path: '/api-keys',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
@@ -151,6 +210,16 @@ const AdminAiRoute = AdminAiRouteImport.update({
   path: '/ai',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminPromotionNewRoute = AdminPromotionNewRouteImport.update({
+  id: '/promotion/new',
+  path: '/promotion/new',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminProductNewRoute = AdminProductNewRouteImport.update({
+  id: '/product/new',
+  path: '/product/new',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminProductIdRoute = AdminProductIdRouteImport.update({
   id: '/product/$id',
   path: '/product/$id',
@@ -161,9 +230,24 @@ const AdminOrdersIdRoute = AdminOrdersIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AdminOrdersRoute,
 } as any)
+const AdminNotificationNewRoute = AdminNotificationNewRouteImport.update({
+  id: '/notification/new',
+  path: '/notification/new',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminCustomerIdRoute = AdminCustomerIdRouteImport.update({
   id: '/customer/$id',
   path: '/customer/$id',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminBannerNewRoute = AdminBannerNewRouteImport.update({
+  id: '/banner/new',
+  path: '/banner/new',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAiAgentNewRoute = AdminAiAgentNewRouteImport.update({
+  id: '/ai-agent/new',
+  path: '/ai-agent/new',
   getParentRoute: () => AdminRoute,
 } as any)
 
@@ -180,20 +264,34 @@ export interface FileRoutesByFullPath {
   '/tracking': typeof TrackingRoute
   '/admin/ai': typeof AdminAiRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/api-keys': typeof AdminApiKeysRoute
+  '/admin/audit': typeof AdminAuditRoute
   '/admin/banners': typeof AdminBannersRoute
+  '/admin/cohorts': typeof AdminCohortsRoute
   '/admin/customers': typeof AdminCustomersRoute
+  '/admin/funnels': typeof AdminFunnelsRoute
+  '/admin/integrations': typeof AdminIntegrationsRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/mobile': typeof AdminMobileRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/orders': typeof AdminOrdersRouteWithChildren
   '/admin/products': typeof AdminProductsRoute
   '/admin/promotions': typeof AdminPromotionsRoute
+  '/admin/reports': typeof AdminReportsRoute
+  '/admin/returns': typeof AdminReturnsRoute
+  '/admin/roles': typeof AdminRolesRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/team': typeof AdminTeamRoute
   '/product/$id': typeof ProductIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/ai-agent/new': typeof AdminAiAgentNewRoute
+  '/admin/banner/new': typeof AdminBannerNewRoute
   '/admin/customer/$id': typeof AdminCustomerIdRoute
+  '/admin/notification/new': typeof AdminNotificationNewRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/product/$id': typeof AdminProductIdRoute
+  '/admin/product/new': typeof AdminProductNewRoute
+  '/admin/promotion/new': typeof AdminPromotionNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -207,20 +305,34 @@ export interface FileRoutesByTo {
   '/tracking': typeof TrackingRoute
   '/admin/ai': typeof AdminAiRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/api-keys': typeof AdminApiKeysRoute
+  '/admin/audit': typeof AdminAuditRoute
   '/admin/banners': typeof AdminBannersRoute
+  '/admin/cohorts': typeof AdminCohortsRoute
   '/admin/customers': typeof AdminCustomersRoute
+  '/admin/funnels': typeof AdminFunnelsRoute
+  '/admin/integrations': typeof AdminIntegrationsRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/mobile': typeof AdminMobileRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/orders': typeof AdminOrdersRouteWithChildren
   '/admin/products': typeof AdminProductsRoute
   '/admin/promotions': typeof AdminPromotionsRoute
+  '/admin/reports': typeof AdminReportsRoute
+  '/admin/returns': typeof AdminReturnsRoute
+  '/admin/roles': typeof AdminRolesRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/team': typeof AdminTeamRoute
   '/product/$id': typeof ProductIdRoute
   '/admin': typeof AdminIndexRoute
+  '/admin/ai-agent/new': typeof AdminAiAgentNewRoute
+  '/admin/banner/new': typeof AdminBannerNewRoute
   '/admin/customer/$id': typeof AdminCustomerIdRoute
+  '/admin/notification/new': typeof AdminNotificationNewRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/product/$id': typeof AdminProductIdRoute
+  '/admin/product/new': typeof AdminProductNewRoute
+  '/admin/promotion/new': typeof AdminPromotionNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -236,20 +348,34 @@ export interface FileRoutesById {
   '/tracking': typeof TrackingRoute
   '/admin/ai': typeof AdminAiRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/api-keys': typeof AdminApiKeysRoute
+  '/admin/audit': typeof AdminAuditRoute
   '/admin/banners': typeof AdminBannersRoute
+  '/admin/cohorts': typeof AdminCohortsRoute
   '/admin/customers': typeof AdminCustomersRoute
+  '/admin/funnels': typeof AdminFunnelsRoute
+  '/admin/integrations': typeof AdminIntegrationsRoute
   '/admin/inventory': typeof AdminInventoryRoute
   '/admin/mobile': typeof AdminMobileRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/orders': typeof AdminOrdersRouteWithChildren
   '/admin/products': typeof AdminProductsRoute
   '/admin/promotions': typeof AdminPromotionsRoute
+  '/admin/reports': typeof AdminReportsRoute
+  '/admin/returns': typeof AdminReturnsRoute
+  '/admin/roles': typeof AdminRolesRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/team': typeof AdminTeamRoute
   '/product/$id': typeof ProductIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/ai-agent/new': typeof AdminAiAgentNewRoute
+  '/admin/banner/new': typeof AdminBannerNewRoute
   '/admin/customer/$id': typeof AdminCustomerIdRoute
+  '/admin/notification/new': typeof AdminNotificationNewRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/product/$id': typeof AdminProductIdRoute
+  '/admin/product/new': typeof AdminProductNewRoute
+  '/admin/promotion/new': typeof AdminPromotionNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -266,20 +392,34 @@ export interface FileRouteTypes {
     | '/tracking'
     | '/admin/ai'
     | '/admin/analytics'
+    | '/admin/api-keys'
+    | '/admin/audit'
     | '/admin/banners'
+    | '/admin/cohorts'
     | '/admin/customers'
+    | '/admin/funnels'
+    | '/admin/integrations'
     | '/admin/inventory'
     | '/admin/mobile'
     | '/admin/notifications'
     | '/admin/orders'
     | '/admin/products'
     | '/admin/promotions'
+    | '/admin/reports'
+    | '/admin/returns'
+    | '/admin/roles'
     | '/admin/settings'
+    | '/admin/team'
     | '/product/$id'
     | '/admin/'
+    | '/admin/ai-agent/new'
+    | '/admin/banner/new'
     | '/admin/customer/$id'
+    | '/admin/notification/new'
     | '/admin/orders/$id'
     | '/admin/product/$id'
+    | '/admin/product/new'
+    | '/admin/promotion/new'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -293,20 +433,34 @@ export interface FileRouteTypes {
     | '/tracking'
     | '/admin/ai'
     | '/admin/analytics'
+    | '/admin/api-keys'
+    | '/admin/audit'
     | '/admin/banners'
+    | '/admin/cohorts'
     | '/admin/customers'
+    | '/admin/funnels'
+    | '/admin/integrations'
     | '/admin/inventory'
     | '/admin/mobile'
     | '/admin/notifications'
     | '/admin/orders'
     | '/admin/products'
     | '/admin/promotions'
+    | '/admin/reports'
+    | '/admin/returns'
+    | '/admin/roles'
     | '/admin/settings'
+    | '/admin/team'
     | '/product/$id'
     | '/admin'
+    | '/admin/ai-agent/new'
+    | '/admin/banner/new'
     | '/admin/customer/$id'
+    | '/admin/notification/new'
     | '/admin/orders/$id'
     | '/admin/product/$id'
+    | '/admin/product/new'
+    | '/admin/promotion/new'
   id:
     | '__root__'
     | '/'
@@ -321,20 +475,34 @@ export interface FileRouteTypes {
     | '/tracking'
     | '/admin/ai'
     | '/admin/analytics'
+    | '/admin/api-keys'
+    | '/admin/audit'
     | '/admin/banners'
+    | '/admin/cohorts'
     | '/admin/customers'
+    | '/admin/funnels'
+    | '/admin/integrations'
     | '/admin/inventory'
     | '/admin/mobile'
     | '/admin/notifications'
     | '/admin/orders'
     | '/admin/products'
     | '/admin/promotions'
+    | '/admin/reports'
+    | '/admin/returns'
+    | '/admin/roles'
     | '/admin/settings'
+    | '/admin/team'
     | '/product/$id'
     | '/admin/'
+    | '/admin/ai-agent/new'
+    | '/admin/banner/new'
     | '/admin/customer/$id'
+    | '/admin/notification/new'
     | '/admin/orders/$id'
     | '/admin/product/$id'
+    | '/admin/product/new'
+    | '/admin/promotion/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -437,11 +605,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/team': {
+      id: '/admin/team'
+      path: '/team'
+      fullPath: '/admin/team'
+      preLoaderRoute: typeof AdminTeamRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/settings': {
       id: '/admin/settings'
       path: '/settings'
       fullPath: '/admin/settings'
       preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/roles': {
+      id: '/admin/roles'
+      path: '/roles'
+      fullPath: '/admin/roles'
+      preLoaderRoute: typeof AdminRolesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/returns': {
+      id: '/admin/returns'
+      path: '/returns'
+      fullPath: '/admin/returns'
+      preLoaderRoute: typeof AdminReturnsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/reports': {
+      id: '/admin/reports'
+      path: '/reports'
+      fullPath: '/admin/reports'
+      preLoaderRoute: typeof AdminReportsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/promotions': {
@@ -486,6 +682,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminInventoryRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/integrations': {
+      id: '/admin/integrations'
+      path: '/integrations'
+      fullPath: '/admin/integrations'
+      preLoaderRoute: typeof AdminIntegrationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/funnels': {
+      id: '/admin/funnels'
+      path: '/funnels'
+      fullPath: '/admin/funnels'
+      preLoaderRoute: typeof AdminFunnelsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/customers': {
       id: '/admin/customers'
       path: '/customers'
@@ -493,11 +703,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCustomersRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/cohorts': {
+      id: '/admin/cohorts'
+      path: '/cohorts'
+      fullPath: '/admin/cohorts'
+      preLoaderRoute: typeof AdminCohortsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/banners': {
       id: '/admin/banners'
       path: '/banners'
       fullPath: '/admin/banners'
       preLoaderRoute: typeof AdminBannersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/audit': {
+      id: '/admin/audit'
+      path: '/audit'
+      fullPath: '/admin/audit'
+      preLoaderRoute: typeof AdminAuditRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/api-keys': {
+      id: '/admin/api-keys'
+      path: '/api-keys'
+      fullPath: '/admin/api-keys'
+      preLoaderRoute: typeof AdminApiKeysRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/analytics': {
@@ -514,6 +745,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAiRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/promotion/new': {
+      id: '/admin/promotion/new'
+      path: '/promotion/new'
+      fullPath: '/admin/promotion/new'
+      preLoaderRoute: typeof AdminPromotionNewRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/product/new': {
+      id: '/admin/product/new'
+      path: '/product/new'
+      fullPath: '/admin/product/new'
+      preLoaderRoute: typeof AdminProductNewRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/product/$id': {
       id: '/admin/product/$id'
       path: '/product/$id'
@@ -528,11 +773,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminOrdersIdRouteImport
       parentRoute: typeof AdminOrdersRoute
     }
+    '/admin/notification/new': {
+      id: '/admin/notification/new'
+      path: '/notification/new'
+      fullPath: '/admin/notification/new'
+      preLoaderRoute: typeof AdminNotificationNewRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/customer/$id': {
       id: '/admin/customer/$id'
       path: '/customer/$id'
       fullPath: '/admin/customer/$id'
       preLoaderRoute: typeof AdminCustomerIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/banner/new': {
+      id: '/admin/banner/new'
+      path: '/banner/new'
+      fullPath: '/admin/banner/new'
+      preLoaderRoute: typeof AdminBannerNewRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/ai-agent/new': {
+      id: '/admin/ai-agent/new'
+      path: '/ai-agent/new'
+      fullPath: '/admin/ai-agent/new'
+      preLoaderRoute: typeof AdminAiAgentNewRouteImport
       parentRoute: typeof AdminRoute
     }
   }
@@ -553,35 +819,63 @@ const AdminOrdersRouteWithChildren = AdminOrdersRoute._addFileChildren(
 interface AdminRouteChildren {
   AdminAiRoute: typeof AdminAiRoute
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
+  AdminApiKeysRoute: typeof AdminApiKeysRoute
+  AdminAuditRoute: typeof AdminAuditRoute
   AdminBannersRoute: typeof AdminBannersRoute
+  AdminCohortsRoute: typeof AdminCohortsRoute
   AdminCustomersRoute: typeof AdminCustomersRoute
+  AdminFunnelsRoute: typeof AdminFunnelsRoute
+  AdminIntegrationsRoute: typeof AdminIntegrationsRoute
   AdminInventoryRoute: typeof AdminInventoryRoute
   AdminMobileRoute: typeof AdminMobileRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminOrdersRoute: typeof AdminOrdersRouteWithChildren
   AdminProductsRoute: typeof AdminProductsRoute
   AdminPromotionsRoute: typeof AdminPromotionsRoute
+  AdminReportsRoute: typeof AdminReportsRoute
+  AdminReturnsRoute: typeof AdminReturnsRoute
+  AdminRolesRoute: typeof AdminRolesRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminTeamRoute: typeof AdminTeamRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminAiAgentNewRoute: typeof AdminAiAgentNewRoute
+  AdminBannerNewRoute: typeof AdminBannerNewRoute
   AdminCustomerIdRoute: typeof AdminCustomerIdRoute
+  AdminNotificationNewRoute: typeof AdminNotificationNewRoute
   AdminProductIdRoute: typeof AdminProductIdRoute
+  AdminProductNewRoute: typeof AdminProductNewRoute
+  AdminPromotionNewRoute: typeof AdminPromotionNewRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAiRoute: AdminAiRoute,
   AdminAnalyticsRoute: AdminAnalyticsRoute,
+  AdminApiKeysRoute: AdminApiKeysRoute,
+  AdminAuditRoute: AdminAuditRoute,
   AdminBannersRoute: AdminBannersRoute,
+  AdminCohortsRoute: AdminCohortsRoute,
   AdminCustomersRoute: AdminCustomersRoute,
+  AdminFunnelsRoute: AdminFunnelsRoute,
+  AdminIntegrationsRoute: AdminIntegrationsRoute,
   AdminInventoryRoute: AdminInventoryRoute,
   AdminMobileRoute: AdminMobileRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminOrdersRoute: AdminOrdersRouteWithChildren,
   AdminProductsRoute: AdminProductsRoute,
   AdminPromotionsRoute: AdminPromotionsRoute,
+  AdminReportsRoute: AdminReportsRoute,
+  AdminReturnsRoute: AdminReturnsRoute,
+  AdminRolesRoute: AdminRolesRoute,
   AdminSettingsRoute: AdminSettingsRoute,
+  AdminTeamRoute: AdminTeamRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AdminAiAgentNewRoute: AdminAiAgentNewRoute,
+  AdminBannerNewRoute: AdminBannerNewRoute,
   AdminCustomerIdRoute: AdminCustomerIdRoute,
+  AdminNotificationNewRoute: AdminNotificationNewRoute,
   AdminProductIdRoute: AdminProductIdRoute,
+  AdminProductNewRoute: AdminProductNewRoute,
+  AdminPromotionNewRoute: AdminPromotionNewRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
@@ -602,13 +896,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

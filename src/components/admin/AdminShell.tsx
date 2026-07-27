@@ -3,7 +3,8 @@ import type { ReactNode } from "react";
 import {
   LayoutDashboard, Package, Boxes, ShoppingBag, Users, Megaphone,
   BarChart3, Image as ImageIcon, Bell, Sparkles, Settings, Search,
-  Plus, ChevronRight, HelpCircle, Command,
+  Plus, ChevronRight, HelpCircle, Command, RotateCcw, LineChart,
+  Filter, CalendarClock, UserCog, ShieldCheck, ScrollText, KeyRound, Plug,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +24,7 @@ const nav: NavGroup[] = [
   ]},
   { section: "Commerce", items: [
     { to: "/admin/orders", icon: ShoppingBag, label: "Orders", badge: "12" },
+    { to: "/admin/returns", icon: RotateCcw, label: "Returns" },
     { to: "/admin/products", icon: Package, label: "Products" },
     { to: "/admin/inventory", icon: Boxes, label: "Inventory", badge: "3", tone: "warn" },
     { to: "/admin/customers", icon: Users, label: "Customers" },
@@ -30,14 +32,25 @@ const nav: NavGroup[] = [
   { section: "Growth", items: [
     { to: "/admin/promotions", icon: Megaphone, label: "Promotions" },
     { to: "/admin/analytics", icon: BarChart3, label: "Analytics" },
+    { to: "/admin/cohorts", icon: LineChart, label: "Cohorts" },
+    { to: "/admin/funnels", icon: Filter, label: "Funnels" },
+    { to: "/admin/reports", icon: CalendarClock, label: "Reports" },
     { to: "/admin/banners", icon: ImageIcon, label: "Banners" },
     { to: "/admin/notifications", icon: Bell, label: "Notifications" },
+  ]},
+  { section: "Administration", items: [
+    { to: "/admin/team", icon: UserCog, label: "Team" },
+    { to: "/admin/roles", icon: ShieldCheck, label: "Roles" },
+    { to: "/admin/audit", icon: ScrollText, label: "Audit log" },
+    { to: "/admin/api-keys", icon: KeyRound, label: "API keys" },
+    { to: "/admin/integrations", icon: Plug, label: "Integrations" },
   ]},
   { section: "Platform", items: [
     { to: "/admin/ai", icon: Sparkles, label: "AI Config" },
     { to: "/admin/settings", icon: Settings, label: "Settings" },
   ]},
 ];
+
 
 function crumbLabel(seg: string) {
   const map: Record<string, string> = {
