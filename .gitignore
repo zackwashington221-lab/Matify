@@ -30,3 +30,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# backend / mobile app deps
+server/node_modules
+mobile/node_modules
+mobile/.expo
+server/.env
