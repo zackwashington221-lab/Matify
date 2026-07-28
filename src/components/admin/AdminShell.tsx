@@ -2,11 +2,12 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import {
   LayoutDashboard, Package, Boxes, ShoppingBag, Users, Megaphone,
-  BarChart3, Image as ImageIcon, Bell, Sparkles, Settings, Search,
+  BarChart3, Image as ImageIcon, Bell, Settings, Search,
   Plus, ChevronRight, HelpCircle, Command, RotateCcw, LineChart,
-  Filter, CalendarClock, UserCog, ShieldCheck, ScrollText, KeyRound, Plug,
+  Filter, CalendarClock, UserCog, ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { AdminUser } from "@/lib/api-client";
 
 type NavItem = {
   to: string;
@@ -24,7 +25,7 @@ const nav: NavGroup[] = [
   ]},
   { section: "Commerce", items: [
     { to: "/admin/orders", icon: ShoppingBag, label: "Orders", badge: "12" },
-    { to: "/admin/returns", icon: RotateCcw, label: "Returns" },
+    { to: "/admin/returns", icon: RotateCcw, label: "Return orders" },
     { to: "/admin/products", icon: Package, label: "Products" },
     { to: "/admin/inventory", icon: Boxes, label: "Inventory", badge: "3", tone: "warn" },
     { to: "/admin/customers", icon: Users, label: "Customers" },
@@ -41,12 +42,8 @@ const nav: NavGroup[] = [
   { section: "Administration", items: [
     { to: "/admin/team", icon: UserCog, label: "Team" },
     { to: "/admin/roles", icon: ShieldCheck, label: "Roles" },
-    { to: "/admin/audit", icon: ScrollText, label: "Audit log" },
-    { to: "/admin/api-keys", icon: KeyRound, label: "API keys" },
-    { to: "/admin/integrations", icon: Plug, label: "Integrations" },
   ]},
   { section: "Platform", items: [
-    { to: "/admin/ai", icon: Sparkles, label: "AI Config" },
     { to: "/admin/settings", icon: Settings, label: "Settings" },
   ]},
 ];
@@ -54,18 +51,20 @@ const nav: NavGroup[] = [
 
 function crumbLabel(seg: string) {
   const map: Record<string, string> = {
-    admin: "Admin", ai: "AI Config",
+    admin: "Admin",
   };
   if (map[seg]) return map[seg];
   return seg.charAt(0).toUpperCase() + seg.slice(1);
 }
 
-export function AdminShell({ children }: { children: ReactNode }) {
+export function AdminShell({ children, user }: { children: ReactNode; user: AdminUser }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const segments = pathname.split("/").filter(Boolean);
 
   const isActive = (to: string, exact?: boolean) =>
     exact ? pathname === to : pathname === to || pathname.startsWith(to + "/");
+
+  const initials = user.name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase() || "A";
 
   return (
     <div className="min-h-screen bg-surface flex">
@@ -118,16 +117,6 @@ export function AdminShell({ children }: { children: ReactNode }) {
           ))}
         </nav>
 
-        <div className="p-3 border-t border-border">
-          <div className="rounded-2xl bg-gradient-to-br from-primary to-accent p-4 text-primary-foreground">
-            <Sparkles className="size-4 mb-2" />
-            <div className="text-[13px] font-semibold leading-tight">AI insights ready</div>
-            <div className="text-[11px] opacity-90 mt-1 leading-snug">3 SKUs need restocking soon.</div>
-            <Link to="/admin/ai" className="mt-3 inline-flex h-7 px-2.5 rounded-lg bg-white/20 hover:bg-white/30 text-[11px] font-semibold items-center gap-1">
-              Review <ChevronRight className="size-3" />
-            </Link>
-          </div>
-        </div>
       </aside>
 
       {/* Main */}
@@ -144,17 +133,19 @@ export function AdminShell({ children }: { children: ReactNode }) {
             </kbd>
           </div>
           <div className="flex items-center gap-2 ml-auto">
-            <button className="hidden md:inline-flex h-9 px-3 rounded-lg text-muted-foreground hover:bg-secondary items-center gap-1.5 text-sm">
+            <a href="mailto:support@freshly.local?subject=Freshly%20Admin%20help" className="hidden md:inline-flex h-9 px-3 rounded-lg text-muted-foreground hover:bg-secondary items-center gap-1.5 text-sm">
               <HelpCircle className="size-4" /> Help
-            </button>
+            </a>
             <Link to="/admin/notifications" className="relative size-9 rounded-lg hover:bg-secondary flex items-center justify-center">
               <Bell className="size-4 text-muted-foreground" />
               <span className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-destructive" />
             </Link>
-            <button className="h-9 px-3 rounded-lg bg-primary text-primary-foreground text-sm font-semibold inline-flex items-center gap-1.5 shadow-emerald hover:opacity-95">
+            <Link to="/admin/product/new" className="h-9 px-3 rounded-lg bg-primary text-primary-foreground text-sm font-semibold inline-flex items-center gap-1.5 shadow-emerald hover:opacity-95">
               <Plus className="size-4" /> Create
-            </button>
-            <div className="size-9 rounded-full bg-gradient-to-br from-primary to-accent text-primary-foreground font-semibold flex items-center justify-center text-xs ml-1">AM</div>
+            </Link>
+            <Link to="/admin/profile" title={`Signed in as ${user.name}. Open profile.`} className="size-9 rounded-full bg-gradient-to-br from-primary to-accent text-primary-foreground font-semibold flex items-center justify-center text-xs ml-1" aria-label="Open profile">
+              {initials}
+            </Link>
           </div>
         </header>
 

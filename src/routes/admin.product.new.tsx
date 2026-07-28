@@ -1,5 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { toast } from "sonner";
+import { api, type Product } from "@/lib/api-client";
 import { PageHeader, PageBody, SectionCard, StatusBadge, ToolbarButton } from "@/components/admin/primitives";
 import { Field, FormGrid, SelectInput, TextArea, TextInput, Toggle } from "@/components/admin/form";
 import { ImagePlus, Sparkles, Trash2 } from "lucide-react";
@@ -22,25 +24,53 @@ function NewProduct() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [brand, setBrand] = useState("");
+  const [category, setCategory] = useState("produce");
+  const [unit, setUnit] = useState("each");
   const [price, setPrice] = useState("");
   const [published, setPublished] = useState(true);
   const [trackStock, setTrackStock] = useState(true);
   const [subscribable, setSubscribable] = useState(false);
   const [variants, setVariants] = useState<Variant[]>([{ id: 1, name: "Default", sku: "SKU-0001", price: "", stock: "0" }]);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
 
   const aiCopy = () =>
     setDescription(
       `${name || "This product"} is hand-picked at peak freshness and delivered within hours. Naturally grown, rich in flavour, and packed to keep its texture from our chill-chain to your kitchen.`
     );
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.SyntheticEvent, shouldPublish = published) => {
     e.preventDefault();
     const next: Record<string, string> = {};
     if (!name.trim()) next.name = "Product name is required.";
     if (!price || Number(price) <= 0) next.price = "Enter a price greater than 0.";
     setErrors(next);
-    if (Object.keys(next).length === 0) navigate({ to: "/admin/products" });
+    if (Object.keys(next).length) return;
+    setSaving(true);
+    try {
+      const primary = variants[0];
+      const product = await api.products.create({
+        name: name.trim(),
+        slug: slugify(name),
+        brand: brand.trim() || "Freshly",
+        description: description.trim(),
+        price: Number(price),
+        unit,
+        category,
+        emoji: categoryEmoji(category),
+        status: shouldPublish ? "active" : "draft",
+      } as Partial<Product>);
+      if (trackStock && primary?.sku.trim()) {
+        await api.inventory.create({ product: product.data._id, sku: primary.sku.trim(), onHand: Number(primary.stock) || 0, reorderPoint: 10, reorderQty: 50 });
+      }
+      toast.success(shouldPublish ? "Product published" : "Product saved as draft");
+      navigate({ to: "/admin/products" });
+    } catch (error) {
+      toast.error("Could not save product", { description: error instanceof Error ? error.message : "Please try again." });
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -51,8 +81,8 @@ function NewProduct() {
         actions={
           <>
             <ToolbarButton variant="secondary" onClick={() => navigate({ to: "/admin/products" })}>Cancel</ToolbarButton>
-            <ToolbarButton variant="secondary">Save draft</ToolbarButton>
-            <ToolbarButton variant="primary" onClick={submit}>Publish product</ToolbarButton>
+            <ToolbarButton variant="secondary" onClick={(event) => submit(event, false)} disabled={saving}>Save draft</ToolbarButton>
+            <ToolbarButton variant="primary" onClick={(event) => submit(event, true)} disabled={saving}>{saving ? "Saving…" : "Publish product"}</ToolbarButton>
           </>
         }
       />
@@ -65,7 +95,7 @@ function NewProduct() {
                   <Field label="Product name" required error={errors.name}>
                     <TextInput value={name} onChange={(e) => setName(e.target.value)} placeholder="Organic Hass Avocado" />
                   </Field>
-                  <Field label="Brand"><TextInput placeholder="Freshly Farms" /></Field>
+                  <Field label="Brand"><TextInput value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="Freshly Farms" /></Field>
                 </FormGrid>
                 <Field
                   label="Description"
@@ -88,7 +118,7 @@ function NewProduct() {
                   <SelectInput options={[{ value: "food", label: "Food (0%)" }, { value: "standard", label: "Standard" }, { value: "reduced", label: "Reduced" }]} />
                 </Field>
                 <Field label="Unit">
-                  <SelectInput options={[{ value: "each", label: "Each" }, { value: "kg", label: "Per kg" }, { value: "pack", label: "Pack" }]} />
+                  <SelectInput value={unit} onChange={(e) => setUnit(e.target.value)} options={[{ value: "each", label: "Each" }, { value: "kg", label: "Per kg" }, { value: "pack", label: "Pack" }]} />
                 </Field>
                 <Field label="Min order qty"><TextInput type="number" defaultValue={1} /></Field>
               </FormGrid>
@@ -161,7 +191,7 @@ function NewProduct() {
             <SectionCard title="Organisation">
               <div className="space-y-4">
                 <Field label="Category">
-                  <SelectInput options={[
+                  <SelectInput value={category} onChange={(e) => setCategory(e.target.value)} options={[
                     { value: "produce", label: "Fresh produce" },
                     { value: "dairy", label: "Dairy & eggs" },
                     { value: "bakery", label: "Bakery" },
@@ -189,3 +219,6 @@ function NewProduct() {
     </>
   );
 }
+
+const slugify = (value: string) => value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || `product-${Date.now()}`;
+const categoryEmoji = (category: string) => ({ produce: "🥬", dairy: "🥛", bakery: "🥖", meat: "🐟", pantry: "🫙" }[category] || "🛒");

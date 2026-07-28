@@ -1,102 +1,46 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { AdminMobileShell, AdminTopBar, SectionTitle } from "@/components/app/AdminMobileShell";
-import { Sparkles, Copy, Trash2, TrendingUp } from "lucide-react";
-import { productById } from "@/lib/mock-data";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { api, type Product } from "@/lib/api-client";
+import { PageBody, PageHeader, SectionCard, ToolbarButton } from "@/components/admin/primitives";
+import { Field, FormGrid, SelectInput, TextArea, TextInput } from "@/components/admin/form";
 
-export const Route = createFileRoute("/admin/product/$id")({
-  head: ({ params }) => ({
-    meta: [
-      { title: `Edit product — Freshly Admin` },
-      { name: "description", content: `Edit product ${params.id}: pricing, inventory, AI tags and merchandising.` },
-    ],
-  }),
-  component: ProductEdit,
-});
+export const Route = createFileRoute("/admin/product/$id")({ component: ProductDetail });
 
-function ProductEdit() {
+function ProductDetail() {
   const { id } = Route.useParams();
-  const p = productById(id);
-  return (
-    <AdminMobileShell hideTabs>
-      <AdminTopBar
-        title="Edit product"
-        subtitle={p.id.toUpperCase()}
-        back="/admin/products"
-        right={<button className="h-10 px-4 rounded-full bg-primary text-primary-foreground text-[12px] font-semibold shadow-emerald">Save</button>}
-      />
+  const navigate = useNavigate();
+  const [product, setProduct] = useState<Product | null>(null);
+  const [form, setForm] = useState<Partial<Product>>({});
+  const [saving, setSaving] = useState(false);
 
-      <div className="px-5 mt-4">
-        <div className={`aspect-[16/10] rounded-3xl bg-gradient-to-br ${p.gradient} flex items-center justify-center text-8xl relative`}>
-          {p.emoji}
-          <button className="absolute bottom-3 right-3 h-9 px-3 rounded-full bg-white/90 backdrop-blur text-[11px] font-semibold">Replace image</button>
+  useEffect(() => {
+    api.products.get(id).then(({ data }) => { setProduct(data); setForm(data); }).catch((error) => toast.error("Product could not be loaded", { description: error instanceof Error ? error.message : "Please return to the catalog." }));
+  }, [id]);
+
+  async function save() {
+    if (!product || !form.name?.trim() || !form.price || Number(form.price) < 0) return toast.error("Enter a valid product name and price");
+    setSaving(true);
+    try {
+      const { data } = await api.products.update(product._id, { ...form, price: Number(form.price) });
+      setProduct(data); setForm(data); toast.success("Product updated");
+    } catch (error) { toast.error("Could not save product", { description: error instanceof Error ? error.message : "Please try again." }); }
+    finally { setSaving(false); }
+  }
+
+  if (!product) return <main className="grid min-h-[50vh] place-items-center text-sm text-muted-foreground">Loading product…</main>;
+  const set = <K extends keyof Product>(key: K, value: Product[K]) => setForm((current) => ({ ...current, [key]: value }));
+
+  return <>
+    <PageHeader title={product.name} description={`Product ID: ${product._id}`} actions={<><ToolbarButton variant="secondary" onClick={() => navigate({ to: "/admin/products" })}>Back to catalog</ToolbarButton><ToolbarButton variant="primary" disabled={saving} onClick={save}>{saving ? "Saving…" : "Save changes"}</ToolbarButton></>} />
+    <PageBody className="max-w-5xl">
+      <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
+        <div className="space-y-5">
+          <SectionCard title="Product details"><FormGrid><Field label="Name" required><TextInput value={form.name || ""} onChange={(e) => set("name", e.target.value)} /></Field><Field label="Brand"><TextInput value={form.brand || ""} onChange={(e) => set("brand", e.target.value)} /></Field><Field label="Category"><TextInput value={form.category || ""} onChange={(e) => set("category", e.target.value)} /></Field><Field label="Unit"><TextInput value={form.unit || ""} onChange={(e) => set("unit", e.target.value)} /></Field></FormGrid><div className="mt-4"><Field label="Description"><TextArea value={form.description || ""} onChange={(e) => set("description", e.target.value)} /></Field></div></SectionCard>
+          <SectionCard title="Pricing"><FormGrid cols={3}><Field label="Price" required><TextInput type="number" step="0.01" value={form.price ?? ""} onChange={(e) => set("price", Number(e.target.value))} /></Field><Field label="Compare-at price"><TextInput type="number" step="0.01" value={form.compareAt ?? ""} onChange={(e) => set("compareAt", e.target.value ? Number(e.target.value) : undefined)} /></Field><Field label="Rating"><TextInput type="number" step="0.1" value={form.rating ?? 0} onChange={(e) => set("rating", Number(e.target.value))} /></Field></FormGrid></SectionCard>
         </div>
+        <div className="space-y-5"><SectionCard title="Publishing"><Field label="Status"><SelectInput value={form.status} onChange={(e) => set("status", e.target.value as Product["status"])} options={[{ value: "active", label: "Active" }, { value: "draft", label: "Draft" }, { value: "archived", label: "Archived" }]} /></Field><div className="mt-4"><Field label="AI tag"><TextInput value={form.aiTag || ""} onChange={(e) => set("aiTag", e.target.value)} /></Field></div></SectionCard><SectionCard title="Storefront preview"><div className="rounded-xl bg-secondary p-5 text-center"><div className="text-5xl">{form.emoji || "🛒"}</div><div className="mt-3 font-semibold">{form.name}</div><div className="mt-1 text-sm text-muted-foreground">{form.brand}</div><div className="mt-3 text-lg font-bold">${Number(form.price || 0).toFixed(2)}</div></div></SectionCard></div>
       </div>
-
-      <SectionTitle>Basics</SectionTitle>
-      <div className="mx-5 rounded-3xl bg-card border border-border p-5 space-y-4">
-        <Field label="Name" value={p.name} />
-        <Field label="Brand" value={p.brand} />
-        <Field label="Category" value={p.category} />
-        <Field label="Unit" value={p.unit} />
-      </div>
-
-      <SectionTitle>Pricing & stock</SectionTitle>
-      <div className="mx-5 rounded-3xl bg-card border border-border p-5 space-y-4">
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Price" value={`$${p.price.toFixed(2)}`} />
-          <Field label="Compare at" value={p.compareAt ? `$${p.compareAt.toFixed(2)}` : "—"} />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Stock" value={String(p.stock)} />
-          <Field label="Reorder point" value="15" />
-        </div>
-      </div>
-
-      <SectionTitle>AI merchandising</SectionTitle>
-      <div className="mx-5 rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white p-5 shadow-emerald">
-        <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-emerald-100 font-semibold"><Sparkles className="size-3.5" />AI copilot</div>
-        <div className="mt-2 text-[14px] font-semibold leading-snug">Generate a fresh product description tuned for your Gold tier shoppers.</div>
-        <div className="mt-4 flex gap-2">
-          <button className="flex-1 h-10 rounded-xl bg-white text-emerald-700 text-[12px] font-semibold">Generate copy</button>
-          <button className="h-10 px-3 rounded-xl bg-white/15 text-white text-[12px] font-semibold">Tags</button>
-        </div>
-      </div>
-
-      <SectionTitle>Badges</SectionTitle>
-      <div className="px-5 flex flex-wrap gap-2">
-        {["Organic", "In season", "Frequent buy", "Healthier pick", "New", "Local"].map((b, i) => (
-          <button key={b} className={`text-[11px] font-semibold rounded-full px-3 py-1.5 border ${i < 2 ? "bg-primary text-primary-foreground border-primary" : "bg-card text-foreground border-border"}`}>{b}</button>
-        ))}
-      </div>
-
-      <SectionTitle>Performance · 30d</SectionTitle>
-      <div className="mx-5 rounded-3xl bg-card border border-border p-5 grid grid-cols-3 gap-3">
-        {[
-          { l: "Units", v: "1,204" },
-          { l: "Revenue", v: "$1.8k" },
-          { l: "Return", v: "0.4%" },
-        ].map((k) => (
-          <div key={k.l}>
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{k.l}</div>
-            <div className="text-lg font-bold font-display tabular-nums mt-0.5">{k.v}</div>
-            <div className="text-[10px] text-emerald-600 font-semibold inline-flex items-center gap-0.5"><TrendingUp className="size-3" />+8%</div>
-          </div>
-        ))}
-      </div>
-
-      <div className="px-5 mt-5 flex gap-2">
-        <button className="flex-1 h-11 rounded-2xl bg-secondary text-[12px] font-semibold inline-flex items-center justify-center gap-1.5"><Copy className="size-4" />Duplicate</button>
-        <button className="flex-1 h-11 rounded-2xl bg-rose-50 text-rose-700 text-[12px] font-semibold inline-flex items-center justify-center gap-1.5"><Trash2 className="size-4" />Archive</button>
-      </div>
-    </AdminMobileShell>
-  );
-}
-
-function Field({ label, value }: { label: string; value: string }) {
-  return (
-    <label className="block">
-      <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">{label}</div>
-      <input defaultValue={value} className="w-full h-10 px-3 rounded-xl bg-secondary text-[13px] font-medium outline-none" />
-    </label>
-  );
+    </PageBody>
+  </>;
 }

@@ -1,8 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { toast } from "sonner";
 import { PageHeader, PageBody, SectionCard, StatusBadge, ToolbarButton } from "@/components/admin/primitives";
 import { Field, FormGrid, SelectInput, TextArea, TextInput, Toggle } from "@/components/admin/form";
 import { Sparkles } from "lucide-react";
+import { api } from "@/lib/api-client";
 
 export const Route = createFileRoute("/admin/promotion/new")({
   head: () => ({
@@ -25,16 +27,29 @@ function NewPromotion() {
   const [stackable, setStackable] = useState(false);
   const [firstOrder, setFirstOrder] = useState(false);
   const [autoApply, setAutoApply] = useState(true);
+  const [discountType, setDiscountType] = useState("percent");
+  const [minSpend, setMinSpend] = useState("");
+  const [usageLimit, setUsageLimit] = useState("1");
+  const [startsAt, setStartsAt] = useState("");
+  const [endsAt, setEndsAt] = useState("");
+  const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const next: Record<string, string> = {};
     if (!name.trim()) next.name = "Give the campaign a name.";
     if (type === "coupon" && !code.trim()) next.code = "Coupon code is required.";
     if (!value) next.value = "Set a discount value.";
     setErrors(next);
-    if (Object.keys(next).length === 0) navigate({ to: "/admin/promotions" });
+    if (Object.keys(next).length) return;
+    setSaving(true);
+    try {
+      await api.promotions.create({ name: name.trim(), code: (code.trim() || name.replace(/\W+/g, "").slice(0, 16)).toUpperCase(), type: discountType === "shipping" ? "free_delivery" : discountType, value: Number(value), minSpend: Number(minSpend || 0), usageLimit: Number(usageLimit || 0) || undefined, status: startsAt ? "scheduled" : "active", startsAt: startsAt || undefined, endsAt: endsAt || undefined });
+      toast.success(startsAt ? "Campaign scheduled" : "Campaign launched");
+      navigate({ to: "/admin/promotions" });
+    } catch (error) { toast.error("Could not create campaign", { description: error instanceof Error ? error.message : "Please try again." }); }
+    finally { setSaving(false); }
   };
 
   return (
@@ -45,7 +60,7 @@ function NewPromotion() {
         actions={
           <>
             <ToolbarButton variant="secondary" onClick={() => navigate({ to: "/admin/promotions" })}>Cancel</ToolbarButton>
-            <ToolbarButton variant="primary" onClick={submit}>Launch campaign</ToolbarButton>
+            <ToolbarButton variant="primary" disabled={saving} onClick={() => void submit({ preventDefault() {} } as React.FormEvent)}>{saving ? "Launching…" : "Launch campaign"}</ToolbarButton>
           </>
         }
       />
@@ -80,14 +95,14 @@ function NewPromotion() {
                   </Field>
                 )}
                 <Field label="Discount type">
-                  <SelectInput options={[{ value: "percent", label: "Percentage" }, { value: "fixed", label: "Fixed amount" }, { value: "shipping", label: "Free delivery" }]} />
+                  <SelectInput value={discountType} onChange={(e) => setDiscountType(e.target.value)} options={[{ value: "percent", label: "Percentage" }, { value: "fixed", label: "Fixed amount" }, { value: "shipping", label: "Free delivery" }]} />
                 </Field>
                 <Field label="Value" required error={errors.value}>
                   <TextInput type="number" value={value} onChange={(e) => setValue(e.target.value)} placeholder="20" />
                 </Field>
-                <Field label="Min basket"><TextInput type="number" placeholder="40" /></Field>
+                <Field label="Min basket"><TextInput type="number" value={minSpend} onChange={(e) => setMinSpend(e.target.value)} placeholder="40" /></Field>
                 <Field label="Max discount"><TextInput type="number" placeholder="25" /></Field>
-                <Field label="Usage limit per customer"><TextInput type="number" defaultValue={1} /></Field>
+                <Field label="Usage limit per customer"><TextInput type="number" value={usageLimit} onChange={(e) => setUsageLimit(e.target.value)} /></Field>
               </FormGrid>
             </SectionCard>
 
@@ -122,8 +137,8 @@ function NewPromotion() {
           <div className="space-y-5">
             <SectionCard title="Schedule">
               <FormGrid cols={1}>
-                <Field label="Starts"><TextInput type="datetime-local" /></Field>
-                <Field label="Ends" hint="Leave blank to run indefinitely."><TextInput type="datetime-local" /></Field>
+                <Field label="Starts"><TextInput type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} /></Field>
+                <Field label="Ends" hint="Leave blank to run indefinitely."><TextInput type="datetime-local" value={endsAt} onChange={(e) => setEndsAt(e.target.value)} /></Field>
                 <Field label="Timezone">
                   <SelectInput options={[{ value: "local", label: "Store local time" }, { value: "utc", label: "UTC" }]} />
                 </Field>

@@ -3,6 +3,7 @@
 
 const BASE_URL = (import.meta.env.VITE_API_URL as string) || "http://localhost:4000/api";
 const TOKEN_KEY = "freshly.admin.token";
+const USER_KEY = "freshly.admin.user";
 
 export function getToken() {
   return typeof window === "undefined" ? null : window.localStorage.getItem(TOKEN_KEY);
@@ -11,6 +12,23 @@ export function setToken(token: string | null) {
   if (typeof window === "undefined") return;
   if (token) window.localStorage.setItem(TOKEN_KEY, token);
   else window.localStorage.removeItem(TOKEN_KEY);
+}
+
+export function getCachedAdminUser(): AdminUser | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const value = window.localStorage.getItem(USER_KEY);
+    return value ? (JSON.parse(value) as AdminUser) : null;
+  } catch {
+    window.localStorage.removeItem(USER_KEY);
+    return null;
+  }
+}
+
+export function setCachedAdminUser(user: AdminUser | null) {
+  if (typeof window === "undefined") return;
+  if (user) window.localStorage.setItem(USER_KEY, JSON.stringify(user));
+  else window.localStorage.removeItem(USER_KEY);
 }
 
 export type ListResponse<T> = { data: T[]; page: number; limit: number; total: number; pages: number };
@@ -68,10 +86,23 @@ export const api = {
         body: JSON.stringify({ email, password }),
       });
       setToken(res.token);
+      setCachedAdminUser(res.user);
       return res;
     },
-    me: () => request<{ user: AdminUser }>("/auth/me"),
-    logout: () => setToken(null),
+    me: async () => {
+      const res = await request<{ user: AdminUser }>("/auth/me");
+      setCachedAdminUser(res.user);
+      return res;
+    },
+    updateProfile: async (payload: Pick<AdminUser, "name"> & { avatarUrl?: string }) => {
+      const res = await request<{ user: AdminUser }>("/auth/me", { method: "PATCH", body: JSON.stringify(payload) });
+      setCachedAdminUser(res.user);
+      return res;
+    },
+    logout: () => {
+      setToken(null);
+      setCachedAdminUser(null);
+    },
   },
 
   products: resource<Product>("/products"),
@@ -87,6 +118,8 @@ export const api = {
   },
   orders: {
     ...resource<Order>("/orders"),
+    createManual: (payload: { customerId: string; items: { productId: string; qty: number }[]; address?: string; deliveryFee?: number; channel?: "app" | "web" | "phone" }) =>
+      request<{ data: Order }>("/orders/manual", { method: "POST", body: JSON.stringify(payload) }),
     setStatus: (id: string, status: Order["status"], note?: string) =>
       request<{ data: Order }>(`/orders/${id}/status`, { method: "POST", body: JSON.stringify({ status, note }) }),
     refund: (id: string, amount: number) =>
@@ -96,10 +129,16 @@ export const api = {
   customers: resource<Customer>("/customers"),
   promotions: resource<Promotion>("/promotions"),
   banners: resource<Banner>("/banners"),
-  notifications: resource<NotificationRecord>("/notifications"),
+  notifications: {
+    ...resource<NotificationRecord>("/notifications"),
+    send: (id: string) => request<{ data: NotificationRecord; delivered: number }>(`/notifications/${id}/send`, { method: "POST" }),
+    mine: () => request<{ data: UserNotification[]; unread: number }>("/notifications/mine"),
+    markRead: (id: string) => request<{ data: UserNotification }>(`/notifications/mine/${id}/read`, { method: "PATCH" }),
+    registerDevice: (token: string, platform: "ios" | "android" | "web" = "web") => request<{ ok: boolean }>("/notifications/device-token", { method: "POST", body: JSON.stringify({ token, platform }) }),
+  },
   reports: resource<ScheduledReport>("/reports"),
   aiAgents: resource<AiAgent>("/ai/agents"),
-  team: resource<AdminUser>("/team"),
+  team: { ...resource<AdminUser>("/team"), invite: (email: string, role: string) => request<{ data: AdminUser; delivery?: { testMode: boolean; previewUrl?: string | null } }>("/team/invite", { method: "POST", body: JSON.stringify({ email, role }) }) },
   roles: resource<RoleRecord>("/roles"),
   apiKeys: resource<ApiKeyRecord>("/api-keys"),
   integrations: resource<IntegrationRecord>("/integrations"),
@@ -108,19 +147,20 @@ export const api = {
   audit: (query?: Query) => request<{ data: AuditEntry[] }>(`/audit${qs(query)}`),
 
   analytics: {
-    kpis: () => request<{ data: Kpis }>("/analytics/kpis"),
-    revenueSeries: (days = 30) => request<{ data: { date: string; revenue: number; orders: number }[] }>(`/analytics/revenue-series?days=${days}`),
-    topProducts: () => request<{ data: { _id: string; name: string; units: number; revenue: number }[] }>("/analytics/top-products"),
-    categoryMix: () => request<{ data: { category: string; revenue: number }[] }>("/analytics/category-mix"),
-    funnel: () => request<{ data: { step: string; users: number }[] }>("/analytics/funnel"),
-    cohorts: () => request<{ data: { month: string; size: number; avgLtv: number }[] }>("/analytics/cohorts"),
+    kpis: (days = 30, category?: string) => request<{ data: Kpis }>(`/analytics/kpis${qs({ days, category })}`),
+    revenueSeries: (days = 30, category?: string) => request<{ data: { date: string; revenue: number; orders: number }[] }>(`/analytics/revenue-series${qs({ days, category })}`),
+    topProducts: (days = 30, category?: string) => request<{ data: { _id: string; name: string; units: number; revenue: number }[] }>(`/analytics/top-products${qs({ days, category })}`),
+    categoryMix: (days = 30) => request<{ data: { category: string; revenue: number }[] }>(`/analytics/category-mix${qs({ days })}`),
+    funnel: (days = 30) => request<{ data: { step: string; users: number }[] }>(`/analytics/funnel${qs({ days })}`),
+    cohorts: () => request<{ data: { month: string; size: number; avgLtv: number; repeatRate: number; orders: number }[] }>("/analytics/cohorts"),
+    geography: (days = 30) => request<{ data: { region: string; orders: number; revenue: number }[] }>(`/analytics/geography${qs({ days })}`),
   },
 };
 
 /* ---------------- types mirroring server/src/models ---------------- */
 
 export type Id = string;
-export type AdminUser = { id?: Id; _id?: Id; name: string; email: string; role: string; status?: string; mfaEnabled?: boolean; lastActiveAt?: string };
+export type AdminUser = { id?: Id; _id?: Id; name: string; email: string; role: string; status?: string; mfaEnabled?: boolean; lastActiveAt?: string; avatarUrl?: string };
 export type Category = { _id: Id; slug: string; name: string; emoji?: string; sortOrder?: number };
 export type Product = {
   _id: Id; slug: string; name: string; brand?: string; description?: string; price: number; compareAt?: number;
@@ -139,14 +179,15 @@ export type Order = {
   paymentStatus: string; channel: string; address?: string; courier?: string; placedAt: string; deliveredAt?: string;
   timeline: { label: string; at: string; note?: string }[];
 };
-export type ReturnCase = { _id: Id; reference: string; reason: string; items: number; amount: number; status: string; createdAt: string };
+export type ReturnCase = { _id: Id; reference: string; reason: string; items: number; amount: number; status: string; resolutionNote?: string; createdAt: string };
 export type Customer = {
   _id: Id; name: string; email: string; phone?: string; tier: string; lifetimeValue: number; ordersCount: number;
   churnRisk: "low" | "medium" | "high"; city?: string; lastOrderAt?: string;
 };
 export type Promotion = { _id: Id; code: string; name?: string; type: string; value: number; minSpend?: number; usageLimit?: number; usedCount: number; status: string; startsAt?: string; endsAt?: string };
 export type Banner = { _id: Id; title: string; subtitle?: string; slot: number; ctaLabel?: string; status: string; impressions: number; clicks: number; startsAt?: string; endsAt?: string };
-export type NotificationRecord = { _id: Id; title: string; body?: string; channel: string; category: string; status: string; scheduledFor?: string; sentAt?: string; stats?: { delivered?: number; opened?: number; clicked?: number } };
+export type NotificationRecord = { _id: Id; title: string; body?: string; channel: string; audience?: string; category: string; status: string; scheduledFor?: string; sentAt?: string; stats?: { delivered?: number; opened?: number; clicked?: number } };
+export type UserNotification = { _id: Id; title: string; body?: string; category?: string; channel: string; readAt?: string; createdAt: string };
 export type ScheduledReport = { _id: Id; name: string; cadence: string; recipients: string[]; format: string; nextRunAt?: string; status: string };
 export type AiAgent = { _id: Id; key: string; name: string; purpose?: string; model: string; temperature: number; systemPrompt?: string; enabled: boolean; autonomy: string; runsLast30d: number };
 export type RoleRecord = { _id: Id; name: string; description?: string; matrix: Record<string, string[]> };

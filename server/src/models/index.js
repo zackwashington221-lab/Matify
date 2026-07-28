@@ -179,7 +179,7 @@ export const Promotion = def("Promotion", {
   audience: { type: String, default: "all" },
   startsAt: Date,
   endsAt: Date,
-  status: { type: String, enum: ["draft", "scheduled", "active", "ended"], default: "draft", index: true },
+  status: { type: String, enum: ["draft", "scheduled", "active", "ended", "archived"], default: "draft", index: true },
 });
 
 export const Banner = def("Banner", {
@@ -207,6 +207,24 @@ export const Notification = def("Notification", {
   scheduledFor: Date,
   sentAt: Date,
   stats: { delivered: Number, opened: Number, clicked: Number },
+});
+
+export const DeviceToken = def("DeviceToken", {
+  user: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
+  token: { type: String, required: true, unique: true },
+  platform: { type: String, enum: ["ios", "android", "web"], default: "web" },
+  active: { type: Boolean, default: true },
+  lastSeenAt: { type: Date, default: Date.now },
+});
+
+export const UserNotification = def("UserNotification", {
+  user: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
+  campaign: { type: Schema.Types.ObjectId, ref: "Notification" },
+  title: { type: String, required: true },
+  body: String,
+  category: String,
+  channel: { type: String, default: "inapp" },
+  readAt: Date,
 });
 
 /* ---------------- AI ---------------- */

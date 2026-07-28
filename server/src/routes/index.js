@@ -4,6 +4,8 @@ import storefrontRoutes from "./storefront.routes.js";
 import ordersRoutes from "./orders.routes.js";
 import inventoryRoutes from "./inventory.routes.js";
 import analyticsRoutes from "./analytics.routes.js";
+import notificationsRoutes from "./notifications.routes.js";
+import teamRoutes from "./team.routes.js";
 import { crudRouter } from "../utils/crud.js";
 import { requireAdmin, requireAuth, requireRole } from "../middleware/auth.js";
 import {
@@ -43,7 +45,7 @@ router.use("/customers", crudRouter(Customer, {
 // growth
 router.use("/promotions", crudRouter(Promotion, { searchFields: ["code", "name"], filterFields: ["status", "type"], resourceName: "promotion" }));
 router.use("/banners", crudRouter(Banner, { searchFields: ["title", "subtitle"], filterFields: ["status"], defaultSort: "slot", resourceName: "banner" }));
-router.use("/notifications", crudRouter(Notification, { searchFields: ["title", "body"], filterFields: ["status", "channel", "category"], resourceName: "notification" }));
+router.use("/notifications", notificationsRoutes);
 
 // analytics & reporting
 router.use("/analytics", analyticsRoutes);
@@ -54,12 +56,7 @@ router.use("/ai/agents", crudRouter(AiAgent, { searchFields: ["name", "key", "pu
 router.use("/ai/runs", crudRouter(AiRun, { populate: "agent", filterFields: ["status"], resourceName: "airun" }));
 
 // administration
-router.use("/team", crudRouter(User, {
-  searchFields: ["name", "email"],
-  filterFields: ["role", "status"],
-  writeGuard: [requireAuth, requireRole("Owner", "Admin")],
-  resourceName: "member",
-}));
+router.use("/team", teamRoutes);
 router.use("/roles", crudRouter(Role, { searchFields: ["name"], writeGuard: [requireAuth, requireRole("Owner", "Admin")], resourceName: "role" }));
 router.use("/api-keys", crudRouter(ApiKey, {
   searchFields: ["label", "prefix"],

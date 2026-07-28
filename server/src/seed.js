@@ -37,11 +37,23 @@ const PRODUCTS = [
 
 async function run() {
   await connectDB();
-  console.log("[seed] clearing collections…");
-  await Promise.all(
-    [User, Role, ApiKey, Integration, Category, Product, InventoryItem, Customer, Order, ReturnCase,
-      Promotion, Banner, Notification, AiAgent, ScheduledReport, Setting, AuditLog].map((M) => M.deleteMany({}))
-  );
+  const models = [User, Role, ApiKey, Integration, Category, Product, InventoryItem, Customer, Order, ReturnCase,
+    Promotion, Banner, Notification, AiAgent, ScheduledReport, Setting, AuditLog];
+  const reset = process.argv.includes("--reset");
+  const existingDocuments = (await Promise.all(models.map((Model) => Model.estimatedDocumentCount()))).reduce((total, count) => total + count, 0);
+
+  if (existingDocuments > 0 && !reset) {
+    console.log(`[seed] skipped — database already contains ${existingDocuments} documents. Use npm run seed:reset to replace them.`);
+    await mongoose.disconnect();
+    return;
+  }
+
+  if (reset) {
+    console.log("[seed] reset requested — clearing demo collections…");
+    await Promise.all(models.map((Model) => Model.deleteMany({})));
+  } else {
+    console.log("[seed] empty database detected — loading demonstration data…");
+  }
 
   /* users & roles */
   const hash = await bcrypt.hash("Password123!", 10);

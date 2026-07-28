@@ -2,6 +2,7 @@
 
 Separate Expo app for customers. It talks to the same backend as the admin panel
 (`server/`), so nothing is duplicated between the two clients.
+npm ls expo react react-native
 
 ```bash
 cd mobile
@@ -29,14 +30,14 @@ mobile/
 
 The web admin/customer screens map 1:1 onto these primitives:
 
-| Web | Native |
-| --- | --- |
-| `div` / `section` | `View` |
-| `p`, `span`, `h1` | `Text` (styles from `src/theme.ts`) |
-| Tailwind classes | `StyleSheet` objects using `colors`/`spacing`/`radius` |
-| `button` | `Pressable` / `Button` from `components/ui` |
-| `<Link to>` / router | `navigation.navigate(...)` |
-| scroll container | `ScrollView` / `FlatList` |
+| Web                  | Native                                                 |
+| -------------------- | ------------------------------------------------------ |
+| `div` / `section`    | `View`                                                 |
+| `p`, `span`, `h1`    | `Text` (styles from `src/theme.ts`)                    |
+| Tailwind classes     | `StyleSheet` objects using `colors`/`spacing`/`radius` |
+| `button`             | `Pressable` / `Button` from `components/ui`            |
+| `<Link to>` / router | `navigation.navigate(...)`                             |
+| scroll container     | `ScrollView` / `FlatList`                              |
 
 Keep business logic in `src/api/client.ts` and the contexts — only the
 presentation layer differs between web and native.

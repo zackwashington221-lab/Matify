@@ -12,14 +12,22 @@ export function ProductCard({ product, onPress }: { product: Product; onPress: (
         <Text style={{ fontSize: 40 }}>{product.emoji || "🛒"}</Text>
       </View>
       {product.aiTag ? (
-        <Text style={[type.caption, { color: colors.primary, fontWeight: "700", marginTop: 8 }]}>{product.aiTag}</Text>
+        <Text style={[type.caption, { color: colors.primary, fontWeight: "700", marginTop: 8 }]}>
+          {product.aiTag}
+        </Text>
       ) : null}
-      <Text style={[type.label, { marginTop: 4 }]} numberOfLines={1}>{product.name}</Text>
-      <Text style={type.caption} numberOfLines={1}>{product.brand} · {product.unit}</Text>
+      <Text style={[type.label, { marginTop: 4 }]} numberOfLines={1}>
+        {product.name}
+      </Text>
+      <Text style={type.caption} numberOfLines={1}>
+        {product.brand} · {product.unit}
+      </Text>
       <View style={{ flexDirection: "row", alignItems: "baseline", gap: 6, marginTop: 6 }}>
         <Text style={[type.label, { fontSize: 15 }]}>{money(product.price)}</Text>
         {product.compareAt ? (
-          <Text style={[type.caption, { textDecorationLine: "line-through" }]}>{money(product.compareAt)}</Text>
+          <Text style={[type.caption, { textDecorationLine: "line-through" }]}>
+            {money(product.compareAt)}
+          </Text>
         ) : null}
       </View>
     </Pressable>
@@ -33,12 +41,21 @@ export default function HomeScreen({ navigation }: any) {
   const [active, setActive] = useState("all");
 
   useEffect(() => {
-    api.categories().then(setCategories).catch(() => {});
-    api.banners().then(setBanners).catch(() => {});
+    api
+      .categories()
+      .then(setCategories)
+      .catch(() => {});
+    api
+      .banners()
+      .then(setBanners)
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
-    api.products({ category: active === "all" ? undefined : active }).then(setProducts).catch(() => {});
+    api
+      .products({ category: active === "all" ? undefined : active })
+      .then(setProducts)
+      .catch(() => {});
   }, [active]);
 
   return (
@@ -48,20 +65,37 @@ export default function HomeScreen({ navigation }: any) {
         <Text style={[type.display, { marginTop: 2 }]}>Good morning</Text>
 
         {banners[0] ? (
-          <Card style={{ marginTop: spacing.lg, backgroundColor: colors.primaryTint, borderColor: colors.primaryTint }}>
+          <Card
+            style={{
+              marginTop: spacing.lg,
+              backgroundColor: colors.primaryTint,
+              borderColor: colors.primaryTint,
+            }}
+          >
             <Text style={[type.title, { color: colors.primary }]}>{banners[0].title}</Text>
             <Text style={[type.caption, { marginTop: 4 }]}>{banners[0].subtitle}</Text>
           </Card>
         ) : null}
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: spacing.xl }}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={{ marginTop: spacing.xl }}
+        >
           <Chip label="All" active={active === "all"} onPress={() => setActive("all")} />
           {categories.map((c) => (
-            <Chip key={c._id} label={`${c.emoji || ""} ${c.name}`} active={active === c.slug} onPress={() => setActive(c.slug)} />
+            <Chip
+              key={c._id}
+              label={`${c.emoji || ""} ${c.name}`}
+              active={active === c.slug}
+              onPress={() => setActive(c.slug)}
+            />
           ))}
         </ScrollView>
 
-        <Text style={[type.title, { marginTop: spacing.xl, marginBottom: spacing.md }]}>Picked for you</Text>
+        <Text style={[type.title, { marginTop: spacing.xl, marginBottom: spacing.md }]}>
+          Picked for you
+        </Text>
         <FlatList
           data={products}
           scrollEnabled={false}
@@ -70,7 +104,10 @@ export default function HomeScreen({ navigation }: any) {
           columnWrapperStyle={{ gap: spacing.md }}
           contentContainerStyle={{ gap: spacing.md }}
           renderItem={({ item }) => (
-            <ProductCard product={item} onPress={() => navigation.navigate("Product", { slug: item.slug })} />
+            <ProductCard
+              product={item}
+              onPress={() => navigation.navigate("Product", { slug: item.slug })}
+            />
           )}
         />
       </ScrollView>

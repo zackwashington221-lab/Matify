@@ -9,6 +9,8 @@ export type Column<T> = {
   render: (row: T) => ReactNode;
   sortable?: boolean;
   sortAccessor?: (row: T) => string | number;
+  /** Plain-text value used by CSV exports when the rendered cell is JSX. */
+  exportValue?: (row: T) => string | number;
   className?: string;
   headerClassName?: string;
   align?: "left" | "right" | "center";
@@ -34,7 +36,7 @@ function toCsv<T>(rows: T[], cols: Column<T>[]) {
   const header = cols.map((c) => `"${c.header}"`).join(",");
   const body = rows.map((row) =>
     cols.map((c) => {
-      const v = c.sortAccessor ? c.sortAccessor(row) : "";
+      const v = c.exportValue ? c.exportValue(row) : c.sortAccessor ? c.sortAccessor(row) : "";
       const str = String(v ?? "").replace(/"/g, '""');
       return `"${str}"`;
     }).join(",")

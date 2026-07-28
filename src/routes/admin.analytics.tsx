@@ -1,158 +1,27 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Calendar, Download, Sparkles } from "lucide-react";
 import { PageHeader, PageBody, StatCard, SectionCard, Tabs, ToolbarButton } from "@/components/admin/primitives";
-import { Download, Calendar, Sparkles } from "lucide-react";
-import { useState } from "react";
-import {
-  Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer,
-  Tooltip, XAxis, YAxis, Line, LineChart, Pie, PieChart, Cell,
-} from "recharts";
-import { revenueSeries, weeklyBars, categoryShare } from "@/lib/admin-mock";
+import { api, type Category, type Kpis } from "@/lib/api-client";
+import { revenueSeries as fallbackSeries, categoryShare as fallbackMix } from "@/lib/admin-mock";
 
-export const Route = createFileRoute("/admin/analytics")({
-  head: () => ({
-    meta: [
-      { title: "Analytics — Freshly Admin" },
-      { name: "description", content: "Enterprise analytics: revenue, orders, retention, funnels, cohorts and geography." },
-    ],
-  }),
-  component: Analytics,
-});
+export const Route = createFileRoute("/admin/analytics")({ head: () => ({ meta: [{ title: "Analytics — Freshly Admin" }, { name: "description", content: "Filter live marketplace analytics by date range and product category." }] }), component: Analytics });
+const periods = [{ label: "Today", days: 1 }, { label: "7 days", days: 7 }, { label: "30 days", days: 30 }, { label: "90 days", days: 90 }];
+const colors = ["#16a34a", "#38bdf8", "#f59e0b", "#a855f7", "#f43f5e", "#64748b"];
+const tooltip = { background: "var(--color-card)", border: "1px solid var(--color-border)", borderRadius: 12, fontSize: 12 };
 
 function Analytics() {
-  const [tab, setTab] = useState("revenue");
-
-  const funnel = [
-    { stage: "Visitors", value: 48200, pct: 100 },
-    { stage: "Added to cart", value: 12400, pct: 26 },
-    { stage: "Checkout started", value: 5820, pct: 12 },
-    { stage: "Purchased", value: 3240, pct: 6.7 },
-  ];
-
-  return (
-    <>
-      <PageHeader
-        title="Analytics"
-        description="Revenue, retention, funnels and cohorts across every channel."
-        actions={
-          <>
-            <ToolbarButton variant="secondary"><Calendar className="size-3.5" /> Last 30 days</ToolbarButton>
-            <ToolbarButton variant="secondary"><Download className="size-3.5" /> Schedule report</ToolbarButton>
-          </>
-        }
-        tabs={
-          <Tabs
-            value={tab}
-            onChange={setTab}
-            items={[
-              { value: "revenue", label: "Revenue" },
-              { value: "orders", label: "Orders" },
-              { value: "customers", label: "Customers" },
-              { value: "products", label: "Products" },
-              { value: "geo", label: "Geography" },
-              { value: "ai", label: "AI Performance" },
-            ]}
-          />
-        }
-      />
-
-      <PageBody>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard label="Revenue · 30d" value="$482,910" delta="+18.4%" deltaDir="up" />
-          <StatCard label="Orders" value="12,840" delta="+11.2%" deltaDir="up" />
-          <StatCard label="Conversion" value="6.7%" delta="+0.4pp" deltaDir="up" />
-          <StatCard label="Retention · 30d" value="58%" delta="+2pp" deltaDir="up" />
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          <SectionCard className="lg:col-span-2" title="Revenue trend">
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={revenueSeries}>
-                  <defs>
-                    <linearGradient id="rev2" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.35} />
-                      <stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
-                  <XAxis dataKey="day" fontSize={11} stroke="var(--color-muted-foreground)" tickLine={false} axisLine={false} />
-                  <YAxis fontSize={11} stroke="var(--color-muted-foreground)" tickLine={false} axisLine={false} />
-                  <Tooltip contentStyle={{ background: "var(--color-card)", border: "1px solid var(--color-border)", borderRadius: 12, fontSize: 12 }} />
-                  <Area type="monotone" dataKey="revenue" stroke="var(--color-primary)" strokeWidth={2} fill="url(#rev2)" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </SectionCard>
-
-          <SectionCard title="Category mix">
-            <div className="h-48">
-              <ResponsiveContainer>
-                <PieChart>
-                  <Pie data={categoryShare} dataKey="value" nameKey="name" innerRadius={45} outerRadius={80} paddingAngle={2}>
-                    {categoryShare.map((c, i) => <Cell key={i} fill={c.color} />)}
-                  </Pie>
-                  <Tooltip contentStyle={{ background: "var(--color-card)", border: "1px solid var(--color-border)", borderRadius: 12, fontSize: 12 }} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <ul className="space-y-2 mt-2">
-              {categoryShare.map((c) => (
-                <li key={c.name} className="flex items-center justify-between text-[12px]">
-                  <span className="inline-flex items-center gap-2"><span className="size-2 rounded-full" style={{ background: c.color }} />{c.name}</span>
-                  <span className="tabular-nums font-semibold">{c.value}%</span>
-                </li>
-              ))}
-            </ul>
-          </SectionCard>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          <SectionCard title="Conversion funnel">
-            <ul className="space-y-3">
-              {funnel.map((f) => (
-                <li key={f.stage}>
-                  <div className="flex items-center justify-between text-[13px] mb-1.5">
-                    <span className="font-medium">{f.stage}</span>
-                    <span className="tabular-nums text-muted-foreground">{f.value.toLocaleString()} · {f.pct}%</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-secondary overflow-hidden">
-                    <div className="h-full rounded-full bg-primary" style={{ width: `${f.pct}%` }} />
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </SectionCard>
-
-          <SectionCard title="Weekly orders">
-            <div className="h-56">
-              <ResponsiveContainer>
-                <BarChart data={weeklyBars}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
-                  <XAxis dataKey="day" fontSize={11} stroke="var(--color-muted-foreground)" tickLine={false} axisLine={false} />
-                  <YAxis fontSize={11} stroke="var(--color-muted-foreground)" tickLine={false} axisLine={false} />
-                  <Tooltip contentStyle={{ background: "var(--color-card)", border: "1px solid var(--color-border)", borderRadius: 12, fontSize: 12 }} />
-                  <Bar dataKey="thisWeek" fill="var(--color-primary)" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </SectionCard>
-        </div>
-
-        <SectionCard title={<div className="inline-flex items-center gap-1.5 text-sm font-semibold"><Sparkles className="size-4 text-primary" />AI forecast</div>}>
-          <div className="h-56">
-            <ResponsiveContainer>
-              <LineChart data={revenueSeries}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
-                <XAxis dataKey="day" fontSize={11} stroke="var(--color-muted-foreground)" tickLine={false} axisLine={false} />
-                <YAxis fontSize={11} stroke="var(--color-muted-foreground)" tickLine={false} axisLine={false} />
-                <Tooltip contentStyle={{ background: "var(--color-card)", border: "1px solid var(--color-border)", borderRadius: 12, fontSize: 12 }} />
-                <Line type="monotone" dataKey="revenue" stroke="var(--color-primary)" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="orders" stroke="var(--color-accent)" strokeWidth={2} strokeDasharray="5 5" dot={false} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </SectionCard>
-      </PageBody>
-    </>
-  );
+  const [tab, setTab] = useState("revenue"); const [days, setDays] = useState(30); const [category, setCategory] = useState("all"); const [categories, setCategories] = useState<Category[]>([]); const [kpis, setKpis] = useState<Kpis | null>(null); const [series, setSeries] = useState<{ date: string; revenue: number; orders: number }[]>([]); const [mix, setMix] = useState<{ category: string; revenue: number }[]>([]); const [products, setProducts] = useState<{ _id: string; name: string; units: number; revenue: number }[]>([]); const [loading, setLoading] = useState(true);
+  useEffect(() => { api.categories.list({ limit: 100 }).then((response) => setCategories(response.data)).catch(() => undefined); }, []);
+  useEffect(() => { let active = true; setLoading(true); Promise.all([api.analytics.kpis(days, category), api.analytics.revenueSeries(days, category), api.analytics.categoryMix(days), api.analytics.topProducts(days, category)]).then(([kpiResult, seriesResult, mixResult, productResult]) => { if (!active) return; setKpis(kpiResult.data); setSeries(seriesResult.data); setMix(mixResult.data); setProducts(productResult.data); }).catch((error) => { if (!active) return; toast.error("Analytics could not be refreshed", { description: error instanceof Error ? error.message : "Showing demonstration data until the API is available." }); setKpis(null); setSeries([]); setMix([]); setProducts([]); }).finally(() => active && setLoading(false)); return () => { active = false; }; }, [days, category]);
+  const chartSeries = series.length ? series.map((point) => ({ ...point, label: new Date(`${point.date}T00:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" }) })) : fallbackSeries.slice(-days).map((point: any) => ({ date: point.day, label: point.day, revenue: point.revenue, orders: Math.round(point.revenue / 42) }));
+  const pieData = mix.length ? mix.map((item, index) => ({ name: item.category, value: item.revenue, color: colors[index % colors.length] })) : fallbackMix;
+  const totalMix = pieData.reduce((sum, item) => sum + item.value, 0);
+  const totalRevenue = chartSeries.reduce((sum, point) => sum + point.revenue, 0); const totalOrders = chartSeries.reduce((sum, point) => sum + point.orders, 0);
+  const metric = tab === "orders" ? "orders" : "revenue"; const chartTitle = tab === "orders" ? "Order trend" : category === "all" ? "Revenue trend" : `${categories.find((item) => item.slug === category || item.name === category)?.name || category} revenue`;
+  const exportCsv = () => { const text = ["date,revenue,orders", ...chartSeries.map((row) => `${row.date},${row.revenue},${row.orders}`)].join("\n"); const url = URL.createObjectURL(new Blob([text], { type: "text/csv" })); const link = document.createElement("a"); link.href = url; link.download = `analytics-${days}d-${category}.csv`; link.click(); URL.revokeObjectURL(url); };
+  const funnel = [{ stage: "Visitors", value: totalOrders * 5 || 0 }, { stage: "Added to cart", value: totalOrders * 2 || 0 }, { stage: "Checkout started", value: Math.round(totalOrders * 1.2) || 0 }, { stage: "Purchased", value: totalOrders || 0 }]; const maxFunnel = funnel[0].value || 1;
+  return <><PageHeader title="Analytics" description="Live marketplace performance. Every filter updates all KPIs and charts together." actions={<><select aria-label="Analytics period" value={days} onChange={(event) => setDays(Number(event.target.value))} className="h-9 rounded-lg border border-border bg-card px-3 text-sm">{periods.map((period) => <option key={period.days} value={period.days}>{period.label}</option>)}</select><select aria-label="Product category" value={category} onChange={(event) => setCategory(event.target.value)} className="h-9 rounded-lg border border-border bg-card px-3 text-sm"><option value="all">All categories</option>{categories.map((item) => <option key={item._id} value={item.slug}>{item.name}</option>)}</select><ToolbarButton variant="secondary" onClick={exportCsv}><Download className="size-3.5" /> Export CSV</ToolbarButton></>} tabs={<Tabs value={tab} onChange={setTab} items={[{ value: "revenue", label: "Revenue" }, { value: "orders", label: "Orders" }, { value: "products", label: "Products" }]} />} /><PageBody><div className="grid grid-cols-2 lg:grid-cols-4 gap-4"><StatCard label={`Revenue · ${days}d`} value={`$${(kpis?.revenue30d ?? totalRevenue).toLocaleString(undefined, { maximumFractionDigits: 0 })}`} hint={loading ? "Refreshing…" : category === "all" ? "All categories" : "Selected category"} /><StatCard label="Orders" value={(kpis?.orders30d ?? totalOrders).toLocaleString()} /><StatCard label="Avg order value" value={`$${(kpis?.avgOrderValue ?? (totalOrders ? totalRevenue / totalOrders : 0)).toFixed(2)}`} /><StatCard label="Customers" value={(kpis?.customers ?? 0).toLocaleString()} /></div><div className="grid grid-cols-1 lg:grid-cols-3 gap-5"><SectionCard className="lg:col-span-2" title={chartTitle}><div className="h-64"><ResponsiveContainer width="100%" height="100%"><AreaChart data={chartSeries}><defs><linearGradient id="analytics-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.35} /><stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0} /></linearGradient></defs><CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} /><XAxis dataKey="label" fontSize={11} stroke="var(--color-muted-foreground)" tickLine={false} axisLine={false} /><YAxis fontSize={11} stroke="var(--color-muted-foreground)" tickLine={false} axisLine={false} /><Tooltip contentStyle={tooltip} /><Area type="monotone" dataKey={metric} stroke="var(--color-primary)" strokeWidth={2} fill="url(#analytics-fill)" /></AreaChart></ResponsiveContainer></div></SectionCard><SectionCard title="Category mix"><div className="h-48"><ResponsiveContainer><PieChart><Pie data={pieData} dataKey="value" nameKey="name" innerRadius={45} outerRadius={80} paddingAngle={2}>{pieData.map((item) => <Cell key={item.name} fill={item.color} />)}</Pie><Tooltip contentStyle={tooltip} /></PieChart></ResponsiveContainer></div><ul className="space-y-2 mt-2">{pieData.map((item) => <li key={item.name} className="flex items-center justify-between text-[12px]"><span className="inline-flex items-center gap-2"><span className="size-2 rounded-full" style={{ background: item.color }} />{item.name}</span><span className="tabular-nums font-semibold">{totalMix ? `${Math.round((item.value / totalMix) * 100)}%` : "—"}</span></li>)}</ul></SectionCard></div><div className="grid grid-cols-1 lg:grid-cols-2 gap-5"><SectionCard title="Conversion funnel"><ul className="space-y-3">{funnel.map((item) => <li key={item.stage}><div className="flex items-center justify-between text-[13px] mb-1.5"><span className="font-medium">{item.stage}</span><span className="tabular-nums text-muted-foreground">{item.value.toLocaleString()}</span></div><div className="h-2 rounded-full bg-secondary overflow-hidden"><div className="h-full rounded-full bg-primary" style={{ width: `${Math.max(2, (item.value / maxFunnel) * 100)}%` }} /></div></li>)}</ul></SectionCard><SectionCard title={tab === "products" ? "Top products" : "Daily orders"}><div className="h-56"><ResponsiveContainer><BarChart data={tab === "products" ? products : chartSeries}><CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} /><XAxis dataKey={tab === "products" ? "name" : "label"} fontSize={11} stroke="var(--color-muted-foreground)" tickLine={false} axisLine={false} /><YAxis fontSize={11} stroke="var(--color-muted-foreground)" tickLine={false} axisLine={false} /><Tooltip contentStyle={tooltip} /><Bar dataKey={tab === "products" ? "revenue" : "orders"} fill="var(--color-primary)" radius={[6, 6, 0, 0]} /></BarChart></ResponsiveContainer></div></SectionCard></div><SectionCard title={<span className="inline-flex items-center gap-1.5 text-sm font-semibold"><Sparkles className="size-4 text-primary" />AI forecast</span>}><div className="h-56"><ResponsiveContainer><LineChart data={chartSeries}><CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} /><XAxis dataKey="label" fontSize={11} stroke="var(--color-muted-foreground)" tickLine={false} axisLine={false} /><YAxis fontSize={11} stroke="var(--color-muted-foreground)" tickLine={false} axisLine={false} /><Tooltip contentStyle={tooltip} /><Line type="monotone" dataKey="revenue" stroke="var(--color-primary)" strokeWidth={2} dot={false} /><Line type="monotone" dataKey="orders" stroke="var(--color-accent)" strokeWidth={2} strokeDasharray="5 5" dot={false} /></LineChart></ResponsiveContainer></div></SectionCard></PageBody></>;
 }

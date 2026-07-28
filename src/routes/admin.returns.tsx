@@ -1,18 +1,21 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
+import { api } from "@/lib/api-client";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PageHeader, PageBody, SectionCard, StatCard, StatusBadge, Tabs, ToolbarButton } from "@/components/admin/primitives";
 import { DataTable, type Column } from "@/components/admin/DataTable";
 import { Field, FormGrid, SelectInput, TextArea, TextInput } from "@/components/admin/form";
-import { RotateCcw, ShieldCheck } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 import { returnCases, type ReturnCase } from "@/lib/admin-platform-mock";
 
 export const Route = createFileRoute("/admin/returns")({
   head: () => ({
     meta: [
-      { title: "Returns & Refunds — Freshly Admin" },
-      { name: "description", content: "Review return requests, approve refunds within policy and track refund spend by reason." },
-      { property: "og:title", content: "Returns & Refunds — Freshly Admin" },
-      { property: "og:description", content: "Review return requests, approve refunds within policy and track refund spend by reason." },
+      { title: "Return Orders — Freshly Admin" },
+      { name: "description", content: "Review returned orders, approve refunds within policy and track refund spend by reason." },
+      { property: "og:title", content: "Return Orders — Freshly Admin" },
+      { property: "og:description", content: "Review returned orders, approve refunds within policy and track refund spend by reason." },
     ],
   }),
   component: ReturnsPage,
@@ -23,8 +26,33 @@ const tone = { requested: "warning", approved: "info", refunded: "success", reje
 function ReturnsPage() {
   const [tab, setTab] = useState("all");
   const [active, setActive] = useState<ReturnCase | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [liveCases, setLiveCases] = useState<ReturnCase[] | null>(null);
+  const [note, setNote] = useState("");
 
-  const rows = tab === "all" ? returnCases : returnCases.filter((r) => r.status === tab);
+  const loadCases = useCallback(async () => {
+    try {
+      const response = await api.returns.list({ limit: 200 });
+      const mapped = response.data.map((item: any) => ({
+        id: item._id,
+        orderId: item.order?.reference || "Order",
+        customer: item.customer?.name || "Customer",
+        reason: item.reason,
+        items: item.items,
+        amount: item.amount,
+        status: item.status,
+        openedAt: item.createdAt,
+      })) as ReturnCase[];
+      setLiveCases(mapped.length ? mapped : null);
+    } catch {
+      toast.error("Returns could not be refreshed", { description: "Showing demonstration return data until the API is available." });
+    }
+  }, []);
+
+  useEffect(() => { loadCases(); }, [loadCases]);
+
+  const caseData = liveCases || returnCases;
+  const rows = tab === "all" ? caseData : caseData.filter((r) => r.status === tab);
 
   const columns: Column<ReturnCase>[] = [
     { key: "id", header: "Case", sortable: true, sortAccessor: (r) => r.id, render: (r) => <span className="font-semibold tabular-nums">{r.id}</span> },
@@ -36,44 +64,67 @@ function ReturnsPage() {
     { key: "status", header: "Status", render: (r) => <StatusBadge tone={tone[r.status]}>{r.status}</StatusBadge> },
     {
       key: "actions", header: "", align: "right",
-      render: (r) => <ToolbarButton variant="secondary" onClick={() => setActive(r)}>Review</ToolbarButton>,
+      render: (r) => <ToolbarButton variant="secondary" onClick={() => { setNote(""); setActive(r); }}>Review</ToolbarButton>,
     },
   ];
+
+  async function decide(status: "approved" | "rejected" | "refunded") {
+    if (!active) return;
+    setSaving(true);
+    try {
+      await api.returns.update(active.id, { status, resolutionNote: note.trim() || `${status} from admin returns review` });
+      toast.success(status === "rejected" ? "Return rejected" : status === "refunded" ? "Return refunded" : "Return approved");
+      setActive(null);
+      setNote("");
+      await loadCases();
+    } catch (error) {
+      toast.error("Could not update return", { description: error instanceof Error ? error.message : "Please try again." });
+    } finally { setSaving(false); }
+  }
+
+  async function decideMany(selected: ReturnCase[], status: "approved" | "rejected") {
+    if (!liveCases) return toast.error("Bulk actions need return cases saved in the backend.");
+    setSaving(true);
+    try {
+      await Promise.all(selected.map((item) => api.returns.update(item.id, { status, resolutionNote: `${status} in bulk return review` })));
+      await loadCases();
+      toast.success(`${selected.length} return order${selected.length === 1 ? "" : "s"} ${status}`);
+    } catch (error) { toast.error("Could not update return orders", { description: error instanceof Error ? error.message : "Please try again." }); }
+    finally { setSaving(false); }
+  }
 
   return (
     <>
       <PageHeader
-        title="Returns & refunds"
-        description="Every refund is policy-checked, capped by role, and written to the audit log."
-        actions={<ToolbarButton variant="secondary"><ShieldCheck className="size-3.5" /> Refund policy</ToolbarButton>}
+        title="Return orders"
+        description="Review returned orders, resolve customer requests, and issue refunds when appropriate."
         tabs={
           <Tabs
             value={tab}
             onChange={setTab}
             items={[
-              { value: "all", label: "All", count: returnCases.length },
-              { value: "requested", label: "Requested", count: returnCases.filter((r) => r.status === "requested").length },
-              { value: "approved", label: "Approved", count: returnCases.filter((r) => r.status === "approved").length },
-              { value: "refunded", label: "Refunded", count: returnCases.filter((r) => r.status === "refunded").length },
-              { value: "rejected", label: "Rejected", count: returnCases.filter((r) => r.status === "rejected").length },
+              { value: "all", label: "All", count: caseData.length },
+              { value: "requested", label: "Requested", count: caseData.filter((r) => r.status === "requested").length },
+              { value: "approved", label: "Approved", count: caseData.filter((r) => r.status === "approved").length },
+              { value: "refunded", label: "Refunded", count: caseData.filter((r) => r.status === "refunded").length },
+              { value: "rejected", label: "Rejected", count: caseData.filter((r) => r.status === "rejected").length },
             ]}
           />
         }
       />
       <PageBody>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard label="Open cases" value={String(returnCases.filter((r) => r.status === "requested").length)} icon={<RotateCcw className="size-4" />} />
-          <StatCard label="Refunded · 30d" value={`$${returnCases.reduce((s, r) => s + r.amount, 0).toFixed(0)}`} delta="-8%" deltaDir="down" />
+          <StatCard label="Open cases" value={String(caseData.filter((r) => r.status === "requested").length)} icon={<RotateCcw className="size-4" />} />
+          <StatCard label="Refunded · 30d" value={`$${caseData.reduce((s, r) => s + r.amount, 0).toFixed(0)}`} delta="-8%" deltaDir="down" />
           <StatCard label="Refund rate" value="1.8%" delta="-0.3pp" deltaDir="down" />
           <StatCard label="Avg resolution" value="4.2h" delta="-40m" deltaDir="down" />
         </div>
 
         {active && (
-          <SectionCard
-            title={`Review ${active.id} · ${active.orderId}`}
-            action={<ToolbarButton variant="ghost" onClick={() => setActive(null)}>Close</ToolbarButton>}
-          >
-            <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); setActive(null); }}>
+          <Dialog open onOpenChange={(open) => !open && setActive(null)}>
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader><DialogTitle>{`Review ${active.id} · ${active.orderId}`}</DialogTitle><DialogDescription>Review the request, refund value and internal resolution before saving.</DialogDescription></DialogHeader>
+            <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); decide("approved"); }}>
               <FormGrid cols={3}>
                 <Field label="Customer"><TextInput readOnly value={active.customer} /></Field>
                 <Field label="Reason"><TextInput readOnly value={active.reason} /></Field>
@@ -91,14 +142,16 @@ function ReturnsPage() {
                 </Field>
               </FormGrid>
               <Field label="Internal note" hint="Visible to the team and stored in the audit log.">
-                <TextArea placeholder="Courier confirmed the cold chain break; approving full refund." />
+                <TextArea value={note} onChange={(event) => setNote(event.target.value)} placeholder="Courier confirmed the cold chain break; approving full refund." />
               </Field>
               <div className="flex justify-end gap-2">
-                <ToolbarButton type="button" variant="secondary" onClick={() => setActive(null)}>Reject</ToolbarButton>
-                <ToolbarButton type="submit" variant="primary">Approve refund</ToolbarButton>
+                <ToolbarButton type="button" variant="secondary" disabled={saving} onClick={() => decide("rejected")}>Reject</ToolbarButton>
+                {active.status === "approved" && <ToolbarButton type="button" variant="secondary" disabled={saving} onClick={() => decide("refunded")}>Issue refund</ToolbarButton>}
+                <ToolbarButton type="submit" variant="primary" disabled={saving}>{saving ? "Saving…" : "Approve refund"}</ToolbarButton>
               </div>
             </form>
-          </SectionCard>
+            </DialogContent>
+          </Dialog>
         )}
 
         <DataTable<ReturnCase>
@@ -107,11 +160,12 @@ function ReturnsPage() {
           rowKey={(r) => r.id}
           searchAccessor={(r) => `${r.id} ${r.orderId} ${r.customer} ${r.reason}`}
           searchPlaceholder="Search case, order or customer…"
+          onRowClick={(returnOrder) => { setNote(""); setActive(returnOrder); }}
           exportFilename="returns.csv"
           bulkActions={(sel) => (
             <>
-              <ToolbarButton variant="secondary">Approve ({sel.length})</ToolbarButton>
-              <ToolbarButton variant="secondary">Reject</ToolbarButton>
+              <ToolbarButton variant="secondary" disabled={saving} onClick={() => void decideMany(sel, "approved")}>Approve ({sel.length})</ToolbarButton>
+              <ToolbarButton variant="secondary" disabled={saving} onClick={() => void decideMany(sel, "rejected")}>Reject</ToolbarButton>
             </>
           )}
         />

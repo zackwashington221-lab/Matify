@@ -11,11 +11,22 @@ Standalone backend for both clients:
 cd server
 cp .env.example .env      # set MONGODB_URI + JWT_SECRET
 npm install
-npm run seed              # demo catalog, orders, customers, staff
+npm run seed              # safely loads demo catalog, orders, customers, staff into an empty database
 npm run dev               # http://localhost:4000/api
 ```
 
+`npm run seed` never overwrites existing data. For a local-only full replacement of the
+demo data, run `npm run seed:reset` explicitly.
+
 Seeded admin login: `amara@freshly.io` / `Password123!`
+
+### Team invite email
+
+Team invitations run in safe Ethereal test mode by default (`SMTP_TEST_MODE=true`).
+The API logs a preview URL for each invite and no real recipient receives the email.
+For a later production deployment only, set `SMTP_TEST_MODE=false` and add
+`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, and `SMTP_FROM` to
+`server/.env`. Set `ADMIN_APP_URL` to the URL where admins complete their invitation.
 
 ## Conventions
 

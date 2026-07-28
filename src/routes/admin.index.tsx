@@ -1,12 +1,14 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { PageHeader, PageBody, SectionCard, StatCard, StatusBadge, Tabs, ToolbarButton } from "@/components/admin/primitives";
 import { DollarSign, ShoppingBag, Users, Activity, Sparkles, ArrowUpRight, ChevronRight, Server, Database, Zap, Plus, Download } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import {
   Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer,
   Tooltip, XAxis, YAxis, Cell, PieChart, Pie,
 } from "recharts";
 import { orders, revenueSeries, weeklyBars, categoryShare, statusTone } from "@/lib/admin-mock";
+import { api, type Customer, type Kpis, type Order } from "@/lib/api-client";
 
 export const Route = createFileRoute("/admin/")({
   head: () => ({
@@ -20,12 +22,74 @@ export const Route = createFileRoute("/admin/")({
 
 function Dashboard() {
   const [range, setRange] = useState("7d");
-  const recentOrders = orders.slice(0, 6);
+  const navigate = useNavigate();
+  const [liveKpis, setLiveKpis] = useState<Kpis | null>(null);
+  const [liveRevenue, setLiveRevenue] = useState<{ date: string; revenue: number; orders: number }[] | null>(null);
+  const [liveCategories, setLiveCategories] = useState<{ category: string; revenue: number }[] | null>(null);
+  const [liveOrders, setLiveOrders] = useState<Order[] | null>(null);
+  const days = range === "today" ? 1 : range === "7d" ? 7 : range === "30d" ? 30 : 90;
+
+  useEffect(() => {
+    let active = true;
+    Promise.all([
+      api.analytics.kpis(),
+      api.analytics.revenueSeries(days),
+      api.analytics.categoryMix(),
+      api.orders.list({ limit: 200, sort: "-placedAt" }),
+    ])
+      .then(([kpis, revenue, categories, orderList]) => {
+        if (!active) return;
+        setLiveKpis(kpis.data);
+        setLiveRevenue(revenue.data);
+        setLiveCategories(categories.data);
+        setLiveOrders(orderList.data);
+      })
+      .catch(() => {
+        if (active) toast.error("Dashboard data could not be refreshed", { description: "Showing saved demonstration data until the API is available." });
+      });
+    return () => { active = false; };
+  }, [days]);
+
+  const dashboard = useMemo(() => {
+    const fallbackRevenue = revenueSeries.slice(-Math.min(days, revenueSeries.length)).map((point) => ({ date: `Day ${point.day}`, ...point }));
+    const series = liveRevenue?.length ? liveRevenue : fallbackRevenue;
+    const cutoff = new Date(Date.now() - days * 86_400_000);
+    const filteredOrders = (liveOrders || []).filter((order) => new Date(order.placedAt) >= cutoff);
+    const orderRows = liveOrders
+      ? filteredOrders.slice(0, 6).map((order) => ({
+          id: order.reference,
+          customer: typeof order.customer === "object" ? (order.customer as Customer).name : "Customer",
+          status: order.status,
+          total: order.total,
+        }))
+      : orders.filter((order) => new Date(order.placedAt) >= cutoff).slice(0, 6);
+    const fallbackCategories = categoryShare;
+    const categoryTotal = (liveCategories || []).reduce((sum, item) => sum + item.revenue, 0);
+    const palette = ["hsl(155 50% 45%)", "hsl(200 60% 55%)", "hsl(35 85% 55%)", "hsl(0 70% 55%)", "hsl(265 55% 60%)"];
+    const categories = liveCategories?.length
+      ? liveCategories.map((item, index) => ({ name: item.category || "Uncategorised", value: Math.round((item.revenue / (categoryTotal || 1)) * 100), color: palette[index % palette.length] }))
+      : fallbackCategories;
+    const revenue = series.reduce((sum, point) => sum + point.revenue, 0);
+    const orderCount = series.reduce((sum, point) => sum + point.orders, 0);
+    return { categories, orderCount, orderRows, revenue, series };
+  }, [days, liveCategories, liveOrders, liveRevenue]);
+
+  function exportDashboard() {
+    const rows = [["Date", "Revenue", "Orders"], ...dashboard.series.map((point) => [point.date, point.revenue, point.orders])];
+    const csv = rows.map((row) => row.join(",")).join("\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `freshly-dashboard-${range}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success("Dashboard export downloaded");
+  }
 
   return (
     <>
       <PageHeader
-        title="Good afternoon, Alex"
+        title="Store overview"
         description="Here's what's happening across your store today."
         actions={
           <>
@@ -39,8 +103,8 @@ function Dashboard() {
                 { value: "q", label: "Quarter" },
               ]}
             />
-            <ToolbarButton variant="secondary"><Download className="size-3.5" /> Export</ToolbarButton>
-            <ToolbarButton variant="primary"><Plus className="size-3.5" /> New product</ToolbarButton>
+            <ToolbarButton variant="secondary" onClick={exportDashboard}><Download className="size-3.5" /> Export</ToolbarButton>
+            <ToolbarButton variant="primary" onClick={() => navigate({ to: "/admin/product/new" })}><Plus className="size-3.5" /> New product</ToolbarButton>
           </>
         }
       />
@@ -48,10 +112,10 @@ function Dashboard() {
       <PageBody>
         {/* KPIs */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard label="Revenue" value="$48,290" delta="+12.4%" deltaDir="up" hint="vs last week" icon={<DollarSign className="size-4" />} />
-          <StatCard label="Orders" value="1,284" delta="+8.1%" deltaDir="up" hint="248 today" icon={<ShoppingBag className="size-4" />} />
-          <StatCard label="Customers" value="12,482" delta="+3.6%" deltaDir="up" hint="342 new · 7d" icon={<Users className="size-4" />} />
-          <StatCard label="Avg. basket" value="$37.60" delta="-2.3%" deltaDir="down" hint="vs last week" icon={<Activity className="size-4" />} />
+          <StatCard label="Revenue" value={`$${dashboard.revenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}`} delta="+12.4%" deltaDir="up" hint={`last ${range === "today" ? "24 hours" : `${days} days`}`} icon={<DollarSign className="size-4" />} />
+          <StatCard label="Orders" value={dashboard.orderCount.toLocaleString()} delta="+8.1%" deltaDir="up" hint={`last ${range === "today" ? "24 hours" : `${days} days`}`} icon={<ShoppingBag className="size-4" />} />
+          <StatCard label="Customers" value={(liveKpis?.customers || 12482).toLocaleString()} delta="+3.6%" deltaDir="up" hint="all customers" icon={<Users className="size-4" />} />
+          <StatCard label="Avg. basket" value={`$${(dashboard.orderCount ? dashboard.revenue / dashboard.orderCount : liveKpis?.avgOrderValue || 0).toFixed(2)}`} delta="-2.3%" deltaDir="down" hint="selected period" icon={<Activity className="size-4" />} />
         </div>
 
         {/* Main charts row */}
@@ -60,7 +124,7 @@ function Dashboard() {
             className="lg:col-span-2"
             title={<div>
               <div className="text-sm font-semibold">Revenue over time</div>
-              <div className="text-[11px] text-muted-foreground uppercase tracking-wider mt-0.5">Last 30 days</div>
+              <div className="text-[11px] text-muted-foreground uppercase tracking-wider mt-0.5">{range === "today" ? "Today" : `Last ${days} days`}</div>
             </div>}
             action={<div className="flex items-center gap-3 text-[11px] text-muted-foreground">
               <span className="inline-flex items-center gap-1"><span className="size-2 rounded-full bg-primary" /> Revenue</span>
@@ -69,7 +133,7 @@ function Dashboard() {
           >
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={revenueSeries}>
+                <AreaChart data={dashboard.series}>
                   <defs>
                     <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.35} />
@@ -77,7 +141,7 @@ function Dashboard() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
-                  <XAxis dataKey="day" fontSize={11} stroke="var(--color-muted-foreground)" tickLine={false} axisLine={false} />
+                  <XAxis dataKey="date" fontSize={11} stroke="var(--color-muted-foreground)" tickLine={false} axisLine={false} />
                   <YAxis fontSize={11} stroke="var(--color-muted-foreground)" tickLine={false} axisLine={false} />
                   <Tooltip
                     contentStyle={{
@@ -97,15 +161,15 @@ function Dashboard() {
             <div className="h-40">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={categoryShare} dataKey="value" nameKey="name" innerRadius={40} outerRadius={70} paddingAngle={2}>
-                    {categoryShare.map((c, i) => <Cell key={i} fill={c.color} />)}
+                  <Pie data={dashboard.categories} dataKey="value" nameKey="name" innerRadius={40} outerRadius={70} paddingAngle={2}>
+                    {dashboard.categories.map((c, i) => <Cell key={i} fill={c.color} />)}
                   </Pie>
                   <Tooltip contentStyle={{ background: "var(--color-card)", border: "1px solid var(--color-border)", borderRadius: 12, fontSize: 12 }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
             <div className="space-y-2 mt-2">
-              {categoryShare.map((c) => (
+              {dashboard.categories.map((c) => (
                 <div key={c.name} className="flex items-center justify-between text-[12px]">
                   <span className="inline-flex items-center gap-2"><span className="size-2 rounded-full" style={{ background: c.color }} />{c.name}</span>
                   <span className="tabular-nums font-semibold">{c.value}%</span>
@@ -172,11 +236,11 @@ function Dashboard() {
                 </tr>
               </thead>
               <tbody>
-                {recentOrders.map((o) => (
+                {dashboard.orderRows.map((o) => (
                   <tr key={o.id} className="border-t border-border/60 hover:bg-secondary/40">
                     <td className="px-5 py-2.5 font-semibold tabular-nums">#{o.id}</td>
                     <td className="px-3 py-2.5">{o.customer}</td>
-                    <td className="px-3 py-2.5"><StatusBadge tone={statusTone[o.status]}>{o.status}</StatusBadge></td>
+                    <td className="px-3 py-2.5"><StatusBadge tone={statusTone[o.status as keyof typeof statusTone] || "info"}>{o.status.replaceAll("_", " ")}</StatusBadge></td>
                     <td className="px-5 py-2.5 text-right tabular-nums font-semibold">${o.total.toFixed(2)}</td>
                   </tr>
                 ))}

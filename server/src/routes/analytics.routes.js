@@ -6,16 +6,28 @@ import { requireAdmin } from "../middleware/auth.js";
 const router = Router();
 router.use(requireAdmin);
 
+function range(req) {
+  const days = Math.min(180, Math.max(1, Number(req.query.days) || 30));
+  return { days, since: new Date(Date.now() - days * 864e5) };
+}
+
+async function categoryProductIds(category) {
+  if (!category || category === "all") return null;
+  return Product.find({ category }).distinct("_id");
+}
+
 router.get(
   "/kpis",
-  asyncHandler(async (_req, res) => {
-    const since = new Date(Date.now() - 30 * 864e5);
+  asyncHandler(async (req, res) => {
+    const { since } = range(req);
+    const productIds = await categoryProductIds(req.query.category);
+    const itemFilter = productIds ? { "items.product": { $in: productIds } } : {};
     const [revenueAgg, orders, customers, lowStock] = await Promise.all([
       Order.aggregate([
-        { $match: { placedAt: { $gte: since }, status: { $ne: "cancelled" } } },
+        { $match: { placedAt: { $gte: since }, status: { $ne: "cancelled" }, ...itemFilter } },
         { $group: { _id: null, revenue: { $sum: "$total" }, count: { $sum: 1 } } },
       ]),
-      Order.countDocuments({ placedAt: { $gte: since } }),
+      Order.countDocuments({ placedAt: { $gte: since }, ...itemFilter }),
       Customer.countDocuments(),
       InventoryItem.countDocuments({ $expr: { $lte: [{ $subtract: ["$onHand", "$reserved"] }, "$reorderPoint"] } }),
     ]);
@@ -35,10 +47,10 @@ router.get(
 router.get(
   "/revenue-series",
   asyncHandler(async (req, res) => {
-    const days = Math.min(180, Number(req.query.days) || 30);
-    const since = new Date(Date.now() - days * 864e5);
+    const { days, since } = range(req);
+    const productIds = await categoryProductIds(req.query.category);
     const data = await Order.aggregate([
-      { $match: { placedAt: { $gte: since }, status: { $ne: "cancelled" } } },
+      { $match: { placedAt: { $gte: since }, status: { $ne: "cancelled" }, ...(productIds ? { "items.product": { $in: productIds } } : {}) } },
       {
         $group: {
           _id: { $dateToString: { format: "%Y-%m-%d", date: "$placedAt" } },
@@ -54,8 +66,11 @@ router.get(
 
 router.get(
   "/top-products",
-  asyncHandler(async (_req, res) => {
+  asyncHandler(async (req, res) => {
+    const { since } = range(req);
+    const productIds = await categoryProductIds(req.query.category);
     const data = await Order.aggregate([
+      { $match: { placedAt: { $gte: since }, status: { $ne: "cancelled" }, ...(productIds ? { "items.product": { $in: productIds } } : {}) } },
       { $unwind: "$items" },
       {
         $group: {
@@ -74,10 +89,12 @@ router.get(
 
 router.get(
   "/category-mix",
-  asyncHandler(async (_req, res) => {
+  asyncHandler(async (req, res) => {
+    const { since } = range(req);
     const products = await Product.find().select("_id category");
     const map = new Map(products.map((p) => [String(p._id), p.category]));
     const rows = await Order.aggregate([
+      { $match: { placedAt: { $gte: since }, status: { $ne: "cancelled" } } },
       { $unwind: "$items" },
       { $group: { _id: "$items.product", revenue: { $sum: { $multiply: ["$items.price", "$items.qty"] } } } },
     ]);
@@ -96,9 +113,11 @@ router.get(
 
 router.get(
   "/funnel",
-  asyncHandler(async (_req, res) => {
-    const paid = await Order.countDocuments({ paymentStatus: "paid" });
-    const started = await Order.countDocuments();
+  asyncHandler(async (req, res) => {
+    const { since } = range(req);
+    const base = { placedAt: { $gte: since }, status: { $ne: "cancelled" } };
+    const paid = await Order.countDocuments({ ...base, paymentStatus: "paid" });
+    const started = await Order.countDocuments(base);
     res.json({
       data: [
         { step: "App opened", users: started * 5 },
@@ -115,10 +134,25 @@ router.get(
   "/cohorts",
   asyncHandler(async (_req, res) => {
     const data = await Customer.aggregate([
-      { $group: { _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } }, size: { $sum: 1 }, ltv: { $avg: "$lifetimeValue" } } },
+      { $group: { _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } }, size: { $sum: 1 }, ltv: { $avg: "$lifetimeValue" }, repeatCustomers: { $sum: { $cond: [{ $gte: ["$ordersCount", 2] }, 1, 0] } }, orders: { $sum: "$ordersCount" } } },
       { $sort: { _id: 1 } },
     ]);
-    res.json({ data: data.map((d) => ({ month: d._id, size: d.size, avgLtv: Math.round(d.ltv || 0) })) });
+    res.json({ data: data.map((d) => ({ month: d._id, size: d.size, avgLtv: Math.round(d.ltv || 0), repeatRate: d.size ? Math.round((d.repeatCustomers / d.size) * 100) : 0, orders: d.orders })) });
+  })
+);
+
+router.get(
+  "/geography",
+  asyncHandler(async (req, res) => {
+    const { since } = range(req);
+    const data = await Order.aggregate([
+      { $match: { placedAt: { $gte: since }, status: { $ne: "cancelled" } } },
+      { $lookup: { from: "customers", localField: "customer", foreignField: "_id", as: "customer" } },
+      { $unwind: { path: "$customer", preserveNullAndEmptyArrays: true } },
+      { $group: { _id: { $ifNull: ["$customer.city", "Unknown"] }, orders: { $sum: 1 }, revenue: { $sum: "$total" } } },
+      { $sort: { revenue: -1 } },
+    ]);
+    res.json({ data: data.map((d) => ({ region: d._id, orders: d.orders, revenue: Math.round(d.revenue * 100) / 100 })) });
   })
 );
 

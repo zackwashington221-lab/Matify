@@ -1,70 +1,20 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { PageHeader, PageBody, StatCard, SectionCard, StatusBadge, ToolbarButton } from "@/components/admin/primitives";
-import { Eye, GripVertical, Image as ImageIcon, Plus } from "lucide-react";
-import { banners } from "@/lib/admin-mock";
+import { Eye, Image as ImageIcon, Plus } from "lucide-react";
+import { api, type Banner } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/admin/banners")({
-  head: () => ({
-    meta: [
-      { title: "Banners — Freshly Admin" },
-      { name: "description", content: "Home hero rotation, mobile/desktop variants, scheduling, A/B and click analytics." },
-    ],
-  }),
-  component: Banners,
-});
-
-const tone = { live: "success", scheduled: "info", expired: "muted", draft: "warning" } as const;
+export const Route = createFileRoute("/admin/banners")({ head: () => ({ meta: [{ title: "Banners — Freshly Admin" }] }), component: Banners });
+const tone: Record<string, "success" | "info" | "muted" | "warning"> = { live: "success", scheduled: "info", archived: "muted", draft: "warning" };
+const gradients = ["from-primary to-accent", "from-amber-400 to-rose-500", "from-sky-500 to-indigo-600", "from-fuchsia-500 to-purple-600"];
 
 function Banners() {
-  return (
-    <>
-      <PageHeader
-        title="Banners"
-        description="Home hero rotation, mobile/desktop variants, scheduling, A/B testing and click analytics."
-        actions={<ToolbarButton variant="primary"><Plus className="size-3.5" /> New banner</ToolbarButton>}
-      />
-      <PageBody>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard label="Live slots" value="3" icon={<ImageIcon className="size-4" />} />
-          <StatCard label="Scheduled" value="1" />
-          <StatCard label="Clicks · 7d" value="14,381" delta="+12%" deltaDir="up" />
-          <StatCard label="Avg CTR" value="3.6%" delta="+0.4pp" deltaDir="up" />
-        </div>
-
-        <SectionCard title="Slot rotation" action={<button className="text-[12px] font-semibold text-primary inline-flex items-center gap-1"><Eye className="size-3.5" /> Preview</button>}>
-          <div className="space-y-3">
-            {banners.map((b) => (
-              <div key={b.id} className="flex items-center gap-4 p-3 rounded-xl border border-border hover:bg-secondary/40 transition-colors">
-                <GripVertical className="size-4 text-muted-foreground cursor-grab" />
-                <div className={cn("w-56 h-24 rounded-xl bg-gradient-to-br p-3 text-white flex flex-col justify-between shrink-0", b.gradient)}>
-                  <div>
-                    <div className="text-[9px] uppercase tracking-wider opacity-90 font-semibold">Slot {b.slot}</div>
-                    <div className="font-display font-bold text-[14px] leading-tight mt-0.5">{b.title}</div>
-                  </div>
-                  <div className="text-[11px] opacity-90">{b.subtitle}</div>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <div className="font-semibold text-sm">{b.title}</div>
-                    <StatusBadge tone={tone[b.status]}>{b.status}</StatusBadge>
-                  </div>
-                  <div className="text-[12px] text-muted-foreground mt-1">
-                    {b.audience} · CTR {b.ctr} · {b.clicks.toLocaleString()} clicks
-                  </div>
-                  <div className="text-[11px] text-muted-foreground mt-0.5">
-                    {new Date(b.startsAt).toLocaleDateString()} → {new Date(b.endsAt).toLocaleDateString()}
-                  </div>
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <ToolbarButton variant="secondary">Edit</ToolbarButton>
-                  <ToolbarButton variant="ghost">Analytics</ToolbarButton>
-                </div>
-              </div>
-            ))}
-          </div>
-        </SectionCard>
-      </PageBody>
-    </>
-  );
+  const navigate = useNavigate(); const [banners, setBanners] = useState<Banner[]>([]); const [loading, setLoading] = useState(true);
+  const load = async () => { setLoading(true); try { setBanners((await api.banners.list({ limit: 100 })).data); } catch (error) { toast.error("Banners could not be loaded", { description: error instanceof Error ? error.message : "Please check the backend connection." }); } finally { setLoading(false); } };
+  useEffect(() => { void load(); }, []);
+  const stats = useMemo(() => { const live = banners.filter((b) => b.status === "live"); const scheduled = banners.filter((b) => b.status === "scheduled"); const clicks = banners.reduce((sum, b) => sum + (b.clicks || 0), 0); const impressions = banners.reduce((sum, b) => sum + (b.impressions || 0), 0); return { live: live.length, scheduled: scheduled.length, clicks, ctr: impressions ? `${((clicks / impressions) * 100).toFixed(1)}%` : "—" }; }, [banners]);
+  const updateStatus = async (banner: Banner) => { try { await api.banners.update(banner._id, { status: banner.status === "live" ? "archived" : "live" }); await load(); toast.success(banner.status === "live" ? "Banner archived" : "Banner published"); } catch (error) { toast.error("Could not update banner", { description: error instanceof Error ? error.message : "Please try again." }); } };
+  return <><PageHeader title="Banners" description="Home hero rotation, scheduling and performance for the storefront." actions={<ToolbarButton variant="primary" onClick={() => navigate({ to: "/admin/banner/new" })}><Plus className="size-3.5" /> New banner</ToolbarButton>} /><PageBody><div className="grid grid-cols-2 lg:grid-cols-4 gap-4"><StatCard label="Live slots" value={String(stats.live)} icon={<ImageIcon className="size-4" />} /><StatCard label="Scheduled" value={String(stats.scheduled)} /><StatCard label="Clicks" value={stats.clicks.toLocaleString()} /><StatCard label="Avg CTR" value={stats.ctr} /></div><SectionCard title="Slot rotation" action={<span className="text-[12px] text-muted-foreground inline-flex items-center gap-1"><Eye className="size-3.5" /> Live storefront order</span>}><div className="space-y-3">{banners.map((b, index) => <div key={b._id} className="flex items-center gap-4 p-3 rounded-xl border border-border hover:bg-secondary/40"><div className={cn("w-56 h-24 rounded-xl bg-gradient-to-br p-3 text-white flex flex-col justify-between shrink-0", gradients[index % gradients.length])}><div><div className="text-[9px] uppercase tracking-wider opacity-90 font-semibold">Slot {b.slot}</div><div className="font-display font-bold text-[14px] leading-tight mt-0.5">{b.title}</div></div><div className="text-[11px] opacity-90">{b.subtitle}</div></div><div className="flex-1 min-w-0"><div className="flex items-center gap-2 flex-wrap"><div className="font-semibold text-sm">{b.title}</div><StatusBadge tone={tone[b.status] || "muted"}>{b.status}</StatusBadge></div><div className="text-[12px] text-muted-foreground mt-1">{(b.clicks || 0).toLocaleString()} clicks · {(b.impressions || 0).toLocaleString()} impressions</div>{b.startsAt && <div className="text-[11px] text-muted-foreground mt-0.5">{new Date(b.startsAt).toLocaleDateString()} → {b.endsAt ? new Date(b.endsAt).toLocaleDateString() : "No end date"}</div>}</div><ToolbarButton variant="secondary" onClick={() => void updateStatus(b)}>{b.status === "live" ? "Archive" : "Publish"}</ToolbarButton></div>)}{!loading && !banners.length && <div className="py-12 text-center text-sm text-muted-foreground">No banners yet. Create the first storefront banner.</div>}{loading && <div className="py-12 text-center text-sm text-muted-foreground">Loading banners…</div>}</div></SectionCard></PageBody></>;
 }

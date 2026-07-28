@@ -1,15 +1,33 @@
 {
   "expo": {
-    "name": "Freshly",
-    "slug": "freshly",
+    "name": "Martify",
+    "slug": "martify",
     "version": "1.0.0",
     "orientation": "portrait",
-    "scheme": "freshly",
+    "scheme": "martify",
     "userInterfaceStyle": "light",
-    "splash": { "resizeMode": "contain", "backgroundColor": "#faf8f5" },
-    "ios": { "supportsTablet": true, "bundleIdentifier": "io.freshly.app" },
-    "android": { "package": "io.freshly.app", "adaptiveIcon": { "backgroundColor": "#faf8f5" } },
-    "web": { "bundler": "metro" },
-    "extra": { "apiUrl": "http://localhost:4000/api" }
+
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.martify.app"
+    },
+
+    "android": {
+      "package": "com.martify.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#faf8f5"
+      }
+    },
+
+    "web": {
+      "bundler": "metro"
+    },
+
+    "extra": {
+      "apiUrl": "http://localhost:4000/api"
+    },
+
+    "plugins": ["expo-font"]
   }
 }
