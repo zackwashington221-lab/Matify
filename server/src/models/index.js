@@ -19,6 +19,19 @@ export const User = def("User", {
   mfaEnabled: { type: Boolean, default: false },
   avatarUrl: String,
   lastActiveAt: Date,
+  preferences: {
+    healthySwaps: { type: Boolean, default: true },
+    budgetAlerts: { type: Boolean, default: true },
+    weeklyBudget: { type: Number, default: 120 },
+    dietaryPreferences: { type: [String], default: [] },
+  },
+  paymentMethods: [{
+    provider: { type: String, enum: ["stripe", "apple_pay", "google_pay"], required: true },
+    providerPaymentMethodId: { type: String, required: true },
+    brand: String,
+    last4: String,
+    isDefault: { type: Boolean, default: false },
+  }],
 });
 
 export const Role = def("Role", {
@@ -122,6 +135,7 @@ export const Customer = def("Customer", {
   churnRisk: { type: String, enum: ["low", "medium", "high"], default: "low" },
   city: String,
   addresses: [{ label: String, line1: String, city: String, postcode: String, isDefault: Boolean }],
+  wishlist: [{ type: Schema.Types.ObjectId, ref: "Product" }],
   lastOrderAt: Date,
 });
 

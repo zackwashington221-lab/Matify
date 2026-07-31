@@ -2,18 +2,22 @@ import React from "react";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import RootNavigator from "./src/navigation/RootNavigator";
-import { AuthProvider } from "./src/context/AuthContext";
-import { CartProvider } from "./src/context/CartContext";
+import { Provider } from "react-redux";
+import { PersistGate } from "redux-persist/integration/react";
+import { persistor, store } from "./src/redux/store/store";
+import AuthSessionGate from "./src/service/AuthSessionGate";
 
 export default function App() {
   return (
     <SafeAreaProvider>
-      <AuthProvider>
-        <CartProvider>
+      <Provider store={store}>
+        <PersistGate loading={null} persistor={persistor}>
           <StatusBar style="dark" />
-          <RootNavigator />
-        </CartProvider>
-      </AuthProvider>
+          <AuthSessionGate>
+            <RootNavigator />
+          </AuthSessionGate>
+        </PersistGate>
+      </Provider>
     </SafeAreaProvider>
   );
 }

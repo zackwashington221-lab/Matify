@@ -85,6 +85,12 @@ router.post(
   })
 );
 
+// JWTs are stateless; clients clear their persisted token after this acknowledgement.
+// This endpoint keeps the mobile logout flow explicit and leaves room for token revocation later.
+router.post("/logout", requireAuth, asyncHandler(async (_req, res) => {
+  res.status(204).send();
+}));
+
 function publicUser(u) {
   return { id: u._id, name: u.name, email: u.email, role: u.role, avatarUrl: u.avatarUrl, mfaEnabled: u.mfaEnabled };
 }
