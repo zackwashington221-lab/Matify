@@ -15,7 +15,7 @@ export default function Signup() {
       <Header title="Create account" back />
       <View style={{ flex: 1, justifyContent: "center" }}>
         <Text style={styles.title}>Shop smarter.</Text>
-        <Text style={styles.muted}>Create your Freshly account to save orders and preferences.</Text>
+        <Text style={styles.muted}>Create your Martify account to save orders and preferences.</Text>
         <Input value={formik.values.name} onChangeText={formik.handleChange("name")} onBlur={formik.handleBlur("name")} placeholder="Full name" />
         <Input value={formik.values.email} onChangeText={formik.handleChange("email")} onBlur={formik.handleBlur("email")} autoCapitalize="none" keyboardType="email-address" placeholder="Email address" />
         <Input value={formik.values.password} onChangeText={formik.handleChange("password")} onBlur={formik.handleBlur("password")} secureTextEntry placeholder="Password (8+ characters)" />

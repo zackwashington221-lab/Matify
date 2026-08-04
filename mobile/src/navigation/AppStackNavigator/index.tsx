@@ -20,7 +20,7 @@ export default function AppStackNavigator() {
       screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}
     >
       <Stack.Screen name="Tabs" component={BottomStackNavigator} />
-      <Stack.Screen name="Product" component={Product} />
+      <Stack.Screen name="Product" component={Product} options={{ presentation: "modal" }} />
       <Stack.Screen name="Checkout" component={Checkout} />
       <Stack.Screen name="Tracking" component={Tracking} />
       <Stack.Screen name="Assistant" component={Assistant} />

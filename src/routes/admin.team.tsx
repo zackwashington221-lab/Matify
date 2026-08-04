@@ -65,13 +65,11 @@ function TeamPage() {
       setInviting(false);
       await load();
       toast.success("Member invited", {
-        description: result.delivery?.testMode
-          ? "Test email captured safely. Open the backend terminal for its Ethereal preview URL."
-          : "Their access is pending until they complete the invite flow.",
+        description: "Their access is pending until they complete the invite flow.",
       });
-    } catch (error) {
+    } catch {
       toast.error("Could not invite member", {
-        description: error instanceof Error ? error.message : "Please try again.",
+        description: "We couldn't send the invitation. Please verify the email address and try again.",
       });
     } finally {
       setSaving(false);

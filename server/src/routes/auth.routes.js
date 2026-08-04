@@ -13,33 +13,37 @@ const credentials = z.object({
   name: z.string().min(2).optional(),
 });
 
-router.post(
-  "/register",
-  asyncHandler(async (req, res) => {
-    const { email, password, name } = credentials.parse(req.body);
-    if (await User.findOne({ email })) return res.status(409).json({ error: "Email already registered" });
+const signUp = asyncHandler(async (req, res) => {
+  const { email, password, name } = credentials.parse(req.body);
+  const normalizedEmail = email.toLowerCase();
+  if (await User.findOne({ email: normalizedEmail })) {
+    return res.status(409).json({ error: "Email already registered" });
+  }
 
-    const user = await User.create({
-      email,
-      name: name || email.split("@")[0],
-      passwordHash: await bcrypt.hash(password, 10),
-      role: "Customer",
-    });
-    await Customer.findOneAndUpdate(
-      { email },
-      { email, name: user.name, user: user._id },
-      { upsert: true, setDefaultsOnInsert: true }
-    );
+  const user = await User.create({
+    email: normalizedEmail,
+    name: name || normalizedEmail.split("@")[0],
+    passwordHash: await bcrypt.hash(password, 10),
+    role: "Customer",
+  });
+  await Customer.findOneAndUpdate(
+    { email: normalizedEmail },
+    { email: normalizedEmail, name: user.name, user: user._id },
+    { upsert: true, setDefaultsOnInsert: true },
+  );
 
-    res.status(201).json({ token: signToken(user), user: publicUser(user) });
-  })
-);
+  res.status(201).json({ token: signToken(user), user: publicUser(user) });
+});
+
+router.post("/signup", signUp);
+// Keep the original endpoint available for existing web and mobile clients.
+router.post("/register", signUp);
 
 router.post(
   "/login",
   asyncHandler(async (req, res) => {
     const { email, password } = credentials.parse(req.body);
-    const user = await User.findOne({ email }).select("+passwordHash");
+    const user = await User.findOne({ email: email.toLowerCase() }).select("+passwordHash");
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
       return res.status(401).json({ error: "Invalid email or password" });
     }

@@ -29,6 +29,8 @@ export type Address = { _id?: string; label: string; line1: string; city: string
 export type PaymentMethod = { _id?: string; provider: "stripe" | "apple_pay" | "google_pay"; providerPaymentMethodId: string; brand?: string; last4?: string; isDefault?: boolean };
 export type AiPreferences = { healthySwaps: boolean; budgetAlerts: boolean; weeklyBudget: number; dietaryPreferences: string[] };
 export type UserNotification = { _id: string; title: string; body?: string; category?: string; channel: string; readAt?: string };
+export type ShoppingRecommendation = { product: Product; qty: number; reason: string };
+export type ShoppingAdvice = { reply: string; recommendations: ShoppingRecommendation[]; total: number; budget?: number };
 
 export type AuthState = {
   user: User | null;

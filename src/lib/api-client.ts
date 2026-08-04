@@ -138,7 +138,7 @@ export const api = {
   },
   reports: resource<ScheduledReport>("/reports"),
   aiAgents: resource<AiAgent>("/ai/agents"),
-  team: { ...resource<AdminUser>("/team"), invite: (email: string, role: string) => request<{ data: AdminUser; delivery?: { testMode: boolean; previewUrl?: string | null } }>("/team/invite", { method: "POST", body: JSON.stringify({ email, role }) }) },
+  team: { ...resource<AdminUser>("/team"), invite: (email: string, role: string) => request<{ data: AdminUser; delivery?: { success: boolean; id?: string } }>("/team/invite", { method: "POST", body: JSON.stringify({ email, role }) }) },
   roles: resource<RoleRecord>("/roles"),
   apiKeys: resource<ApiKeyRecord>("/api-keys"),
   integrations: resource<IntegrationRecord>("/integrations"),

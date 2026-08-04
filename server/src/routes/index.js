@@ -7,6 +7,7 @@ import analyticsRoutes from "./analytics.routes.js";
 import notificationsRoutes from "./notifications.routes.js";
 import teamRoutes from "./team.routes.js";
 import mobileRoutes from "./mobile.routes.js";
+import aiShopperRoutes from "./ai-shopper.routes.js";
 import { crudRouter } from "../utils/crud.js";
 import { requireAdmin, requireAuth, requireRole } from "../middleware/auth.js";
 import {
@@ -22,6 +23,7 @@ router.get("/health", (_req, res) => res.json({ ok: true, uptime: process.uptime
 router.use("/auth", authRoutes);
 router.use("/storefront", storefrontRoutes);
 router.use("/mobile", mobileRoutes);
+router.use("/ai", aiShopperRoutes);
 
 // commerce
 router.use("/products", crudRouter(Product, {

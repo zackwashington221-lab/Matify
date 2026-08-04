@@ -5,6 +5,7 @@ import { catalogApi } from "../Apis/Catalog";
 import { customerApi } from "../Apis/Customer";
 import { notificationApi } from "../Apis/Notification";
 import { orderApi } from "../Apis/Orders";
+import { assistantApi } from "../Apis/Assistant";
 import { mmkvStorage } from "../../helpers/storage";
 import errorLogger from "../../middlewares/apierror.middleware";
 import successLogger from "../../middlewares/apisuccess.middleware";
@@ -21,6 +22,7 @@ const reducer = combineReducers({
   [customerApi.reducerPath]: customerApi.reducer,
   [notificationApi.reducerPath]: notificationApi.reducer,
   [orderApi.reducerPath]: orderApi.reducer,
+  [assistantApi.reducerPath]: assistantApi.reducer,
 });
 
 const persistedReducer = persistReducer(
@@ -32,7 +34,7 @@ export const store = configureStore({
   reducer: persistedReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({ serializableCheck: false })
-      .concat(authApi.middleware, catalogApi.middleware, customerApi.middleware, notificationApi.middleware, orderApi.middleware)
+      .concat(authApi.middleware, catalogApi.middleware, customerApi.middleware, notificationApi.middleware, orderApi.middleware, assistantApi.middleware)
       .concat(errorLogger, successLogger),
 });
 

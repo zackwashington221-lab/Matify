@@ -22,11 +22,11 @@ Seeded admin login: `amara@freshly.io` / `Password123!`
 
 ### Team invite email
 
-Team invitations run in safe Ethereal test mode by default (`SMTP_TEST_MODE=true`).
-The API logs a preview URL for each invite and no real recipient receives the email.
-For a later production deployment only, set `SMTP_TEST_MODE=false` and add
-`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, and `SMTP_FROM` to
-`server/.env`. Set `ADMIN_APP_URL` to the URL where admins complete their invitation.
+Team invitations are delivered through [Resend](https://resend.com). Add
+`RESEND_API_KEY` and `RESEND_FROM` to `server/.env`; the sender must be a
+verified Resend domain in production. For development, Resend's
+`onboarding@resend.dev` sender can be used to send to the account owner's email.
+Set `ADMIN_APP_URL` to the URL where admins complete their invitation.
 
 ## Conventions
 
@@ -40,7 +40,7 @@ For a later production deployment only, set `SMTP_TEST_MODE=false` and add
 
 | Area | Routes |
 | --- | --- |
-| Auth | `POST /auth/register`, `POST /auth/login`, `GET /auth/me`, `PATCH /auth/me`, `POST /auth/change-password` |
+| Auth | `POST /auth/signup`, `POST /auth/login`, `GET /auth/me`, `PATCH /auth/me`, `POST /auth/change-password` (`POST /auth/register` remains supported for compatibility) |
 | Storefront (public) | `GET /storefront/categories`, `/products`, `/products/:slug`, `/banners`, `/promotions` |
 | Products | `GET/POST /products`, `GET/PATCH/DELETE /products/:id` |
 | Categories | `/categories` CRUD |
@@ -54,6 +54,7 @@ For a later production deployment only, set `SMTP_TEST_MODE=false` and add
 | Analytics | `/analytics/kpis`, `/revenue-series`, `/top-products`, `/category-mix`, `/funnel`, `/cohorts`, `/promotion-performance` |
 | Reports | `/reports` CRUD |
 | AI | `/ai/agents` CRUD, `/ai/runs` CRUD |
+| AI shopper | `POST /ai/shopper` — Gemini-powered budget-aware product recommendations for Martify |
 | Administration | `/team`, `/roles`, `/api-keys`, `/integrations`, `/settings` CRUD, `GET /audit` |
 
 ## Wiring the admin panel

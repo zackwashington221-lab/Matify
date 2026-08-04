@@ -36,7 +36,7 @@ export default function Login() {
           disabled={values.isLoading}
         />
         <Pressable onPress={() => navigation.navigate("Signup")}>
-          <Text style={styles.muted}>New to Freshly? Create account</Text>
+          <Text style={styles.muted}>New to Martify? Create account</Text>
         </Pressable>
       </View>
     </PrimaryLayout>

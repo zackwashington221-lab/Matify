@@ -20,7 +20,7 @@ export async function sendTeamInvite({
   validateConfig();
 
   const from =
-    process.env.SMTP_FROM ||
+    process.env.RESEND_FROM ||
     "Freshly Admin <onboarding@resend.dev>";
 
   const { data, error } = await resend.emails.send({

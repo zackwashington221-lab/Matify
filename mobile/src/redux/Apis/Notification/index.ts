@@ -2,11 +2,9 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import type { UserNotification } from "../../../helpers/types";
 import { USE_MOCK_DATA } from "../../../helpers/data";
 import { baseQuery } from "../baseQuery";
+import { mockNotifications } from "../../../mocks/user.mock";
 
-let notifications: UserNotification[] = [
-  { _id: "delivery", title: "Order on its way", body: "Your FR-4821 order arrives in 28 minutes.", category: "orders", channel: "inapp" },
-  { _id: "picks", title: "Fresh weekly picks", body: "Your personalised produce list is ready.", category: "growth", channel: "inapp" },
-];
+let notifications: UserNotification[] = mockNotifications;
 
 export const notificationApi = createApi({
   reducerPath: "notificationApi",
@@ -31,7 +29,7 @@ export const notificationApi = createApi({
       invalidatesTags: ["Notifications"],
     }),
     registerDeviceToken: builder.mutation<{ ok: boolean }, { token: string; platform: "ios" | "android" | "web" }>({
-      query: (body) => ({ url: "/notifications/device-token", method: "POST", body }),
+      queryFn: async (body, api, extraOptions) => USE_MOCK_DATA ? { data: { ok: true } } : baseQuery({ url: "/notifications/device-token", method: "POST", body }, api, extraOptions) as Promise<{ data: { ok: boolean } }>,
     }),
   }),
 });

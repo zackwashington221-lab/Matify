@@ -4,7 +4,7 @@ import type { Banner, Category, Product } from "../../../helpers/types";
 import { baseQuery } from "../baseQuery";
 import { USE_MOCK_DATA } from "../../../helpers/data";
 
-type ProductParams = { q?: string; category?: string };
+type ProductParams = { q?: string; category?: string; limit?: number };
 
 export const catalogApi = createApi({
   reducerPath: "catalogApi",

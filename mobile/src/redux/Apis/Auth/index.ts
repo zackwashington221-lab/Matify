@@ -42,7 +42,7 @@ export const authApi = createApi({
             },
           };
         return baseQuery(
-          { url: "/auth/register", method: "POST", body },
+          { url: "/auth/signup", method: "POST", body },
           api,
           extraOptions,
         ) as Promise<{ data: AuthResponse }>;
@@ -67,7 +67,7 @@ export const authApi = createApi({
       },
     }),
     changePassword: builder.mutation<{ ok: boolean }, { currentPassword: string; newPassword: string }>({
-      query: (body) => ({ url: "/auth/change-password", method: "POST", body }),
+      queryFn: async (body, api, extraOptions) => USE_MOCK_DATA ? { data: { ok: true } } : baseQuery({ url: "/auth/change-password", method: "POST", body }, api, extraOptions) as Promise<{ data: { ok: boolean } }>,
     }),
     logout: builder.mutation<void, void>({
       queryFn: async (_body, api, extraOptions) => {

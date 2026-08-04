@@ -1,7 +1,15 @@
-# Freshly Mobile — React Native (Expo)
+# Martify Mobile — React Native (Expo)
 
-Separate Expo app for customers. It talks to the same backend as the admin panel
-(`server/`), so nothing is duplicated between the two clients.
+Martify is the customer app. Its RTK Query feature slices connect to the same
+Express API as the admin panel (`server/`):
+
+- `Auth` → `/auth`
+- `Catalog` → `/storefront`
+- `Customer` → `/mobile`
+- `Orders` → `/orders`
+- `Notification` → `/notifications`
+
+Authentication is sent automatically as a Bearer token by the shared base query.
 npm ls expo react react-native
 
 ```bash
@@ -10,8 +18,16 @@ npm install
 npx expo start          # press i / a, or scan the QR code
 ```
 
-Point the app at your API in `app.json` → `expo.extra.apiUrl`
-(use your LAN IP for a physical device, e.g. `http://192.168.1.20:4000/api`).
+For a physical device or deployed API, copy `.env.example` to `.env` and set
+`EXPO_PUBLIC_API_URL` (including the `/api` suffix). The `app.json` URL remains
+the fallback for local simulators. Use your LAN IP for a physical device, for
+example `http://192.168.1.20:4000/api`.
+
+## Demo data
+
+Set `expo.extra.useMockData` to `true` in `app.json` to run Martify without a
+backend. Every RTK Query slice has a matching in-memory mock implementation,
+including authentication, catalog, customer data, checkout, and notifications.
 
 ## Structure
 

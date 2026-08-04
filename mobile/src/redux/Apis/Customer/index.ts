@@ -1,18 +1,12 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import { mockProducts } from "../../../mocks/user.mock";
+import { mockAddresses, mockPaymentMethods, mockPreferences, mockProducts, mockUser } from "../../../mocks/user.mock";
 import type { Address, AiPreferences, PaymentMethod, Product, User } from "../../../helpers/types";
 import { USE_MOCK_DATA } from "../../../helpers/data";
 import { baseQuery } from "../baseQuery";
 
-const mockAddresses: Address[] = [
-  { _id: "home", label: "Home", line1: "1247 Elm Street", city: "North Park", postcode: "92104", isDefault: true },
-  { _id: "work", label: "Work", line1: "89 Market Lane", city: "Downtown", postcode: "92101" },
-];
-const mockPreferences: AiPreferences = { healthySwaps: true, budgetAlerts: true, weeklyBudget: 120, dietaryPreferences: [] };
-const mockPaymentMethods: PaymentMethod[] = [
-  { _id: "visa-4242", provider: "stripe", providerPaymentMethodId: "mock-pm-4242", brand: "Visa", last4: "4242", isDefault: true },
-  { _id: "apple-pay", provider: "apple_pay", providerPaymentMethodId: "mock-apple-pay", brand: "Apple Pay" },
-];
+let addresses = mockAddresses.map((address) => ({ ...address }));
+let preferences = { ...mockPreferences };
+let paymentMethods = mockPaymentMethods.map((method) => ({ ...method }));
 let wishlist = mockProducts.slice(0, 2);
 
 export const customerApi = createApi({
@@ -21,18 +15,22 @@ export const customerApi = createApi({
   tagTypes: ["Addresses", "PaymentMethods", "Preferences", "Wishlist"],
   endpoints: (builder) => ({
     getProfile: builder.query<User, void>({
-      query: () => "/mobile/profile",
+      queryFn: async (_arg, api, extraOptions) => USE_MOCK_DATA ? { data: mockUser } : baseQuery("/mobile/profile", api, extraOptions) as Promise<{ data: User }>,
     }),
     updateMobileProfile: builder.mutation<User, Partial<Pick<User, "name">> & { avatarUrl?: string }>({
-      query: (body) => ({ url: "/mobile/profile", method: "PATCH", body }),
+      queryFn: async (body, api, extraOptions) => USE_MOCK_DATA ? { data: { ...mockUser, ...body } } : baseQuery({ url: "/mobile/profile", method: "PATCH", body }, api, extraOptions) as Promise<{ data: User }>,
     }),
     getAddresses: builder.query<Address[], void>({
-      queryFn: async (_arg, api, extraOptions) => USE_MOCK_DATA ? { data: mockAddresses } : baseQuery("/mobile/addresses", api, extraOptions) as Promise<{ data: Address[] }>,
+      queryFn: async (_arg, api, extraOptions) => USE_MOCK_DATA ? { data: addresses } : baseQuery("/mobile/addresses", api, extraOptions) as Promise<{ data: Address[] }>,
       providesTags: ["Addresses"],
     }),
     addAddress: builder.mutation<Address, Omit<Address, "_id">>({
       queryFn: async (body, api, extraOptions) => {
-        if (USE_MOCK_DATA) return { data: { ...body, _id: "address-" + Date.now() } };
+        if (USE_MOCK_DATA) {
+          const address = { ...body, _id: "address-" + Date.now() };
+          addresses = addresses.concat(address);
+          return { data: address };
+        }
         return baseQuery({ url: "/mobile/addresses", method: "POST", body }, api, extraOptions) as Promise<{ data: Address }>;
       },
       invalidatesTags: ["Addresses"],
@@ -40,8 +38,11 @@ export const customerApi = createApi({
     updateAddress: builder.mutation<Address, { id: string; body: Partial<Address> }>({
       queryFn: async ({ id, body }, api, extraOptions) => {
         if (USE_MOCK_DATA) {
-          const address = mockAddresses.find((item) => item._id === id);
-          return address ? { data: { ...address, ...body } } : { error: { status: 404, data: "Address not found" } };
+          const address = addresses.find((item) => item._id === id);
+          if (!address) return { error: { status: 404, data: "Address not found" } };
+          const updated = { ...address, ...body };
+          addresses = addresses.map((item) => item._id === id ? updated : item);
+          return { data: updated };
         }
         return baseQuery({ url: "/mobile/addresses/" + id, method: "PATCH", body }, api, extraOptions) as Promise<{ data: Address }>;
       },
@@ -49,7 +50,10 @@ export const customerApi = createApi({
     }),
     deleteAddress: builder.mutation<void, string>({
       queryFn: async (id, api, extraOptions) => {
-        if (USE_MOCK_DATA) return { data: undefined };
+        if (USE_MOCK_DATA) {
+          addresses = addresses.filter((address) => address._id !== id);
+          return { data: undefined };
+        }
         return baseQuery({ url: "/mobile/addresses/" + id, method: "DELETE" }, api, extraOptions) as Promise<{ data: undefined }>;
       },
       invalidatesTags: ["Addresses"],
@@ -80,30 +84,40 @@ export const customerApi = createApi({
       invalidatesTags: ["Wishlist"],
     }),
     getPreferences: builder.query<AiPreferences, void>({
-      queryFn: async (_arg, api, extraOptions) => USE_MOCK_DATA ? { data: mockPreferences } : baseQuery("/mobile/preferences", api, extraOptions) as Promise<{ data: AiPreferences }>,
+      queryFn: async (_arg, api, extraOptions) => USE_MOCK_DATA ? { data: preferences } : baseQuery("/mobile/preferences", api, extraOptions) as Promise<{ data: AiPreferences }>,
       providesTags: ["Preferences"],
     }),
     updatePreferences: builder.mutation<AiPreferences, Partial<AiPreferences>>({
       queryFn: async (body, api, extraOptions) => {
-        if (USE_MOCK_DATA) return { data: { ...mockPreferences, ...body } };
+        if (USE_MOCK_DATA) {
+          preferences = { ...preferences, ...body };
+          return { data: preferences };
+        }
         return baseQuery({ url: "/mobile/preferences", method: "PATCH", body }, api, extraOptions) as Promise<{ data: AiPreferences }>;
       },
       invalidatesTags: ["Preferences"],
     }),
     getPaymentMethods: builder.query<PaymentMethod[], void>({
-      queryFn: async (_arg, api, extraOptions) => USE_MOCK_DATA ? { data: mockPaymentMethods } : baseQuery("/mobile/payment-methods", api, extraOptions) as Promise<{ data: PaymentMethod[] }>,
+      queryFn: async (_arg, api, extraOptions) => USE_MOCK_DATA ? { data: paymentMethods } : baseQuery("/mobile/payment-methods", api, extraOptions) as Promise<{ data: PaymentMethod[] }>,
       providesTags: ["PaymentMethods"],
     }),
     addPaymentMethod: builder.mutation<PaymentMethod, Omit<PaymentMethod, "_id">>({
       queryFn: async (body, api, extraOptions) => {
-        if (USE_MOCK_DATA) return { data: { ...body, _id: "payment-method-" + Date.now() } };
+        if (USE_MOCK_DATA) {
+          const paymentMethod = { ...body, _id: "payment-method-" + Date.now() };
+          paymentMethods = paymentMethods.concat(paymentMethod);
+          return { data: paymentMethod };
+        }
         return baseQuery({ url: "/mobile/payment-methods", method: "POST", body }, api, extraOptions) as Promise<{ data: PaymentMethod }>;
       },
       invalidatesTags: ["PaymentMethods"],
     }),
     deletePaymentMethod: builder.mutation<void, string>({
       queryFn: async (id, api, extraOptions) => {
-        if (USE_MOCK_DATA) return { data: undefined };
+        if (USE_MOCK_DATA) {
+          paymentMethods = paymentMethods.filter((method) => method._id !== id);
+          return { data: undefined };
+        }
         return baseQuery({ url: "/mobile/payment-methods/" + id, method: "DELETE" }, api, extraOptions) as Promise<{ data: undefined }>;
       },
       invalidatesTags: ["PaymentMethods"],
