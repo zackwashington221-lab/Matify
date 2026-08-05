@@ -1,7 +1,18 @@
 import { useState } from "react";
-import { useGetProductsQuery } from "../../../redux/Apis/Catalog";
+import { useRoute } from "@react-navigation/native";
+import { useGetCategoriesQuery, useGetProductsQuery } from "../../../redux/Apis/Catalog";
+
 export default function useSearchController() {
+  const route = useRoute<any>();
   const [query, setQuery] = useState("");
-  const { data: products = [], isLoading } = useGetProductsQuery(query ? { q: query } : undefined);
-  return { values: { query, products, isLoading }, functions: { setQuery } };
+  const [category, setCategory] = useState<string | undefined>(route.params?.category);
+  const { data: categories = [] } = useGetCategoriesQuery();
+  const { data: products = [], isLoading } = useGetProductsQuery({
+    q: query || undefined,
+    category: category || undefined,
+  });
+  return {
+    values: { query, category, categories, products, isLoading },
+    functions: { setQuery, setCategory },
+  };
 }

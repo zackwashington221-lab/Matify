@@ -1,17 +1,78 @@
 import React from "react";
-import { Pressable, StyleSheet, Text } from "react-native";
-import { colors, radius } from "../../theme";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { colors, gradients, radius, shadow, type } from "../../theme";
 
-type ButtonProps = { label: string; onPress: () => void; disabled?: boolean };
+type Variant = "primary" | "secondary" | "ghost" | "danger";
 
-export function PrimaryButton({ label, onPress, disabled }: ButtonProps) {
+type ButtonProps = {
+  label: string;
+  onPress: () => void;
+  disabled?: boolean;
+  loading?: boolean;
+  variant?: Variant;
+  icon?: React.ReactNode;
+  style?: StyleProp<ViewStyle>;
+  size?: "md" | "sm";
+};
+
+export function PrimaryButton({
+  label,
+  onPress,
+  disabled,
+  loading,
+  variant = "primary",
+  icon,
+  style,
+  size = "md",
+}: ButtonProps) {
+  const height = size === "sm" ? 44 : 54;
+  const isDisabled = disabled || loading;
+  const content = (
+    <View style={styles.content}>
+      {loading ? (
+        <ActivityIndicator size="small" color={variant === "primary" ? colors.onPrimary : colors.primary} />
+      ) : (
+        icon
+      )}
+      <Text
+        style={[
+          styles.label,
+          variant === "secondary" && { color: colors.primaryDeep },
+          variant === "ghost" && { color: colors.textSoft },
+          variant === "danger" && { color: colors.danger },
+          size === "sm" && { fontSize: 14 },
+        ]}
+      >
+        {label}
+      </Text>
+    </View>
+  );
+
   return (
     <Pressable
-      disabled={disabled}
+      disabled={isDisabled}
       onPress={onPress}
-      style={[styles.button, disabled && styles.disabled]}
+      style={({ pressed }) => [
+        styles.base,
+        { height },
+        variant === "secondary" && styles.secondary,
+        variant === "ghost" && styles.ghost,
+        variant === "danger" && styles.danger,
+        pressed && !isDisabled && { transform: [{ scale: 0.985 }], opacity: 0.94 },
+        isDisabled && { opacity: 0.5 },
+        style,
+      ]}
     >
-      <Text style={styles.label}>{label}</Text>
+      {variant === "primary" ? (
+        <LinearGradient
+          colors={gradients.primary}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+      ) : null}
+      {content}
     </Pressable>
   );
 }
@@ -19,14 +80,17 @@ export function PrimaryButton({ label, onPress, disabled }: ButtonProps) {
 export default PrimaryButton;
 
 const styles = StyleSheet.create({
-  button: {
-    height: 52,
+  base: {
     borderRadius: radius.pill,
-    backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 22,
+    overflow: "hidden",
+    backgroundColor: colors.primary,
+    ...shadow.card,
   },
-  disabled: { opacity: 0.55 },
-  label: { color: "#fff", fontWeight: "800", fontSize: 15 },
+  secondary: { backgroundColor: colors.primaryTint, borderWidth: 1, borderColor: "#d5e3c9", shadowOpacity: 0 },
+  ghost: { backgroundColor: "transparent", shadowOpacity: 0, elevation: 0 },
+  danger: { backgroundColor: colors.dangerTint, shadowOpacity: 0 },
+  content: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
+  label: { ...type.label, fontSize: 15, color: colors.onPrimary },
 });
