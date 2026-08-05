@@ -1,7 +1,7 @@
 // Typed client for the standalone Express + MongoDB API (see server/).
 // Set VITE_API_URL in .env, e.g. VITE_API_URL=http://localhost:4000/api
 
-const BASE_URL = (import.meta.env.VITE_API_URL as string) || "http://localhost:4000/api";
+const BASE_URL = (import.meta.env.VITE_API_URL as string) || "https://matify.up.railway.app/api";
 const TOKEN_KEY = "freshly.admin.token";
 const USER_KEY = "freshly.admin.user";
 
@@ -138,7 +138,11 @@ export const api = {
   },
   reports: resource<ScheduledReport>("/reports"),
   aiAgents: resource<AiAgent>("/ai/agents"),
-  team: { ...resource<AdminUser>("/team"), invite: (email: string, role: string) => request<{ data: AdminUser; delivery?: { success: boolean; id?: string } }>("/team/invite", { method: "POST", body: JSON.stringify({ email, role }) }) },
+  team: {
+    ...resource<AdminUser>("/team"),
+    invite: (email: string, role: string) => request<{ data: AdminUser; delivery?: { success: boolean; id?: string } }>("/team/invite", { method: "POST", body: JSON.stringify({ email, role }) }),
+    createAdmin: (email: string, password: string) => request<{ data: AdminUser }>("/team/admins", { method: "POST", body: JSON.stringify({ email, password }) }),
+  },
   roles: resource<RoleRecord>("/roles"),
   apiKeys: resource<ApiKeyRecord>("/api-keys"),
   integrations: resource<IntegrationRecord>("/integrations"),

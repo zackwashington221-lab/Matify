@@ -1,5 +1,6 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
+import { z } from "zod";
 import { User } from "../models/index.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { asyncHandler } from "../middleware/error.js";
@@ -8,6 +9,29 @@ import { sendTeamInvite } from "../services/mailer.js";
 
 const router = Router();
 const managers = [requireAuth, requireRole("Owner", "Admin")];
+
+const adminCredentials = z.object({
+  email: z.string().email("Enter a valid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+});
+
+router.post("/admins", ...managers, asyncHandler(async (req, res) => {
+  const { email, password } = adminCredentials.parse(req.body);
+  const normalizedEmail = email.toLowerCase();
+  if (await User.findOne({ email: normalizedEmail })) {
+    return res.status(409).json({ error: "A user with this email already exists" });
+  }
+
+  const user = await User.create({
+    name: normalizedEmail.split("@")[0],
+    email: normalizedEmail,
+    passwordHash: await bcrypt.hash(password, 10),
+    role: "Admin",
+    status: "active",
+  });
+  await audit(req, "admin.created", user);
+  res.status(201).json({ data: user });
+}));
 
 router.post("/invite", ...managers, asyncHandler(async (req, res) => {
   const { email, role = "Support", name } = req.body;

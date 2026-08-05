@@ -8,11 +8,10 @@ import { notFound, errorHandler } from "./middleware/error.js";
 
 export function createApp() {
   const app = express();
-  const origins = (process.env.CORS_ORIGIN || "*").split(",").map((s) => s.trim());
 
   app.set("trust proxy", 1);
   app.use(helmet());
-  app.use(cors({ origin: origins.includes("*") ? true : origins, credentials: true }));
+  app.use(cors({ origin: "*" }));
   app.use(express.json({ limit: "1mb" }));
   app.use(morgan("dev"));
   app.use("/api", rateLimit({ windowMs: 60_000, limit: 300, standardHeaders: true, legacyHeaders: false }));
