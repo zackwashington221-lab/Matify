@@ -1,22 +1,39 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { ChevronLeft } from "lucide-react-native";
 import { useNavigation } from "@react-navigation/native";
-import { colors } from "../../theme";
+import { colors, radius, type } from "../../theme";
 
-export function ScreenHeader({ title, back }: { title: string; back?: boolean }) {
+export function ScreenHeader({
+  title,
+  subtitle,
+  back,
+  right,
+}: {
+  title: string;
+  subtitle?: string;
+  back?: boolean;
+  right?: React.ReactNode;
+}) {
   const navigation = useNavigation<any>();
   return (
     <View style={styles.header}>
       {back ? (
-        <Pressable onPress={() => navigation.goBack()} style={styles.button}>
-          <Ionicons name="chevron-back" size={22} color={colors.text} />
+        <Pressable onPress={() => navigation.goBack()} style={styles.circle} hitSlop={10}>
+          <ChevronLeft size={20} color={colors.text} />
         </Pressable>
-      ) : (
-        <View style={styles.button} />
-      )}
-      <Text style={styles.title}>{title}</Text>
-      <View style={styles.button} />
+      ) : null}
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text numberOfLines={1} style={type.title}>
+          {title}
+        </Text>
+        {subtitle ? (
+          <Text numberOfLines={1} style={[type.caption, { marginTop: 2 }]}>
+            {subtitle}
+          </Text>
+        ) : null}
+      </View>
+      {right}
     </View>
   );
 }
@@ -25,12 +42,20 @@ export default ScreenHeader;
 
 const styles = StyleSheet.create({
   header: {
-    height: 48,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 12,
+    gap: 12,
+    minHeight: 48,
+    marginBottom: 6,
   },
-  button: { width: 38, height: 38, alignItems: "center", justifyContent: "center" },
-  title: { color: colors.text, fontSize: 17, fontWeight: "800" },
+  circle: {
+    width: 42,
+    height: 42,
+    borderRadius: radius.pill,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
 });
