@@ -204,5 +204,5 @@ function toOrderRow(order: ApiOrder): Order {
   const status: OrderStatus = order.status === "confirmed" || order.status === "picking" ? "packing" : order.status === "out_for_delivery" ? "shipped" : order.status;
   const payment = order.paymentStatus === "paid" ? "paid" : order.paymentStatus.includes("refund") ? "refunded" : order.paymentStatus === "unpaid" ? "pending" : "failed";
   const customer = typeof order.customer === "object" ? order.customer : undefined;
-  return { id: order._id, customer: customer?.name || "Customer", email: customer?.email || "", total: order.total, items: order.items.reduce((sum, item) => sum + item.qty, 0), status, payment, channel: order.channel === "phone" ? "kiosk" : order.channel, placedAt: order.placedAt };
+  return { id: order._id, customer: customer?.name || "Customer", email: customer?.email || "", total: order.total, items: order.items.reduce((sum, item) => sum + item.qty, 0), status, payment, channel: (order.channel === "phone" ? "kiosk" : order.channel) as "app" | "web" | "kiosk", placedAt: order.placedAt };
 }

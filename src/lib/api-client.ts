@@ -165,7 +165,7 @@ export type Category = { _id: Id; slug: string; name: string; emoji?: string; so
 export type Product = {
   _id: Id; slug: string; name: string; brand?: string; description?: string; price: number; compareAt?: number;
   unit?: string; emoji?: string; category?: string; rating?: number; reviews?: number; aiTag?: string;
-  organic?: boolean; status: "draft" | "active" | "archived"; tags?: string[];
+  organic?: boolean; status: "draft" | "active" | "archived"; tags?: string[]; gradient?: string;
 };
 export type InventoryItem = {
   _id: Id; product: Product | Id; sku: string; warehouse: string; onHand: number; reserved: number;
@@ -185,7 +185,7 @@ export type Customer = {
   churnRisk: "low" | "medium" | "high"; city?: string; lastOrderAt?: string;
 };
 export type Promotion = { _id: Id; code: string; name?: string; type: string; value: number; minSpend?: number; usageLimit?: number; usedCount: number; status: string; startsAt?: string; endsAt?: string };
-export type Banner = { _id: Id; title: string; subtitle?: string; slot: number; ctaLabel?: string; status: string; impressions: number; clicks: number; startsAt?: string; endsAt?: string };
+export type Banner = { _id: Id; title: string; subtitle?: string; slot: number; ctaLabel?: string; ctaHref?: string; theme?: string; status: string; impressions: number; clicks: number; startsAt?: string; endsAt?: string };
 export type NotificationRecord = { _id: Id; title: string; body?: string; channel: string; audience?: string; category: string; status: string; scheduledFor?: string; sentAt?: string; stats?: { delivered?: number; opened?: number; clicked?: number } };
 export type UserNotification = { _id: Id; title: string; body?: string; category?: string; channel: string; readAt?: string; createdAt: string };
 export type ScheduledReport = { _id: Id; name: string; cadence: string; recipients: string[]; format: string; nextRunAt?: string; status: string };

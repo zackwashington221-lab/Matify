@@ -42,8 +42,8 @@ export function AdminMobileShell({
   children: ReactNode;
   hideTabs?: boolean;
 }) {
-  const pathname = useRouterState({
-    select: (s: any) => s.location.pathname,
+  const pathname: string = useRouterState({
+    select: (s: any) => s.location.pathname as string,
   });
 
   return (
