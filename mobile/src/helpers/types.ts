@@ -8,6 +8,7 @@ export type Product = {
   compareAt?: number;
   unit?: string;
   emoji?: string;
+  imageUrl?: string;
   category?: string;
   rating?: number;
   aiTag?: string;
