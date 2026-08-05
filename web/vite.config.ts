@@ -6,10 +6,25 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
+const isGitHubPages = process.env.NITRO_PRESET === "github-pages";
+
 export default defineConfig({
-  tanstackStart: {
-    // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
-    // nitro/vite builds from this
-    server: { entry: "server" },
+  // GitHub Pages only supports static files. In that environment, build a
+  // pre-rendered SPA; all other builds retain the server-rendered app.
+  tanstackStart: isGitHubPages
+    ? {
+        spa: {
+          enabled: true,
+          maskPath: "/Matify/",
+          prerender: { outputPath: "/index.html" },
+        },
+      }
+    : {
+        // Redirect TanStack Start's bundled server entry to src/server.ts.
+        server: { entry: "server" },
+      },
+  vite: {
+    base: isGitHubPages ? "/Matify/" : "/",
   },
+  nitro: isGitHubPages ? false : undefined,
 });
