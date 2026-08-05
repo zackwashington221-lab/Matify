@@ -13,7 +13,7 @@ import { api, type InventoryItem } from "@/lib/api-client";
 export const Route = createFileRoute("/admin/inventory")({
   head: () => ({
     meta: [
-      { title: "Inventory — Freshly Admin" },
+      { title: "Inventory — Martify Admin" },
       { name: "description", content: "Real-time stock, forecasting, low-stock alerts and AI auto-reorder." },
     ],
   }),
@@ -36,7 +36,7 @@ function Inventory() {
     const mapped = data.map((item: InventoryItem) => {
       const product = typeof item.product === "string" ? undefined : item.product;
       const stock = item.onHand - item.reserved;
-      return { id: item._id, inventoryId: item._id, productId: product?._id, name: product?.name || item.sku, brand: product?.brand || item.supplier || "Freshly", price: product?.price || 0, unit: product?.unit || "each", emoji: product?.emoji || "📦", gradient: product?.gradient || "from-emerald-100 to-lime-100", category: product?.category || "inventory", rating: product?.rating || 0, reviews: product?.reviews || 0, stock, cap: Math.max(item.reorderPoint * 3, stock || 1), velocity: Math.max(1, Math.round(stock / 7)), forecast: stock <= item.reorderPoint ? "Restock now" : "Healthy" };
+      return { id: item._id, inventoryId: item._id, productId: product?._id, name: product?.name || item.sku, brand: product?.brand || item.supplier || "Martify", price: product?.price || 0, unit: product?.unit || "each", emoji: product?.emoji || "📦", gradient: product?.gradient || "from-emerald-100 to-lime-100", category: product?.category || "inventory", rating: product?.rating || 0, reviews: product?.reviews || 0, stock, cap: Math.max(item.reorderPoint * 3, stock || 1), velocity: Math.max(1, Math.round(stock / 7)), forecast: stock <= item.reorderPoint ? "Restock now" : "Healthy" };
     });
     setLiveRows(mapped.length ? mapped : null);
   }).catch(() => toast.error("Inventory could not be refreshed", { description: "Showing demonstration inventory data until the API is available." }));

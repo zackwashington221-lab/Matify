@@ -1,4 +1,4 @@
-# Freshly API — Express + MongoDB
+# Martify API — Express + MongoDB
 
 Standalone backend for both clients:
 
@@ -18,7 +18,7 @@ npm run dev               # http://localhost:4000/api
 `npm run seed` never overwrites existing data. For a local-only full replacement of the
 demo data, run `npm run seed:reset` explicitly.
 
-Seeded admin login: `amara@freshly.io` / `Password123!`
+Seeded admin login: `amara@martify.io` / `Password123!`
 
 ### Team invite email
 

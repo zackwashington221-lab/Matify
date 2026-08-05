@@ -13,7 +13,7 @@ import { api, type Customer, type Kpis, type Order } from "@/lib/api-client";
 export const Route = createFileRoute("/admin/")({
   head: () => ({
     meta: [
-      { title: "Dashboard — Freshly Admin" },
+      { title: "Dashboard — Martify Admin" },
       { name: "description", content: "Executive dashboard: revenue, orders, customers, AI signals and system health." },
     ],
   }),
@@ -80,7 +80,7 @@ function Dashboard() {
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
     const link = document.createElement("a");
     link.href = url;
-    link.download = `freshly-dashboard-${range}.csv`;
+    link.download = `martify-dashboard-${range}.csv`;
     link.click();
     URL.revokeObjectURL(url);
     toast.success("Dashboard export downloaded");

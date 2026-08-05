@@ -6,7 +6,7 @@ import { MapPin, Clock, CreditCard, Check, ChevronRight, ShieldCheck, Sparkles }
 export const Route = createFileRoute("/checkout")({
   head: () => ({
     meta: [
-      { title: "Checkout — Freshly" },
+      { title: "Checkout — Martify" },
       { name: "description", content: "Confirm delivery, payment, and place your order securely." },
     ],
   }),
@@ -78,7 +78,7 @@ function Checkout() {
           {[
             { id: "apple", label: "Apple Pay", sub: "Face ID confirmed", emoji: "" },
             { id: "card", label: "Visa · 4242", sub: "Expires 08/28", emoji: "💳" },
-            { id: "wallet", label: "Freshly Wallet", sub: "Balance $28.40", emoji: "💰" },
+            { id: "wallet", label: "Martify Wallet", sub: "Balance $28.40", emoji: "💰" },
           ].map((m) => {
             const active = payment === m.id;
             return (
@@ -112,7 +112,7 @@ function Checkout() {
             <Sparkles className="size-4" />
           </div>
           <div className="text-[13px] leading-relaxed">
-            <span className="font-semibold">Pay with Freshly Wallet</span>{" "}
+            <span className="font-semibold">Pay with Martify Wallet</span>{" "}
             <span className="text-muted-foreground">and earn 3% back — about <span className="font-semibold text-primary">$1.20</span> on this order.</span>
           </div>
         </div>

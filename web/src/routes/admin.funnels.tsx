@@ -12,7 +12,7 @@ import { TrendingDown } from "lucide-react";
 import { api } from "@/lib/api-client";
 import { funnelSteps as fallbackFunnel, geoRows as fallbackGeo } from "@/lib/admin-platform-mock";
 export const Route = createFileRoute("/admin/funnels")({
-  head: () => ({ meta: [{ title: "Funnels & Geography — Freshly Admin" }] }),
+  head: () => ({ meta: [{ title: "Funnels & Geography — Martify Admin" }] }),
   component: FunnelsPage,
 });
 function FunnelsPage() {

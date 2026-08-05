@@ -7,8 +7,8 @@ import { ApiError, api, getCachedAdminUser } from "@/lib/api-client";
 export const Route = createFileRoute("/admin-login")({
   head: () => ({
     meta: [
-      { title: "Admin sign in — Freshly" },
-      { name: "description", content: "Secure access to the Freshly admin console." },
+      { title: "Admin sign in — Martify" },
+      { name: "description", content: "Secure access to the Martify admin console." },
     ],
   }),
   component: AdminLoginPage,
@@ -56,13 +56,13 @@ function AdminLoginPage() {
   return (
     <main className="min-h-screen bg-background px-5 py-8 sm:grid sm:place-items-center">
       <section className="mx-auto w-full max-w-md rounded-[28px] border border-border bg-card p-6 shadow-card sm:p-8">
-        <Link to="/" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">← Back to Freshly</Link>
+        <Link to="/" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">← Back to Martify</Link>
 
         <div className="mt-10">
           <div className="flex size-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-accent text-primary-foreground shadow-emerald">
             <ShieldCheck className="size-6" />
           </div>
-          <p className="mt-6 text-xs font-semibold uppercase tracking-[0.16em] text-primary">Freshly operations</p>
+          <p className="mt-6 text-xs font-semibold uppercase tracking-[0.16em] text-primary">Martify operations</p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight">Admin sign in</h1>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">Use your approved staff account to continue to the admin console.</p>
         </div>
@@ -110,7 +110,7 @@ function AdminLoginPage() {
           </button>
         </form>
 
-        <p className="mt-6 text-center text-xs leading-5 text-muted-foreground">Access is restricted to authorized Freshly staff. Contact an owner if you need an account.</p>
+        <p className="mt-6 text-center text-xs leading-5 text-muted-foreground">Access is restricted to authorized Martify staff. Contact an owner if you need an account.</p>
       </section>
     </main>
   );

@@ -2,8 +2,8 @@
 // Set VITE_API_URL in .env, e.g. VITE_API_URL=http://localhost:4000/api
 
 const BASE_URL = (import.meta.env.VITE_API_URL as string) || "https://matify.up.railway.app/api";
-const TOKEN_KEY = "freshly.admin.token";
-const USER_KEY = "freshly.admin.user";
+const TOKEN_KEY = "martify.admin.token";
+const USER_KEY = "martify.admin.user";
 
 export function getToken() {
   return typeof window === "undefined" ? null : window.localStorage.getItem(TOKEN_KEY);

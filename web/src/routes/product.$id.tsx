@@ -9,8 +9,8 @@ export const Route = createFileRoute("/product/$id")({
     const p = productById(params.id);
     return {
       meta: [
-        { title: `${p.name} — Freshly` },
-        { name: "description", content: `${p.name} by ${p.brand} · $${p.price} · ${p.unit}. Order for same-day delivery on Freshly.` },
+        { title: `${p.name} — Martify` },
+        { name: "description", content: `${p.name} by ${p.brand} · $${p.price} · ${p.unit}. Order for same-day delivery on Martify.` },
       ],
     };
   },
@@ -146,7 +146,7 @@ function ProductDetail() {
             </div>
           </div>
           <p className="text-[13px] text-muted-foreground mt-3 leading-relaxed">
-            Perfectly ripe every single time. Freshly's ripeness sensor thing actually works — no more brown surprises.
+            Perfectly ripe every single time. Martify's ripeness sensor thing actually works — no more brown surprises.
           </p>
         </div>
       </div>

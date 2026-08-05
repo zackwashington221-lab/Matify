@@ -9,9 +9,9 @@ import { ImagePlus, Sparkles, Trash2 } from "lucide-react";
 export const Route = createFileRoute("/admin/product/new")({
   head: () => ({
     meta: [
-      { title: "New Product — Freshly Admin" },
+      { title: "New Product — Martify Admin" },
       { name: "description", content: "Create a product with pricing, variants, inventory, media and AI-generated copy." },
-      { property: "og:title", content: "New Product — Freshly Admin" },
+      { property: "og:title", content: "New Product — Martify Admin" },
       { property: "og:description", content: "Create a product with pricing, variants, inventory, media and AI-generated copy." },
     ],
   }),
@@ -53,7 +53,7 @@ function NewProduct() {
       const product = await api.products.create({
         name: name.trim(),
         slug: slugify(name),
-        brand: brand.trim() || "Freshly",
+        brand: brand.trim() || "Martify",
         description: description.trim(),
         price: Number(price),
         unit,
@@ -95,7 +95,7 @@ function NewProduct() {
                   <Field label="Product name" required error={errors.name}>
                     <TextInput value={name} onChange={(e) => setName(e.target.value)} placeholder="Organic Hass Avocado" />
                   </Field>
-                  <Field label="Brand"><TextInput value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="Freshly Farms" /></Field>
+                  <Field label="Brand"><TextInput value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="Martify Farms" /></Field>
                 </FormGrid>
                 <Field
                   label="Description"

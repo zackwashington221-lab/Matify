@@ -7,7 +7,7 @@ import { Link } from "@tanstack/react-router";
 export const Route = createFileRoute("/search")({
   head: () => ({
     meta: [
-      { title: "Search — Freshly" },
+      { title: "Search — Martify" },
       { name: "description", content: "Browse fresh categories and find groceries with AI-powered search." },
     ],
   }),

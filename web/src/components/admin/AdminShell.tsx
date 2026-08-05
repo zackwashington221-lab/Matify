@@ -73,7 +73,7 @@ export function AdminShell({ children, user }: { children: ReactNode; user: Admi
         <div className="px-5 h-16 flex items-center gap-2.5 border-b border-border">
           <div className="size-9 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-display font-bold text-base shadow-emerald">F</div>
           <div>
-            <div className="text-sm font-bold leading-tight font-display">Freshly</div>
+            <div className="text-sm font-bold leading-tight font-display">Martify</div>
             <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Admin Console</div>
           </div>
         </div>
@@ -133,7 +133,7 @@ export function AdminShell({ children, user }: { children: ReactNode; user: Admi
             </kbd>
           </div>
           <div className="flex items-center gap-2 ml-auto">
-            <a href="mailto:support@freshly.local?subject=Freshly%20Admin%20help" className="hidden md:inline-flex h-9 px-3 rounded-lg text-muted-foreground hover:bg-secondary items-center gap-1.5 text-sm">
+            <a href="mailto:support@martify.local?subject=Martify%20Admin%20help" className="hidden md:inline-flex h-9 px-3 rounded-lg text-muted-foreground hover:bg-secondary items-center gap-1.5 text-sm">
               <HelpCircle className="size-4" /> Help
             </a>
             <Link to="/admin/notifications" className="relative size-9 rounded-lg hover:bg-secondary flex items-center justify-center">

@@ -10,7 +10,7 @@ import { api, type Customer, type Order as ApiOrder, type Product } from "@/lib/
 export const Route = createFileRoute("/admin/orders")({
   head: () => ({
     meta: [
-      { title: "Orders — Freshly Admin" },
+      { title: "Orders — Martify Admin" },
       { name: "description", content: "Full order lifecycle: pending, packing, shipped, delivered, refunds and returns." },
     ],
   }),

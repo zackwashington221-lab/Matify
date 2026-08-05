@@ -5,7 +5,7 @@ import { MapPin, Phone, MessageCircle, Package, Truck, CheckCircle2, Clock, Prin
 export const Route = createFileRoute("/admin/orders/$id")({
   head: ({ params }) => ({
     meta: [
-      { title: `Order #${params.id} — Freshly Admin` },
+      { title: `Order #${params.id} — Martify Admin` },
       { name: "description", content: `Manage order #${params.id}: items, delivery status, refunds and customer notes.` },
     ],
   }),

@@ -4,7 +4,7 @@ import { Sparkles, ShieldCheck, Zap, ArrowRight } from "lucide-react";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Freshly — AI Grocery Marketplace" },
+      { title: "Martify — AI Grocery Marketplace" },
       { name: "description", content: "Groceries, reimagined. AI-curated shopping with same-day delivery." },
     ],
   }),
@@ -22,7 +22,7 @@ function Welcome() {
         <header className="relative z-10 flex items-center justify-between px-6 pt-8">
           <div className="flex items-center gap-2">
             <div className="size-9 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald flex items-center justify-center text-white font-bold">F</div>
-            <span className="font-semibold tracking-tight">Freshly</span>
+            <span className="font-semibold tracking-tight">Martify</span>
           </div>
           <Link to="/auth" className="text-sm font-medium text-muted-foreground">Skip</Link>
         </header>

@@ -7,7 +7,7 @@ import { PageHeader, PageBody, StatCard, SectionCard, Tabs, ToolbarButton } from
 import { api, type Category, type Kpis } from "@/lib/api-client";
 import { revenueSeries as fallbackSeries, categoryShare as fallbackMix } from "@/lib/admin-mock";
 
-export const Route = createFileRoute("/admin/analytics")({ head: () => ({ meta: [{ title: "Analytics — Freshly Admin" }, { name: "description", content: "Filter live marketplace analytics by date range and product category." }] }), component: Analytics });
+export const Route = createFileRoute("/admin/analytics")({ head: () => ({ meta: [{ title: "Analytics — Martify Admin" }, { name: "description", content: "Filter live marketplace analytics by date range and product category." }] }), component: Analytics });
 const periods = [{ label: "Today", days: 1 }, { label: "7 days", days: 7 }, { label: "30 days", days: 30 }, { label: "90 days", days: 90 }];
 const colors = ["#16a34a", "#38bdf8", "#f59e0b", "#a855f7", "#f43f5e", "#64748b"];
 const tooltip = { background: "var(--color-card)", border: "1px solid var(--color-border)", borderRadius: 12, fontSize: 12 };

@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/admin/products")({
   head: () => ({
     meta: [
-      { title: "Products — Freshly Admin" },
+      { title: "Products — Martify Admin" },
       { name: "description", content: "Product catalog: pricing, variants, media, SEO, categories and AI optimization." },
     ],
   }),
@@ -33,7 +33,7 @@ function Products() {
         const mapped = catalog.data.map((product: ApiProduct) => ({
           id: product._id,
           name: product.name,
-          brand: product.brand || "Freshly",
+          brand: product.brand || "Martify",
           price: product.price,
           compareAt: product.compareAt,
           unit: product.unit || "each",

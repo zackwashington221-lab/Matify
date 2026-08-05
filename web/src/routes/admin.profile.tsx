@@ -69,7 +69,7 @@ function AdminProfile() {
     <>
       <PageHeader
         title="Your profile"
-        description="Manage the account currently signed in to the Martiffy admin console."
+        description="Manage the account currently signed in to the Martify admin console."
         actions={canCreateAdmins ? <ToolbarButton variant="primary" onClick={() => setCreateAdminOpen(true)}><UserPlus className="size-3.5" />Create admin</ToolbarButton> : undefined}
       />
       <PageBody className="max-w-3xl">

@@ -21,7 +21,7 @@ import { permissionGroups } from "@/lib/admin-platform-mock";
 import { api, type AdminUser, type RoleRecord } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/admin/roles")({
-  head: () => ({ meta: [{ title: "Roles & Permissions — Freshly Admin" }] }),
+  head: () => ({ meta: [{ title: "Roles & Permissions — Martify Admin" }] }),
   component: RolesPage,
 });
 function RolesPage() {

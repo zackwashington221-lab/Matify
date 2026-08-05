@@ -6,8 +6,8 @@ import { Sparkles, Send, Mic, Plus } from "lucide-react";
 export const Route = createFileRoute("/assistant")({
   head: () => ({
     meta: [
-      { title: "AI concierge — Freshly" },
-      { name: "description", content: "Chat with your Freshly AI for meal plans, budget-friendly picks, and recipe ideas." },
+      { title: "AI concierge — Martify" },
+      { name: "description", content: "Chat with your Martify AI for meal plans, budget-friendly picks, and recipe ideas." },
     ],
   }),
   component: Assistant,
@@ -38,7 +38,7 @@ function Assistant() {
               <Sparkles className="size-4" />
             </div>
             <div>
-              <div className="text-[14px] font-semibold leading-tight">Freshly AI</div>
+              <div className="text-[14px] font-semibold leading-tight">Martify AI</div>
               <div className="text-[10px] text-emerald-600 font-medium flex items-center gap-1">
                 <span className="size-1.5 rounded-full bg-emerald-500" /> Online
               </div>

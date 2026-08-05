@@ -7,7 +7,7 @@ import { Bell, Mail, MessageSquare, Plus, Smartphone } from "lucide-react";
 import { api, type NotificationRecord } from "@/lib/api-client";
 
 export const Route = createFileRoute("/admin/notifications")({
-  head: () => ({ meta: [{ title: "Notifications — Freshly Admin" }, { name: "description", content: "Create, target and deliver customer notifications." }] }),
+  head: () => ({ meta: [{ title: "Notifications — Martify Admin" }, { name: "description", content: "Create, target and deliver customer notifications." }] }),
   component: NotificationsAdmin,
 });
 

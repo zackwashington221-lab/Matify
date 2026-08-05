@@ -21,7 +21,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 export const Route = createFileRoute("/admin/team")({
-  head: () => ({ meta: [{ title: "Team & Access — Freshly Admin" }] }),
+  head: () => ({ meta: [{ title: "Team & Access — Martify Admin" }] }),
   component: TeamPage,
 });
 const tone: Record<string, "success" | "info" | "danger"> = {
@@ -236,7 +236,7 @@ function TeamPage() {
                     type="email"
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
-                    placeholder="name@freshly.io"
+                    placeholder="name@martify.io"
                     required
                   />
                 </Field>

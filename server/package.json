@@ -1,9 +1,9 @@
 {
-  "name": "freshly-admin-api",
+  "name": "martify-admin-api",
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "MongoDB + Express API powering the Freshly admin panel and the Expo mobile app.",
+  "description": "MongoDB + Express API powering the Martify admin panel and the Expo mobile app.",
   "main": "src/server.js",
   "scripts": {
     "dev": "node --watch src/server.js",

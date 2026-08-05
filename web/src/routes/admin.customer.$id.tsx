@@ -5,7 +5,7 @@ import { Mail, Phone, MapPin, Sparkles, ChevronRight } from "lucide-react";
 export const Route = createFileRoute("/admin/customer/$id")({
   head: () => ({
     meta: [
-      { title: "Customer — Freshly Admin" },
+      { title: "Customer — Martify Admin" },
       { name: "description", content: "Customer profile with orders, tier, LTV and AI retention insights." },
     ],
   }),

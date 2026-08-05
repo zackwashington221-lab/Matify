@@ -7,7 +7,7 @@ import { Minus, Plus, Trash2, Tag, Sparkles, ChevronRight, Truck } from "lucide-
 export const Route = createFileRoute("/cart")({
   head: () => ({
     meta: [
-      { title: "Your cart — Freshly" },
+      { title: "Your cart — Martify" },
       { name: "description", content: "Review your grocery cart, apply coupons, and check out." },
     ],
   }),

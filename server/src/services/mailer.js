@@ -21,14 +21,14 @@ export async function sendTeamInvite({
 
   const from =
     process.env.RESEND_FROM ||
-    "Freshly Admin <onboarding@resend.dev>";
+    "Martify Admin <onboarding@resend.dev>";
 
   const { data, error } = await resend.emails.send({
     from,
     to: email,
-    subject: "You're invited to Freshly Admin",
+    subject: "You're invited to Martify Admin",
     text: `
-You have been invited to Freshly Admin as ${role}.
+You have been invited to Martify Admin as ${role}.
 
 Complete your account setup:
 ${inviteUrl}
@@ -36,12 +36,12 @@ ${inviteUrl}
     html: `
       <div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:auto">
         <h1 style="color:#15803d">
-          Welcome to Freshly Admin
+          Welcome to Martify Admin
         </h1>
 
         <p>
           You have been invited to join the
-          <strong>Freshly Admin Console</strong>
+          <strong>Martify Admin Console</strong>
           as <strong>${role}</strong>.
         </p>
 

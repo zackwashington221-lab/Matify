@@ -21,7 +21,7 @@ import {
 import { api } from "@/lib/api-client";
 import { cohorts as fallback } from "@/lib/admin-platform-mock";
 export const Route = createFileRoute("/admin/cohorts")({
-  head: () => ({ meta: [{ title: "Cohorts & Retention — Freshly Admin" }] }),
+  head: () => ({ meta: [{ title: "Cohorts & Retention — Martify Admin" }] }),
   component: CohortsPage,
 });
 type Cohort = { month: string; size: number; avgLtv: number; repeatRate: number; orders: number };

@@ -6,7 +6,7 @@ import { Sparkles, MapPin, Bell, Search, Zap, TrendingUp, ChevronRight, Plus, St
 export const Route = createFileRoute("/home")({
   head: () => ({
     meta: [
-      { title: "Home — Freshly" },
+      { title: "Home — Martify" },
       { name: "description", content: "Your AI-curated grocery feed with personalized picks and same-day delivery." },
     ],
   }),

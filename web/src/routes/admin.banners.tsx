@@ -6,7 +6,7 @@ import { Eye, Image as ImageIcon, Plus } from "lucide-react";
 import { api, type Banner } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/admin/banners")({ head: () => ({ meta: [{ title: "Banners — Freshly Admin" }] }), component: Banners });
+export const Route = createFileRoute("/admin/banners")({ head: () => ({ meta: [{ title: "Banners — Martify Admin" }] }), component: Banners });
 const tone: Record<string, "success" | "info" | "muted" | "warning"> = { live: "success", scheduled: "info", archived: "muted", draft: "warning" };
 const gradients = ["from-primary to-accent", "from-amber-400 to-rose-500", "from-sky-500 to-indigo-600", "from-fuchsia-500 to-purple-600"];
 

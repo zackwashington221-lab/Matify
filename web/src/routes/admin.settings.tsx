@@ -9,7 +9,7 @@ import { api, type SettingRecord } from "@/lib/api-client";
 export const Route = createFileRoute("/admin/settings")({
   head: () => ({
     meta: [
-      { title: "Settings — Freshly Admin" },
+      { title: "Settings — Martify Admin" },
       {
         name: "description",
         content: "Store-wide delivery, checkout, notification, security and feature controls.",
@@ -20,8 +20,8 @@ export const Route = createFileRoute("/admin/settings")({
 });
 type Values = Record<string, string | number | boolean>;
 const defaults: Values = {
-  "store.name": "Freshly",
-  "support.email": "help@freshly.io",
+  "store.name": "Martify",
+  "support.email": "help@martify.io",
   "store.timezone": "Asia/Karachi",
   "checkout.currency": "USD",
   "delivery.radiusKm": 12,
@@ -38,7 +38,7 @@ const defaults: Values = {
   "security.requireMfa": false,
   "security.sessionHours": 24,
   "maintenance.enabled": false,
-  "maintenance.message": "We are making Freshly better. Please check back shortly.",
+  "maintenance.message": "We are making Martify better. Please check back shortly.",
   "feature.aiRecommendations": true,
   "feature.scheduledDelivery": true,
   "feature.referrals": false,

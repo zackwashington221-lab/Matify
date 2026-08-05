@@ -78,9 +78,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { title: "Freshly — AI Grocery Marketplace" },
+      { title: "Martify — AI Grocery Marketplace" },
       { name: "description", content: "Shop smarter. AI-powered grocery marketplace with personalized recommendations, budget planning, and same-day delivery." },
-      { property: "og:title", content: "Freshly — AI Grocery Marketplace" },
+      { property: "og:title", content: "Martify — AI Grocery Marketplace" },
       { property: "og:description", content: "AI-powered grocery shopping with same-day delivery, smart meal planning, and personalized picks." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

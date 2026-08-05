@@ -5,8 +5,8 @@ import { Heart, MapPin, CreditCard, Bell, Sparkles, HelpCircle, Settings, Chevro
 export const Route = createFileRoute("/profile")({
   head: () => ({
     meta: [
-      { title: "You — Freshly" },
-      { name: "description", content: "Your Freshly account, orders, addresses, and preferences." },
+      { title: "You — Martify" },
+      { name: "description", content: "Your Martify account, orders, addresses, and preferences." },
     ],
   }),
   component: Profile,
@@ -81,7 +81,7 @@ function Profile() {
           <MenuRow icon={<Settings className="size-4" />} label="Settings" />
           <MenuRow icon={<LogOut className="size-4 text-destructive" />} label="Sign out" cls="text-destructive" />
         </div>
-        <div className="text-center text-[11px] text-muted-foreground mt-4">Freshly v3.2 · Made with 🥑</div>
+        <div className="text-center text-[11px] text-muted-foreground mt-4">Martify v3.2 · Made with 🥑</div>
       </div>
     </MobileShell>
   );

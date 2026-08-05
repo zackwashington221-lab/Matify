@@ -8,7 +8,7 @@ import { customers, type Customer } from "@/lib/admin-mock";
 export const Route = createFileRoute("/admin/customers")({
   head: () => ({
     meta: [
-      { title: "Customers — Freshly Admin" },
+      { title: "Customers — Martify Admin" },
       { name: "description", content: "Customer directory with LTV, tiers, segments and AI churn signals." },
     ],
   }),

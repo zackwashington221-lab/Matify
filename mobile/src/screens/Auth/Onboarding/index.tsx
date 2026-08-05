@@ -68,7 +68,7 @@ const WelcomeScreen = () => {
                 <Text style={styles.brand_logo_text}>F</Text>
               </LinearGradient>
 
-              <Text style={styles.brand_name}>Freshly</Text>
+              <Text style={styles.brand_name}>Martify</Text>
             </View>
 
             <Pressable

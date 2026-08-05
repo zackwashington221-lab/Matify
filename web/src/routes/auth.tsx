@@ -5,8 +5,8 @@ import { Mail, Lock, Phone, Fingerprint, Apple, Eye, EyeOff, ArrowRight } from "
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Sign in — Freshly" },
-      { name: "description", content: "Sign in or create your Freshly account." },
+      { title: "Sign in — Martify" },
+      { name: "description", content: "Sign in or create your Martify account." },
     ],
   }),
   component: AuthPage,
@@ -97,7 +97,7 @@ function AuthPage() {
         </button>
 
         <p className="text-[11px] text-center text-muted-foreground mt-auto pt-6 leading-relaxed">
-          By continuing you agree to Freshly's <span className="underline">Terms</span> and <span className="underline">Privacy Policy</span>.
+          By continuing you agree to Martify's <span className="underline">Terms</span> and <span className="underline">Privacy Policy</span>.
         </p>
       </div>
     </div>

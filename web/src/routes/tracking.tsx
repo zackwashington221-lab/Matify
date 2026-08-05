@@ -5,8 +5,8 @@ import { Check, MessageCircle, Phone, Sparkles, MapPin } from "lucide-react";
 export const Route = createFileRoute("/tracking")({
   head: () => ({
     meta: [
-      { title: "Order tracking — Freshly" },
-      { name: "description", content: "Live tracking for your Freshly grocery order." },
+      { title: "Order tracking — Martify" },
+      { name: "description", content: "Live tracking for your Martify grocery order." },
     ],
   }),
   component: Tracking,
@@ -60,7 +60,7 @@ function Tracking() {
             <div className="size-6 rounded-lg bg-primary-soft flex items-center justify-center">🏪</div>
             <div>
               <div className="text-[10px] text-muted-foreground uppercase tracking-wider">From</div>
-              <div className="text-[12px] font-semibold">Freshly Hub</div>
+              <div className="text-[12px] font-semibold">Martify Hub</div>
             </div>
           </div>
           <div className="absolute right-4 bottom-4 rounded-2xl bg-card shadow-card border border-border px-3 py-2 flex items-center gap-2">

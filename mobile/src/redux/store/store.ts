@@ -26,7 +26,7 @@ const reducer = combineReducers({
 });
 
 const persistedReducer = persistReducer(
-  { key: "com.freshly.mobile", storage: mmkvStorage, whitelist: ["auth", "cart", "general"] },
+  { key: "com.martify.mobile", storage: mmkvStorage, whitelist: ["auth", "cart", "general"] },
   reducer,
 );
 

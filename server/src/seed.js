@@ -58,12 +58,12 @@ async function run() {
   /* users & roles */
   const hash = await bcrypt.hash("Password123!", 10);
   const staff = await User.insertMany([
-    { name: "Amara Osei", email: "amara@freshly.io", role: "Owner", passwordHash: hash, mfaEnabled: true },
-    { name: "Daniel Reyes", email: "daniel@freshly.io", role: "Admin", passwordHash: hash, mfaEnabled: true },
-    { name: "Wei Zhang", email: "wei@freshly.io", role: "Ops Manager", passwordHash: hash },
-    { name: "Lena Fischer", email: "lena@freshly.io", role: "Support", passwordHash: hash, mfaEnabled: true },
-    { name: "Marco Bianchi", email: "marco@freshly.io", role: "Analyst", passwordHash: hash, status: "invited" },
-    { name: "Tom Becker", email: "tom@freshly.io", role: "Read only", passwordHash: hash, status: "suspended" },
+    { name: "Amara Osei", email: "amara@martify.io", role: "Owner", passwordHash: hash, mfaEnabled: true },
+    { name: "Daniel Reyes", email: "daniel@martify.io", role: "Admin", passwordHash: hash, mfaEnabled: true },
+    { name: "Wei Zhang", email: "wei@martify.io", role: "Ops Manager", passwordHash: hash },
+    { name: "Lena Fischer", email: "lena@martify.io", role: "Support", passwordHash: hash, mfaEnabled: true },
+    { name: "Marco Bianchi", email: "marco@martify.io", role: "Analyst", passwordHash: hash, status: "invited" },
+    { name: "Tom Becker", email: "tom@martify.io", role: "Read only", passwordHash: hash, status: "suspended" },
     { name: "Alex Morgan", email: "alex@example.com", role: "Customer", passwordHash: hash },
   ]);
 
@@ -210,18 +210,18 @@ async function run() {
   ]);
 
   await ScheduledReport.insertMany([
-    { name: "Executive KPI digest", cadence: "Daily", recipients: ["amara@freshly.io", "daniel@freshly.io"], format: "PDF", nextRunAt: daysAgo(-1), status: "active" },
-    { name: "Inventory reorder sheet", cadence: "Weekly", recipients: ["wei@freshly.io"], format: "XLSX", nextRunAt: daysAgo(-3), status: "active" },
-    { name: "Cohort retention model", cadence: "Monthly", recipients: ["marco@freshly.io"], format: "CSV", nextRunAt: daysAgo(-12), status: "active" },
-    { name: "Promo performance", cadence: "Weekly", recipients: ["daniel@freshly.io"], format: "PDF", nextRunAt: daysAgo(-5), status: "paused" },
+    { name: "Executive KPI digest", cadence: "Daily", recipients: ["amara@martify.io", "daniel@martify.io"], format: "PDF", nextRunAt: daysAgo(-1), status: "active" },
+    { name: "Inventory reorder sheet", cadence: "Weekly", recipients: ["wei@martify.io"], format: "XLSX", nextRunAt: daysAgo(-3), status: "active" },
+    { name: "Cohort retention model", cadence: "Monthly", recipients: ["marco@martify.io"], format: "CSV", nextRunAt: daysAgo(-12), status: "active" },
+    { name: "Promo performance", cadence: "Weekly", recipients: ["daniel@martify.io"], format: "PDF", nextRunAt: daysAgo(-5), status: "paused" },
   ]);
 
   await Setting.insertMany([
-    { key: "store.name", value: "Freshly", group: "general" },
+    { key: "store.name", value: "Martify", group: "general" },
     { key: "delivery.radiusKm", value: 12, group: "delivery" },
     { key: "delivery.freeThreshold", value: 45, group: "delivery" },
     { key: "checkout.currency", value: "USD", group: "payments" },
-    { key: "support.email", value: "help@freshly.io", group: "general" },
+    { key: "support.email", value: "help@martify.io", group: "general" },
   ]);
 
   await AuditLog.insertMany(
@@ -238,7 +238,7 @@ async function run() {
   );
 
   console.log(`[seed] done — ${products.length} products, ${inventory.length} inventory rows, ${savedOrders.length} orders, ${staff.length} users`);
-  console.log("[seed] admin login: amara@freshly.io / Password123!");
+  console.log("[seed] admin login: amara@martify.io / Password123!");
   await mongoose.disconnect();
 }
 

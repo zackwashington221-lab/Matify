@@ -1,8 +1,8 @@
-# Martiffy Project Review
+# Martify Project Review
 
 ## 1. Purpose and scope
 
-Martiffy is a grocery-commerce platform with three independently runnable applications that share one Express and MongoDB API:
+Martify is a grocery-commerce platform with three independently runnable applications that share one Express and MongoDB API:
 
 | Area | Location | Main users | Responsibility |
 | --- | --- | --- | --- |
@@ -187,19 +187,19 @@ npm run start
 | Medium | The web console mixes real API infrastructure with mock-backed screens. | Track the migration by screen and avoid deploying a misleading mixture of live and static data. |
 | Medium | API rate limiting is global and simple. | Add per-sensitive-route limits (login, signup, password changes) and monitoring. |
 | Medium | Generic CRUD routes accept request bodies directly. | Introduce route-level Zod schemas/allowlists for each resource before exposing production admin access. |
-| Low | Product naming and documentation are inconsistent: Martiffy/Martify, Freshly, and Graspra remain in different files. | Complete a single branding and documentation pass. |
+| Low | Product naming and documentation are inconsistent: Martify/Martify, Martify, and Graspra remain in different files. | Complete a single branding and documentation pass. |
 
 ## 8. Documentation status
 
 This review reflects the code currently in the repository. Existing documents that need revision are:
 
 - `web/README.md` still reads as a generic Lovable template and describes the former root-level web layout.
-- `server/README.md` uses the previous Freshly name and does not yet list the dedicated admin creation endpoint or separate admin seed.
+- `server/README.md` uses the previous Martify name and does not yet list the dedicated admin creation endpoint or separate admin seed.
 - `mobile/structure.md` and `mobile/service.md` describe a different, older Graspra architecture and file tree. They should not be used as the authoritative guide for the present mobile source.
 
 ## 9. Recommended delivery order
 
-1. Finish the Martiffy brand and documentation cleanup.
+1. Finish the Martify brand and documentation cleanup.
 2. Secure configuration: strong JWT secret, deployment-specific environment variables, and removal of source-controlled initial passwords.
 3. Connect the most important web admin screens to live APIs.
 4. Add test coverage and CI gates for build, formatting, and key authorization flows.

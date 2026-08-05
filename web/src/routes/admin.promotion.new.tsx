@@ -9,9 +9,9 @@ import { api } from "@/lib/api-client";
 export const Route = createFileRoute("/admin/promotion/new")({
   head: () => ({
     meta: [
-      { title: "New Promotion — Freshly Admin" },
+      { title: "New Promotion — Martify Admin" },
       { name: "description", content: "Build coupons, flash sales, bundles and cashback offers with targeting and budget caps." },
-      { property: "og:title", content: "New Promotion — Freshly Admin" },
+      { property: "og:title", content: "New Promotion — Martify Admin" },
       { property: "og:description", content: "Build coupons, flash sales, bundles and cashback offers with targeting and budget caps." },
     ],
   }),

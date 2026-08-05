@@ -12,9 +12,9 @@ import { returnCases, type ReturnCase } from "@/lib/admin-platform-mock";
 export const Route = createFileRoute("/admin/returns")({
   head: () => ({
     meta: [
-      { title: "Return Orders — Freshly Admin" },
+      { title: "Return Orders — Martify Admin" },
       { name: "description", content: "Review returned orders, approve refunds within policy and track refund spend by reason." },
-      { property: "og:title", content: "Return Orders — Freshly Admin" },
+      { property: "og:title", content: "Return Orders — Martify Admin" },
       { property: "og:description", content: "Review returned orders, approve refunds within policy and track refund spend by reason." },
     ],
   }),

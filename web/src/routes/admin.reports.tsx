@@ -14,7 +14,7 @@ import { DataTable, type Column } from "@/components/admin/DataTable";
 import { Field, FormGrid, SelectInput, TextInput } from "@/components/admin/form";
 import { api, type ScheduledReport } from "@/lib/api-client";
 export const Route = createFileRoute("/admin/reports")({
-  head: () => ({ meta: [{ title: "Scheduled Reports — Freshly Admin" }] }),
+  head: () => ({ meta: [{ title: "Scheduled Reports — Martify Admin" }] }),
   component: ReportsPage,
 });
 const cadenceValues = [
@@ -96,7 +96,7 @@ function ReportsPage() {
             `${csv(report.name)},${kpis.data.revenue30d},${kpis.data.orders30d},${kpis.data.avgOrderValue},${kpis.data.customers}`,
         ),
       ];
-      download(rows.join("\n"), "freshly-report-run.csv");
+      download(rows.join("\n"), "martify-report-run.csv");
       toast.success(
         `${selected.length} report${selected.length === 1 ? "" : "s"} generated and downloaded`,
       );
@@ -216,7 +216,7 @@ function ReportsPage() {
                   <TextInput
                     value={recipients}
                     onChange={(event) => setRecipients(event.target.value)}
-                    placeholder="ops@freshly.io, cfo@freshly.io"
+                    placeholder="ops@martify.io, cfo@martify.io"
                   />
                 </Field>
               </FormGrid>

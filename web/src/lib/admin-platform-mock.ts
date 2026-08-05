@@ -18,13 +18,13 @@ export type TeamMember = {
 };
 
 export const teamMembers: TeamMember[] = [
-  { id: "U-01", name: "Amara Osei", email: "amara@freshly.io", role: "Owner", status: "active", lastActive: iso(0, 9), mfa: true },
-  { id: "U-02", name: "Daniel Reyes", email: "daniel@freshly.io", role: "Admin", status: "active", lastActive: iso(0, 8), mfa: true },
-  { id: "U-03", name: "Wei Zhang", email: "wei@freshly.io", role: "Ops Manager", status: "active", lastActive: iso(1), mfa: false },
-  { id: "U-04", name: "Lena Fischer", email: "lena@freshly.io", role: "Support", status: "active", lastActive: iso(0, 11), mfa: true },
-  { id: "U-05", name: "Marco Bianchi", email: "marco@freshly.io", role: "Analyst", status: "invited", lastActive: iso(3), mfa: false },
-  { id: "U-06", name: "Sana Iqbal", email: "sana@freshly.io", role: "Support", status: "active", lastActive: iso(2), mfa: true },
-  { id: "U-07", name: "Tom Becker", email: "tom@freshly.io", role: "Read only", status: "suspended", lastActive: iso(21), mfa: false },
+  { id: "U-01", name: "Amara Osei", email: "amara@martify.io", role: "Owner", status: "active", lastActive: iso(0, 9), mfa: true },
+  { id: "U-02", name: "Daniel Reyes", email: "daniel@martify.io", role: "Admin", status: "active", lastActive: iso(0, 8), mfa: true },
+  { id: "U-03", name: "Wei Zhang", email: "wei@martify.io", role: "Ops Manager", status: "active", lastActive: iso(1), mfa: false },
+  { id: "U-04", name: "Lena Fischer", email: "lena@martify.io", role: "Support", status: "active", lastActive: iso(0, 11), mfa: true },
+  { id: "U-05", name: "Marco Bianchi", email: "marco@martify.io", role: "Analyst", status: "invited", lastActive: iso(3), mfa: false },
+  { id: "U-06", name: "Sana Iqbal", email: "sana@martify.io", role: "Support", status: "active", lastActive: iso(2), mfa: true },
+  { id: "U-07", name: "Tom Becker", email: "tom@martify.io", role: "Read only", status: "suspended", lastActive: iso(21), mfa: false },
 ];
 
 export const permissionGroups = [
@@ -72,8 +72,8 @@ const auditSeed: [string, string, string, AuditEntry["severity"]][] = [
   ["Daniel Reyes", "apikey.created", "Mobile app (prod)", "critical"],
   ["Sana Iqbal", "customer.exported", "1,204 records", "warning"],
   ["Wei Zhang", "promotion.ended", "Flash: Salmon 30% off", "info"],
-  ["Amara Osei", "member.invited", "marco@freshly.io", "info"],
-  ["System", "login.failed", "tom@freshly.io ×5", "warning"],
+  ["Amara Osei", "member.invited", "marco@martify.io", "info"],
+  ["System", "login.failed", "tom@martify.io ×5", "warning"],
   ["Daniel Reyes", "banner.scheduled", "Slot 2 · Sunday Basket", "info"],
   ["Amara Osei", "settings.updated", "Delivery radius 12km", "info"],
 ];
