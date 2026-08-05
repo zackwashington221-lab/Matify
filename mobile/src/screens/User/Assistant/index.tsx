@@ -1,40 +1,114 @@
 import React from "react";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import { Send, Sparkles } from "lucide-react-native";
 import { useNavigation } from "@react-navigation/native";
 import PrimaryLayout from "../../../layouts/PrimaryLayout";
 import Header from "../../../components/Header";
 import Input from "../../../components/Input";
+import { Badge, Card, Divider, Loading, ProductImage } from "../../../components/ui";
+import { colors, money, radius, spacing, type } from "../../../theme";
 import { styles } from "../../styles";
 import useAssistantController from "./useAssistantController";
 
 export default function Assistant() {
   const { values, functions } = useAssistantController();
   const navigation = useNavigation<any>();
+
   return (
     <PrimaryLayout contentStyle={styles.page}>
-      <Header title="Martify AI" back />
-      {values.messages.map((message, index) => (
-        <View key={index} style={[styles.card, message.role === "user" && styles.hero]}>
-          <Text style={message.role === "user" ? styles.heroText : styles.productName}>{message.text}</Text>
-          {message.recommendations?.map((recommendation) => (
-            <Pressable
-              key={recommendation.product._id}
-              style={styles.card}
-              onPress={() => navigation.navigate("Product", { slug: recommendation.product.slug })}
-            >
-              <Text style={styles.productName}>{recommendation.product.emoji || "🛍️"} {recommendation.product.name} × {recommendation.qty}</Text>
-              <Text style={styles.muted}>{recommendation.reason}</Text>
-              <Text style={styles.productPrice}>${(recommendation.product.price * recommendation.qty).toFixed(2)}</Text>
-            </Pressable>
-          ))}
-          {message.recommendations?.length ? <Text style={styles.muted}>Basket total: ${message.total?.toFixed(2)}</Text> : null}
-        </View>
-      ))}
-      {values.isLoading ? <ActivityIndicator style={{ marginVertical: 12 }} /> : null}
-      <View style={styles.row}>
-        <Input value={values.input} onChangeText={functions.setInput} placeholder="Ask Martify AI…" style={{ flex: 1 }} editable={!values.isLoading} />
-        <Pressable onPress={() => void functions.send()} disabled={values.isLoading}><Text style={styles.productName}>Send</Text></Pressable>
+      <Header title="Martify AI" subtitle="Budget-aware baskets and swaps" back />
+
+      {values.messages.map((message, index) =>
+        message.role === "user" ? (
+          <View key={index} style={bubbleUser}>
+            <Text style={{ color: colors.onPrimary, fontSize: 14, lineHeight: 20 }}>{message.text}</Text>
+          </View>
+        ) : (
+          <Card key={index} style={{ marginTop: spacing.md, alignSelf: "flex-start", maxWidth: "94%" }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <Sparkles size={13} color={colors.primary} />
+              <Text style={type.eyebrow}>MARTIFY AI</Text>
+            </View>
+            <Text style={[type.body, { marginTop: 8 }]}>{message.text}</Text>
+
+            {message.recommendations?.length ? (
+              <View style={{ marginTop: spacing.md }}>
+                {message.recommendations.map((recommendation, position) => (
+                  <View key={recommendation.product._id}>
+                    {position > 0 ? <Divider style={{ marginVertical: spacing.sm }} /> : null}
+                    <Pressable
+                      onPress={() => navigation.navigate("Product", { slug: recommendation.product.slug })}
+                      style={{ flexDirection: "row", alignItems: "center", gap: spacing.md }}
+                    >
+                      <ProductImage
+                        uri={recommendation.product.imageUrl}
+                        emoji={recommendation.product.emoji}
+                        height={52}
+                        glyphSize={24}
+                        style={{ width: 52 }}
+                      />
+                      <View style={{ flex: 1, minWidth: 0 }}>
+                        <Text numberOfLines={1} style={type.label}>
+                          {recommendation.product.name} × {recommendation.qty}
+                        </Text>
+                        <Text numberOfLines={2} style={[type.caption, { marginTop: 2 }]}>
+                          {recommendation.reason}
+                        </Text>
+                      </View>
+                      <Text style={type.label}>
+                        {money(recommendation.product.price * recommendation.qty)}
+                      </Text>
+                    </Pressable>
+                  </View>
+                ))}
+                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: spacing.lg }}>
+                  <Badge label="Basket ready" tone="sage" />
+                  <Text style={[type.subtitle, { fontSize: 16 }]}>{money(message.total || 0)}</Text>
+                </View>
+              </View>
+            ) : null}
+          </Card>
+        ),
+      )}
+
+      {values.isLoading ? <Loading label="Thinking through your basket…" /> : null}
+
+      <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.md, marginTop: spacing.lg }}>
+        <Input
+          value={values.input}
+          onChangeText={functions.setInput}
+          placeholder="Ask for a healthy week under $60…"
+          containerStyle={{ flex: 1, marginTop: 0 }}
+          editable={!values.isLoading}
+          onSubmitEditing={() => void functions.send()}
+        />
+        <Pressable
+          onPress={() => void functions.send()}
+          disabled={values.isLoading}
+          style={({ pressed }) => [sendButton, pressed && { opacity: 0.85 }]}
+        >
+          <Send size={18} color={colors.onPrimary} />
+        </Pressable>
       </View>
     </PrimaryLayout>
   );
 }
+
+const bubbleUser = {
+  alignSelf: "flex-end" as const,
+  maxWidth: "88%" as const,
+  marginTop: spacing.md,
+  paddingHorizontal: spacing.lg,
+  paddingVertical: spacing.md,
+  borderRadius: radius.lg,
+  backgroundColor: colors.primary,
+};
+
+const sendButton = {
+  width: 54,
+  height: 54,
+  borderRadius: radius.pill,
+  backgroundColor: colors.primary,
+  alignItems: "center" as const,
+  justifyContent: "center" as const,
+};
