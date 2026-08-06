@@ -12,7 +12,7 @@ cd server
 cp .env.example .env      # set MONGODB_URI + JWT_SECRET
 npm install
 npm run seed              # safely loads demo catalog, orders, customers, staff into an empty database
-npm run seed:products     # adds/updates the expanded storefront catalog without deleting existing data
+npm run seed:products     # upserts the complete 100-product storefront catalog without deleting existing data
 npm run dev               # http://localhost:4000/api
 ```
 
