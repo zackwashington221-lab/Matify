@@ -19,8 +19,8 @@ router.post("/shopper", requireAuth, asyncHandler(async (req, res) => {
 }));
 
 function budgetFromMessage(message) {
-  const match = message.match(/(?:under|within|budget(?:\s+of)?)\s*\$?\s*(\d+(?:\.\d{1,2})?)|for\s*\$\s*(\d+(?:\.\d{1,2})?)/i);
-  return match ? Number(match[1] || match[2]) : undefined;
+  const match = message.match(/(?:under|within|for|budget(?:\s+(?:of|is|equals|=))?|(?:i\s+)?(?:have|got))\s*\$?\s*(\d+(?:\.\d{1,2})?)(?:\s*(?:dollars?|bucks?))?/i);
+  return match ? Number(match[1]) : undefined;
 }
 
 export default router;

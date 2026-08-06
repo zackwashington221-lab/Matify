@@ -29,7 +29,7 @@ export async function getShoppingAdvice({ message, products, budget, preferences
   const prompt = [
     "You are Martify's in-store shopping assistant.",
     "Only handle Martify catalogue, product discovery, basket planning, grocery shopping, budgets, swaps, availability, and delivery questions. Refuse all unrelated requests in one sentence and invite the customer to shop Martify products.",
-    "When recommending products, choose only exact IDs from the catalog and respect the stated budget. Never invent products, prices, discounts, or availability.",
+    "When recommending products, choose only exact IDs from the catalog and respect the stated budget. For a basket request with a budget, aim for a useful, varied basket worth roughly 80–100% of that budget unless the customer asks for only a few specific items. Never invent products, prices, discounts, or availability.",
     "Return valid JSON only in this exact shape:",
     '{"reply":"string","recommendations":[{"productId":"string","qty":1,"reason":"string"}]}',
     "Use an empty recommendations array for general questions.",
@@ -100,15 +100,16 @@ function catalogFallback({ message, products, budget, preferences }) {
     .sort((a, b) => (b.rating || 0) - (a.rating || 0) || (b.reviews || 0) - (a.reviews || 0));
   const recommendations = [];
   let total = 0;
+  const targetTotal = budget == null ? Infinity : budget * 0.8;
   for (const product of candidates) {
-    if (recommendations.length === 5) break;
+    if (recommendations.length === 12 || total >= targetTotal) break;
     if (budget != null && total + product.price > budget + 0.001) continue;
     recommendations.push({ product, qty: 1, reason: healthy ? "A highly rated, wholesome choice from the current catalogue." : "A highly rated choice available from Martify today." });
     total += product.price;
   }
   const roundedTotal = Math.round(total * 100) / 100;
   return {
-    reply: recommendations.length ? `I built a ${healthy ? "health-focused " : ""}basket with ${recommendations.length} items${budget != null ? ` within your $${budget.toFixed(2)} budget` : ""}.` : "I couldn't find a basket that fits that budget. Try increasing it slightly or ask for fewer items.",
+    reply: recommendations.length ? `I built a ${healthy ? "health-focused " : ""}basket with ${recommendations.length} items${budget != null ? ` for $${roundedTotal.toFixed(2)} of your $${budget.toFixed(2)} budget` : ""}.` : "I couldn't find a basket that fits that budget. Try increasing it slightly or ask for fewer items.",
     recommendations,
     total: roundedTotal,
     budget,
