@@ -38,6 +38,12 @@ router.post(
     const subtotal = round(lines.reduce((s, l) => s + l.price * l.qty, 0));
     const deliveryFee = deliverySlot === "60min" || subtotal <= 35 ? 3.99 : 0;
     const discount = 0;
+    const riders = [
+      { name: "Jamie Rivers", phone: "+15550182451", rating: 4.9 },
+      { name: "Marcus Lee", phone: "+15550182452", rating: 4.8 },
+      { name: "Avery Chen", phone: "+15550182453", rating: 4.9 },
+    ];
+    const rider = riders[Math.floor(Math.random() * riders.length)];
     const customer = await Customer.findOneAndUpdate(
       { email: req.user.email },
       { email: req.user.email, name: req.user.name, user: req.user._id },
@@ -55,6 +61,8 @@ router.post(
       status: "confirmed",
       paymentStatus: "unpaid",
       paymentMethod,
+      deliveryWindow: deliverySlot,
+      rider,
       channel: "web",
       address,
       timeline: [{ label: "Order placed", at: new Date() }],

@@ -167,6 +167,8 @@ export const Order = def("Order", {
   status: { type: String, enum: ORDER_STATUSES, default: "pending", index: true },
   paymentStatus: { type: String, enum: ["unpaid", "paid", "refunded", "partially_refunded"], default: "unpaid" },
   paymentMethod: { type: String, enum: ["card", "wallet", "cash"], default: "cash" },
+  deliveryWindow: { type: String, enum: ["60min", "2h", "evening"], default: "2h" },
+  rider: { name: String, phone: String, rating: Number },
   channel: { type: String, enum: ["app", "web", "phone"], default: "app" },
   address: String,
   courier: String,

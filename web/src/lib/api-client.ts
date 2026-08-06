@@ -248,6 +248,8 @@ export type Order = {
   _id: Id; reference: string; customer: Customer | Id; items: OrderItem[]; subtotal: number; deliveryFee: number;
   discount: number; total: number; status: "pending" | "confirmed" | "picking" | "out_for_delivery" | "delivered" | "cancelled";
   paymentStatus: string; channel: string; address?: string; courier?: string; placedAt: string; deliveredAt?: string;
+  paymentMethod?: "card" | "wallet" | "cash"; deliveryWindow?: "60min" | "2h" | "evening";
+  rider?: { name?: string; phone?: string; rating?: number };
   timeline: { label: string; at: string; note?: string }[];
 };
 export type ReturnCase = { _id: Id; reference: string; reason: string; items: number; amount: number; status: string; resolutionNote?: string; createdAt: string };
