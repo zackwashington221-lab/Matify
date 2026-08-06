@@ -15,12 +15,9 @@ export const customerApi = createApi({
   tagTypes: ["Addresses", "PaymentMethods", "Preferences", "Wishlist"],
   endpoints: (builder) => ({
     getCart: builder.query<{ product: Product; qty: number }[], void>({
-      queryFn: async (_arg, api, extraOptions) => {
-        if (USE_MOCK_DATA) return { data: [] };
-        const result = await baseQuery("/mobile/cart", api, extraOptions);
-        if ("error" in result) return { error: result.error };
-        return { data: (result.data as { items: { product: Product; qty: number }[] }).items };
-      },
+      queryFn: async (_arg, api, extraOptions) => USE_MOCK_DATA
+        ? { data: [] }
+        : baseQuery("/mobile/cart", api, extraOptions) as Promise<{ data: { product: Product; qty: number }[] }>,
     }),
     getProfile: builder.query<User, void>({
       queryFn: async (_arg, api, extraOptions) => USE_MOCK_DATA ? { data: mockUser } : baseQuery("/mobile/profile", api, extraOptions) as Promise<{ data: User }>,
