@@ -20,10 +20,10 @@ export const Route = createFileRoute("/checkout")({
   component: Checkout,
 });
 
-const slots = [
+const baseSlots = [
   { id: "60min", top: "Within 60 min", bot: "$3.99 · fastest" },
   { id: "2h", top: "2-hour window", bot: "Free" },
-  { id: "evening", top: "Tonight 6–8pm", bot: "Free" },
+  { id: "evening", top: "In 6 hours", bot: "Free" },
 ];
 
 const payments = [
@@ -37,6 +37,7 @@ function Checkout() {
   const { user, updateProfile } = useCustomerSession();
   const navigate = useNavigate();
   const [slot, setSlot] = useState("2h");
+  const [sixHourTime, setSixHourTime] = useState("");
   const [payment, setPayment] = useState("card");
   const [details, setDetails] = useState({ name: "", email: "", phone: "", company: "", address: "", apartment: "", city: "", state: "", postcode: "", notes: "", cardNumber: "", expiry: "", cvc: "", cardPostcode: "" });
   const [saving, setSaving] = useState(false);
@@ -61,6 +62,14 @@ function Checkout() {
       }));
     }).catch(() => undefined);
   }, [user?.id]);
+
+  useEffect(() => {
+    setSixHourTime(new Date(Date.now() + 6 * 60 * 60 * 1000).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }));
+  }, []);
+
+  const slots = baseSlots.map((slotOption) => slotOption.id === "evening" && sixHourTime
+    ? { ...slotOption, top: `Today, ${sixHourTime}`, bot: "6 hours from now · Free" }
+    : slotOption);
 
   const updateDetail = (key: keyof typeof details) => (value: string) => setDetails((current) => ({ ...current, [key]: value }));
 
