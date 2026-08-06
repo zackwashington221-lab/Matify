@@ -113,6 +113,9 @@ export const api = {
     product: (slug: string) => request<{ data: Product & { stock?: number } }>(`/storefront/products/${encodeURIComponent(slug)}`),
     categories: () => request<{ data: Category[] }>("/storefront/categories"),
   },
+  ai: {
+    shopper: (message: string, budget?: number) => request<{ data: ShoppingAdvice }>("/ai/shopper", { method: "POST", body: JSON.stringify({ message, budget }) }),
+  },
   inventory: {
     ...resource<InventoryItem>("/inventory"),
     lowStock: () => request<{ data: InventoryItem[] }>("/inventory/low-stock"),
@@ -207,3 +210,4 @@ export type IntegrationRecord = { _id: Id; name: string; category: string; descr
 export type SettingRecord = { _id: Id; key: string; value: unknown; group: string };
 export type AuditEntry = { _id: Id; actor: string; action: string; target?: string; severity: "info" | "warning" | "critical"; ip?: string; createdAt: string };
 export type Kpis = { revenue30d: number; orders30d: number; avgOrderValue: number; customers: number; lowStockCount: number };
+export type ShoppingAdvice = { reply: string; recommendations: { product: Product; qty: number; reason: string }[]; total: number; budget?: number };
