@@ -1,4 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { api } from "@/lib/api-client";
+import { useCustomerSession } from "@/lib/customer-session";
 import type { Product } from "@/lib/mock-data";
 import { useStorefront } from "@/lib/storefront";
 
@@ -24,8 +26,10 @@ const STORAGE_KEY = "martify.cart.v1";
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const { products } = useStorefront();
+  const { user } = useCustomerSession();
   const [lines, setLines] = useState<CartLine[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  const [remoteReady, setRemoteReady] = useState(false);
 
   useEffect(() => {
     try {
@@ -38,6 +42,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    if (!user) { setRemoteReady(false); return; }
+    setRemoteReady(false);
+    api.customer.cart().then(({ data }) => {
+      setLines(data.items.map((item) => ({ id: item.product.slug, qty: item.qty })));
+      setRemoteReady(true);
+    }).catch(() => setRemoteReady(true));
+  }, [user?.id]);
+
+  useEffect(() => {
     if (!hydrated) return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(lines));
@@ -45,6 +58,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
       /* ignore */
     }
   }, [lines, hydrated]);
+
+  useEffect(() => {
+    if (!user || !remoteReady) return;
+    const timeout = window.setTimeout(() => { void api.customer.updateCart(lines.map((line) => {
+      const product = products.find((item) => item.id === line.id);
+      return product?.backendId ? { productId: product.backendId, qty: line.qty } : null;
+    }).filter((line): line is { productId: string; qty: number } => Boolean(line))); }, 350);
+    return () => window.clearTimeout(timeout);
+  }, [lines, products, remoteReady, user?.id]);
 
   const add = useCallback((id: string, qty = 1) => {
     setLines((xs) => {

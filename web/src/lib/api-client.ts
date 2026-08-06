@@ -150,6 +150,8 @@ export const api = {
     orders: () => customerRequest<{ data: Order[] }>("/orders/mine"),
     preferences: () => customerRequest<{ data: CustomerPreferences }>("/mobile/preferences"),
     updatePreferences: (payload: Partial<CustomerPreferences>) => customerRequest<{ data: CustomerPreferences }>("/mobile/preferences", { method: "PATCH", body: JSON.stringify(payload) }),
+    cart: () => customerRequest<{ data: { items: { product: Product; qty: number }[] } }>("/mobile/cart"),
+    updateCart: (items: { productId: string; qty: number }[]) => customerRequest<{ data: { items: { product: Product; qty: number }[] } }>("/mobile/cart", { method: "PUT", body: JSON.stringify({ items }) }),
   },
 
   products: resource<Product>("/products"),

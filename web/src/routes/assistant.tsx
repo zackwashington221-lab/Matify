@@ -1,11 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { Check, Plus, Send, Sparkles } from "lucide-react";
 import { StoreLayout } from "@/components/store/StoreLayout";
 import { api, type ShoppingAdvice } from "@/lib/api-client";
 import type { Product } from "@/lib/mock-data";
 import { useCart } from "@/lib/store-cart";
 import { useCustomerSession } from "@/lib/customer-session";
+import { readChatHistory, saveChatHistory } from "@/lib/chat-history";
 
 export const Route = createFileRoute("/assistant")({
   head: () => ({ meta: [{ title: "AI concierge — Martify" }, { name: "description", content: "Chat with your Martify AI for meal plans, budget-friendly picks, and recipe ideas." }] }),
@@ -15,7 +16,7 @@ export const Route = createFileRoute("/assistant")({
 type Message = { role: "user" | "ai"; text: string; advice?: ShoppingAdvice };
 
 function toStoreProduct(product: ShoppingAdvice["recommendations"][number]["product"]): Product {
-  return { id: product.slug, name: product.name, brand: product.brand || "Martify", price: product.price, compareAt: product.compareAt, unit: product.unit || "each", emoji: product.emoji || "🛒", gradient: product.gradient || "from-emerald-100 to-lime-100", category: product.category || "other", rating: product.rating || 0, reviews: product.reviews || 0, aiTag: product.aiTag, organic: product.organic, stock: product.stock || 0 };
+  return { id: product.slug, backendId: product._id, name: product.name, brand: product.brand || "Martify", price: product.price, compareAt: product.compareAt, unit: product.unit || "each", emoji: product.emoji || "🛒", gradient: product.gradient || "from-emerald-100 to-lime-100", category: product.category || "other", rating: product.rating || 0, reviews: product.reviews || 0, aiTag: product.aiTag, organic: product.organic, stock: product.stock || 0 };
 }
 
 function Assistant() {
@@ -25,8 +26,15 @@ function Assistant() {
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const { add } = useCart();
   const { user, loading: sessionLoading } = useCustomerSession();
+  const historyLoadedFor = useRef<string | null>(null);
   const navigate = useNavigate();
   const suggestions = ["5 healthy dinners under $60", "Build a breakfast basket", "Cheaper alternatives", "Vegetarian meal plan"];
+
+  useEffect(() => {
+    if (!user || historyLoadedFor.current === user.id) return;
+    readChatHistory<Message[]>(user.id).then((history) => { if (history?.length) setMessages(history); historyLoadedFor.current = user.id; }).catch(() => { historyLoadedFor.current = user.id; });
+  }, [user?.id]);
+  useEffect(() => { if (user && historyLoadedFor.current === user.id) void saveChatHistory(user.id, messages).catch(() => undefined); }, [messages, user?.id]);
 
   async function send(event?: FormEvent) {
     event?.preventDefault();

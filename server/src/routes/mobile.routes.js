@@ -22,6 +22,7 @@ const paymentMethodSchema = z.object({
   last4: z.string().regex(/^[0-9]{4}$/).optional(),
   isDefault: z.boolean().optional(),
 });
+const cartSchema = z.object({ items: z.array(z.object({ productId: z.string().regex(/^[a-f\d]{24}$/i), qty: z.number().int().min(1).max(20) })).max(100) });
 
 async function getCustomer(user) {
   return Customer.findOneAndUpdate(
@@ -101,6 +102,21 @@ router.delete("/wishlist/:productId", asyncHandler(async (req, res) => {
   customer.wishlist = customer.wishlist.filter((id) => String(id) !== req.params.productId);
   await customer.save();
   res.status(204).send();
+}));
+
+router.get("/cart", asyncHandler(async (req, res) => {
+  await req.user.populate("cart.product");
+  res.json({ data: { items: (req.user.cart || []).filter((item) => item.product).map((item) => ({ product: item.product, qty: item.qty })) } });
+}));
+
+router.put("/cart", asyncHandler(async (req, res) => {
+  const { items } = cartSchema.parse(req.body);
+  const products = await Product.find({ _id: { $in: items.map((item) => item.productId) }, status: "active" }).select("_id");
+  const allowed = new Set(products.map((product) => String(product._id)));
+  req.user.cart = items.filter((item) => allowed.has(item.productId)).map((item) => ({ product: item.productId, qty: item.qty }));
+  await req.user.save();
+  await req.user.populate("cart.product");
+  res.json({ data: { items: req.user.cart.map((item) => ({ product: item.product, qty: item.qty })) } });
 }));
 
 router.get("/preferences", asyncHandler(async (req, res) => {

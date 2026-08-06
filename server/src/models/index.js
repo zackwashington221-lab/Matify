@@ -32,6 +32,10 @@ export const User = def("User", {
     last4: String,
     isDefault: { type: Boolean, default: false },
   }],
+  cart: [{
+    product: { type: Schema.Types.ObjectId, ref: "Product", required: true },
+    qty: { type: Number, required: true, min: 1, max: 20 },
+  }],
 });
 
 export const Role = def("Role", {

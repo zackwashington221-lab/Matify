@@ -10,6 +10,7 @@ const gradients = ["from-emerald-400 to-green-500", "from-amber-400 to-orange-50
 function toStoreProduct(product: ApiProduct): Product {
   return {
     id: product.slug,
+    backendId: product._id,
     name: product.name,
     brand: product.brand || "Martify",
     price: product.price,
