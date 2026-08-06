@@ -12,7 +12,7 @@ export async function getShoppingAdvice({ message, products, budget, preferences
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    return catalogFallback({ message, products, budget, preferences });
+    throw assistantUnavailable();
   }
 
   const model = process.env.GEMINI_MODEL || "gemini-2.5-flash-lite";
@@ -51,19 +51,19 @@ export async function getShoppingAdvice({ message, products, budget, preferences
       signal: AbortSignal.timeout(20_000),
     });
   } catch {
-    return catalogFallback({ message, products, budget, preferences });
+    throw assistantUnavailable();
   }
 
   if (!response.ok) {
     console.error("[gemini] request failed:", response.status);
-    return catalogFallback({ message, products, budget, preferences });
+    throw assistantUnavailable();
   }
 
   const payload = await response.json();
   const text = payload.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join("") || "";
   const result = parseJson(text);
   if (!result) {
-    return catalogFallback({ message, products, budget, preferences });
+    throw assistantUnavailable();
   }
 
   const byId = new Map(products.map((product) => [String(product._id), product]));
@@ -89,31 +89,10 @@ export async function getShoppingAdvice({ message, products, budget, preferences
   };
 }
 
-// Keeps the customer experience usable when the optional Gemini integration is unavailable.
-// It only recommends products that actually exist in the active Martify catalogue.
-function catalogFallback({ message, products, budget, preferences }) {
-  const healthy = /\b(healthy|vegetarian|vegan|organic|protein|heart)\b/i.test(message) || preferences?.healthySwaps;
-  const terms = message.toLowerCase();
-  const preferred = products.filter((product) => `${product.name} ${product.brand || ""} ${product.category || ""} ${(product.tags || []).join(" ")}`.toLowerCase().includes(terms));
-  const candidates = (preferred.length ? preferred : products)
-    .filter((product) => !healthy || product.organic || /produce|seafood|dairy/.test(product.category || ""))
-    .sort((a, b) => (b.rating || 0) - (a.rating || 0) || (b.reviews || 0) - (a.reviews || 0));
-  const recommendations = [];
-  let total = 0;
-  const targetTotal = budget == null ? Infinity : budget * 0.8;
-  for (const product of candidates) {
-    if (recommendations.length === 12 || total >= targetTotal) break;
-    if (budget != null && total + product.price > budget + 0.001) continue;
-    recommendations.push({ product, qty: 1, reason: healthy ? "A highly rated, wholesome choice from the current catalogue." : "A highly rated choice available from Martify today." });
-    total += product.price;
-  }
-  const roundedTotal = Math.round(total * 100) / 100;
-  return {
-    reply: recommendations.length ? `I built a ${healthy ? "health-focused " : ""}basket with ${recommendations.length} items${budget != null ? ` for $${roundedTotal.toFixed(2)} of your $${budget.toFixed(2)} budget` : ""}.` : "I couldn't find a basket that fits that budget. Try increasing it slightly or ask for fewer items.",
-    recommendations,
-    total: roundedTotal,
-    budget,
-  };
+function assistantUnavailable() {
+  const error = new Error("Martify AI is temporarily unavailable. Please try again in a moment.");
+  error.status = 503;
+  return error;
 }
 
 function isMartifyShoppingQuestion(message, products) {
