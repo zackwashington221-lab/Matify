@@ -69,7 +69,7 @@ export function useStorefront() {
   return value;
 }
 
-type HomeCatalog = { categories: StoreCategory[]; featured: Product[]; deals: Product[]; trending: Product[]; banners: Banner[]; promotions: Pick<Promotion, "_id" | "code" | "name" | "type" | "value" | "minSpend" | "endsAt">[]; loading: boolean };
+type HomeCatalog = { categories: StoreCategory[]; featured: Product[]; deals: Product[]; trending: Product[]; banners: Banner[]; promotions: Pick<Promotion, "_id" | "code" | "name" | "type" | "value" | "minSpend" | "endsAt">[]; metrics: StorefrontHome["metrics"]; content: StorefrontHome["content"] | null; loading: boolean };
 
 function toHomeCatalog(home: StorefrontHome): Omit<HomeCatalog, "loading"> {
   return {
@@ -79,11 +79,13 @@ function toHomeCatalog(home: StorefrontHome): Omit<HomeCatalog, "loading"> {
     trending: home.trending.map(toStoreProduct),
     banners: home.banners,
     promotions: home.promotions,
+    metrics: home.metrics,
+    content: home.content,
   };
 }
 
 export function useStorefrontHome(): HomeCatalog {
-  const fallback = useStorefront();
+  const { loading: catalogLoading } = useStorefront();
   const [home, setHome] = useState<Omit<HomeCatalog, "loading"> | null>(null);
 
   useEffect(() => {
@@ -95,5 +97,5 @@ export function useStorefrontHome(): HomeCatalog {
   }, []);
 
   if (home) return { ...home, loading: false };
-  return { categories: fallback.categories, featured: fallback.products.slice(0, 4), deals: fallback.products.filter((product) => product.compareAt), trending: fallback.products.slice(6, 12), banners: [], promotions: [], loading: fallback.loading };
+  return { categories: [], featured: [], deals: [], trending: [], banners: [], promotions: [], metrics: [], content: null, loading: catalogLoading || !home };
 }

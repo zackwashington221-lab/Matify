@@ -19,9 +19,13 @@ export const Route = createFileRoute("/")({
 });
 
 function Landing() {
-  const { categories, featured, deals, trending, banners, promotions, loading } = useStorefrontHome();
+  const { categories, featured, deals, trending, banners, promotions, metrics, content, loading } = useStorefrontHome();
   const heroBanner = banners[0];
   const promotion = promotions[0];
+
+  if (!content) {
+    return <StoreLayout><div className="mx-auto max-w-7xl px-4 lg:px-8 py-24 text-center text-sm text-muted-foreground">Loading storefront…</div></StoreLayout>;
+  }
 
   return (
     <StoreLayout>
@@ -31,26 +35,24 @@ function Landing() {
         <div className="relative mx-auto max-w-7xl px-4 lg:px-8 py-16 lg:py-24 grid lg:grid-cols-2 gap-12 items-center">
           <div>
             <span className="inline-flex items-center gap-2 rounded-full bg-primary-soft px-3 py-1.5 text-xs font-semibold text-accent-foreground">
-              <Sparkles className="size-3.5" /> AI-curated grocery marketplace
+              <Sparkles className="size-3.5" /> {content.hero.eyebrow}
             </span>
             <h1 className="mt-5 font-display text-4xl lg:text-6xl font-bold leading-[1.05] tracking-tight">
-              {heroBanner?.title || "Real food,"} <span className="text-primary">{heroBanner ? "delivered today" : "smarter baskets"}</span>{heroBanner ? "." : ", delivered today."}
+              {heroBanner?.title || content.hero.title}
             </h1>
             <p className="mt-5 text-base lg:text-lg text-muted-foreground leading-relaxed max-w-xl">
-              {heroBanner?.subtitle || "Shop thousands of everyday essentials from local growers and artisan makers. Martify's assistant plans meals, finds cheaper swaps and keeps you inside your budget."}
+              {heroBanner?.subtitle || content.hero.description}
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link to="/shop" className="inline-flex items-center gap-2 h-13 px-6 py-3.5 rounded-2xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors">
-                Start shopping <ArrowRight className="size-4" />
+                {content.hero.primaryCta} <ArrowRight className="size-4" />
               </Link>
               <Link to="/assistant" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-card border border-border font-semibold hover:bg-secondary transition-colors">
-                <Sparkles className="size-4 text-primary" /> Build my basket with AI
+                <Sparkles className="size-4 text-primary" /> {content.hero.secondaryCta}
               </Link>
             </div>
             <div className="mt-10 grid grid-cols-3 gap-4 max-w-lg">
-              <Stat value="12k+" label="Products in stock" />
-              <Stat value="45 min" label="Average delivery" />
-              <Stat value="4.9★" label="From 38k reviews" />
+              {metrics.map((metric) => <Stat key={metric.label} {...metric} />)}
             </div>
             {promotion && <div className="mt-5 text-xs font-semibold text-primary">Use code {promotion.code}{promotion.name ? ` · ${promotion.name}` : ""}</div>}
           </div>
@@ -75,16 +77,13 @@ function Landing() {
       {/* Value props */}
       <section className="border-b border-border bg-surface">
         <div className="mx-auto max-w-7xl px-4 lg:px-8 py-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          <Value icon={<Truck className="size-5" />} title="Same-day delivery" body="Order by 6pm for delivery tonight, free over $35." />
-          <Value icon={<ShieldCheck className="size-5" />} title="Freshness promise" body="Not perfect? We refund the item, no questions asked." />
-          <Value icon={<Sparkles className="size-5" />} title="Smart savings" body="AI swaps surface cheaper equivalents as you shop." />
-          <Value icon={<Clock className="size-5" />} title="One-tap reorders" body="Your weekly staples rebuilt in a single click." />
+          {content.valueProps.map((value) => <Value key={value.title} {...value} />)}
         </div>
       </section>
 
       {/* Departments */}
       <section className="mx-auto max-w-7xl px-4 lg:px-8 py-16">
-        <SectionHead title="Shop by department" href="/shop" cta="Browse all" />
+        <SectionHead title={content.sections.departments.title} href="/shop" cta={content.sections.departments.cta} />
         <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
           {categories.map((c) => (
             <Link
@@ -107,7 +106,7 @@ function Landing() {
 
       {/* Deals */}
       <section className="mx-auto max-w-7xl px-4 lg:px-8 pb-16">
-        <SectionHead title="This week's deals" href="/shop" cta="See all deals" />
+        <SectionHead title={content.sections.deals.title} href="/shop" cta={content.sections.deals.cta} />
         <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {deals.map((p) => (
             <ProductCard key={p.id} product={p} />
@@ -117,7 +116,7 @@ function Landing() {
 
       {/* Trending */}
       <section className="mx-auto max-w-7xl px-4 lg:px-8 pb-16">
-        <SectionHead title="Trending in your area" href="/shop" cta="Shop all" />
+        <SectionHead title={content.sections.trending.title} href="/shop" cta={content.sections.trending.cta} />
         <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {trending.map((p) => (
             <ProductCard key={p.id} product={p} />
@@ -128,11 +127,7 @@ function Landing() {
       {/* Reviews */}
       <section className="mx-auto max-w-7xl px-4 lg:px-8 pb-16">
         <div className="rounded-[2rem] bg-card border border-border p-8 lg:p-12 grid lg:grid-cols-3 gap-8">
-          {[
-            { name: "Amara D.", text: "The AI basket saved me $22 on my usual weekly shop and it still felt like my own list." },
-            { name: "Jonas P.", text: "Produce arrives better than my local store, and the delivery windows are actually accurate." },
-            { name: "Priya S.", text: "Reordering staples takes seconds now. It's the only grocery site I use on desktop." },
-          ].map((r) => (
+          {content.testimonials.map((r) => (
             <figure key={r.name}>
               <div className="flex gap-0.5">
                 {Array.from({ length: 5 }).map((_, i) => (
@@ -150,17 +145,17 @@ function Landing() {
       <section className="mx-auto max-w-7xl px-4 lg:px-8 pb-4">
         <div className="rounded-[2rem] bg-primary text-primary-foreground p-10 lg:p-16 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
           <div>
-            <h2 className="font-display text-3xl lg:text-4xl font-bold tracking-tight">Your first delivery is on us.</h2>
+            <h2 className="font-display text-3xl lg:text-4xl font-bold tracking-tight">{content.cta.title}</h2>
             <p className="mt-3 text-primary-foreground/80 max-w-xl">
-              Create a free account and get free delivery on your first three orders, plus AI meal planning built in.
+              {content.cta.body}
             </p>
           </div>
           <div className="flex gap-3">
             <Link to="/auth" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-primary-foreground text-primary font-semibold">
-              Create account
+              {content.cta.primaryLabel}
             </Link>
             <Link to="/shop" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl border border-primary-foreground/30 font-semibold">
-              Shop as guest
+              {content.cta.secondaryLabel}
             </Link>
           </div>
         </div>
@@ -178,10 +173,13 @@ function Stat({ value, label }: { value: string; label: string }) {
   );
 }
 
-function Value({ icon, title, body }: { icon: React.ReactNode; title: string; body: string }) {
+const valueIcons = { truck: Truck, shield: ShieldCheck, sparkles: Sparkles, clock: Clock };
+
+function Value({ icon, title, body }: { icon: keyof typeof valueIcons; title: string; body: string }) {
+  const Icon = valueIcons[icon];
   return (
     <div className="flex gap-3">
-      <div className="size-10 shrink-0 rounded-2xl bg-primary-soft text-accent-foreground flex items-center justify-center">{icon}</div>
+      <div className="size-10 shrink-0 rounded-2xl bg-primary-soft text-accent-foreground flex items-center justify-center"><Icon className="size-5" /></div>
       <div>
         <div className="text-sm font-semibold">{title}</div>
         <p className="text-[13px] text-muted-foreground leading-relaxed mt-0.5">{body}</p>
