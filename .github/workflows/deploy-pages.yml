@@ -6,9 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
   group: github-pages
@@ -43,16 +41,10 @@ jobs:
       - name: Add SPA fallback
         run: cp web/dist/client/index.html web/dist/client/404.html
 
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
+      - name: Publish website to GitHub Pages branch
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          enablement: true
-
-      - name: Upload website artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: web/dist/client
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: web/dist/client
+          force_orphan: true
