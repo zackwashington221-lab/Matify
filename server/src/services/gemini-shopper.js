@@ -3,7 +3,7 @@ const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models"
 export async function getShoppingAdvice({ message, products, budget, preferences }) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    throw Object.assign(new Error("AI shopping is not configured. Set GEMINI_API_KEY."), { status: 503 });
+    return catalogFallback({ message, products, budget, preferences });
   }
 
   const model = process.env.GEMINI_MODEL || "gemini-2.5-flash-lite";
@@ -42,19 +42,19 @@ export async function getShoppingAdvice({ message, products, budget, preferences
       signal: AbortSignal.timeout(20_000),
     });
   } catch {
-    throw Object.assign(new Error("AI shopping is temporarily unavailable."), { status: 503 });
+    return catalogFallback({ message, products, budget, preferences });
   }
 
   if (!response.ok) {
     console.error("[gemini] request failed:", response.status);
-    throw Object.assign(new Error("AI shopping is temporarily unavailable."), { status: 503 });
+    return catalogFallback({ message, products, budget, preferences });
   }
 
   const payload = await response.json();
   const text = payload.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join("") || "";
   const result = parseJson(text);
   if (!result) {
-    throw Object.assign(new Error("AI shopping returned an invalid response."), { status: 502 });
+    return catalogFallback({ message, products, budget, preferences });
   }
 
   const byId = new Map(products.map((product) => [String(product._id), product]));
@@ -76,6 +76,37 @@ export async function getShoppingAdvice({ message, products, budget, preferences
     reply: typeof result.reply === "string" ? result.reply.slice(0, 1_500) : "Here are some options from the catalog.",
     recommendations,
     total: Math.round(total * 100) / 100,
+    budget,
+  };
+}
+
+// Keeps the customer experience usable when the optional Gemini integration is unavailable.
+// It only recommends products that actually exist in the active Martify catalogue.
+function catalogFallback({ message, products, budget, preferences }) {
+  const shoppingRequest = /\b(buy|basket|cart|shop|list|recommend|need|plan|budget|dinner|meal|breakfast|lunch)\b/i.test(message);
+  if (!shoppingRequest) {
+    return { reply: "I can help plan a meal, compare groceries, or build a basket from the Martify catalogue. Tell me what you need and your budget.", recommendations: [], total: 0, budget };
+  }
+
+  const healthy = /\b(healthy|vegetarian|vegan|organic|protein|heart)\b/i.test(message) || preferences?.healthySwaps;
+  const terms = message.toLowerCase();
+  const preferred = products.filter((product) => `${product.name} ${product.brand || ""} ${product.category || ""} ${(product.tags || []).join(" ")}`.toLowerCase().includes(terms));
+  const candidates = (preferred.length ? preferred : products)
+    .filter((product) => !healthy || product.organic || /produce|seafood|dairy/.test(product.category || ""))
+    .sort((a, b) => (b.rating || 0) - (a.rating || 0) || (b.reviews || 0) - (a.reviews || 0));
+  const recommendations = [];
+  let total = 0;
+  for (const product of candidates) {
+    if (recommendations.length === 5) break;
+    if (budget != null && total + product.price > budget + 0.001) continue;
+    recommendations.push({ product, qty: 1, reason: healthy ? "A highly rated, wholesome choice from the current catalogue." : "A highly rated choice available from Martify today." });
+    total += product.price;
+  }
+  const roundedTotal = Math.round(total * 100) / 100;
+  return {
+    reply: recommendations.length ? `I built a ${healthy ? "health-focused " : ""}basket with ${recommendations.length} items${budget != null ? ` within your $${budget.toFixed(2)} budget` : ""}.` : "I couldn't find a basket that fits that budget. Try increasing it slightly or ask for fewer items.",
+    recommendations,
+    total: roundedTotal,
     budget,
   };
 }
