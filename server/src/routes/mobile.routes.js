@@ -10,9 +10,18 @@ router.use(requireAuth);
 const addressSchema = z.object({
   label: z.string().trim().min(1).max(40),
   line1: z.string().trim().min(3).max(140),
+  line2: z.string().trim().max(100).optional(),
   city: z.string().trim().min(2).max(80),
+  state: z.string().trim().max(80).optional(),
   postcode: z.string().trim().min(2).max(20),
+  notes: z.string().trim().max(300).optional(),
   isDefault: z.boolean().optional(),
+});
+const checkoutDetailsSchema = z.object({
+  name: z.string().trim().min(2).max(100),
+  phone: z.string().trim().max(30).optional(),
+  company: z.string().trim().max(100).optional(),
+  address: addressSchema,
 });
 
 const paymentMethodSchema = z.object({
@@ -47,6 +56,23 @@ router.patch("/profile", asyncHandler(async (req, res) => {
 router.get("/addresses", asyncHandler(async (req, res) => {
   const customer = await getCustomer(req.user);
   res.json({ data: customer.addresses || [] });
+}));
+
+router.put("/checkout-details", asyncHandler(async (req, res) => {
+  const details = checkoutDetailsSchema.parse(req.body);
+  req.user.name = details.name;
+  await req.user.save();
+
+  const customer = await getCustomer(req.user);
+  customer.name = details.name;
+  customer.phone = details.phone || undefined;
+  customer.company = details.company || undefined;
+  customer.city = details.address.city;
+  const currentAddress = customer.addresses.find((address) => address.isDefault) || customer.addresses[0];
+  if (currentAddress) Object.assign(currentAddress, { ...details.address, isDefault: true });
+  else customer.addresses.push({ ...details.address, isDefault: true });
+  await customer.save();
+  res.json({ data: { user: { id: req.user._id, name: req.user.name, email: req.user.email, role: req.user.role, avatarUrl: req.user.avatarUrl }, address: customer.addresses.find((address) => address.isDefault) } });
 }));
 
 router.post("/addresses", asyncHandler(async (req, res) => {

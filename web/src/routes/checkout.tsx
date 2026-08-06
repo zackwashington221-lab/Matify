@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { MapPin, Clock, Check, ShieldCheck, Sparkles, CreditCard, Lock } from "lucide-react";
 import { StoreLayout } from "@/components/store/StoreLayout";
@@ -34,13 +34,18 @@ const payments = [
 
 function Checkout() {
   const { items, count, subtotal, savings, delivery, tax, total } = useCart();
-  const { user } = useCustomerSession();
+  const { user, updateProfile } = useCustomerSession();
+  const navigate = useNavigate();
   const [slot, setSlot] = useState("2h");
   const [payment, setPayment] = useState("card");
   const [details, setDetails] = useState({ name: "", email: "", phone: "", company: "", address: "", apartment: "", city: "", state: "", postcode: "", notes: "", cardNumber: "", expiry: "", cvc: "", cardPostcode: "" });
+  const [saving, setSaving] = useState(false);
+  const [notice, setNotice] = useState("");
 
   useEffect(() => {
     if (!user) return;
+    const saved = readCheckoutSession(user.id);
+    if (saved) setDetails((current) => ({ ...current, ...saved }));
     setDetails((current) => ({ ...current, name: current.name || user.name, email: current.email || user.email }));
     api.customer.addresses().then(({ data }) => {
       const address = data.find((item) => item.isDefault) || data[0];
@@ -48,13 +53,37 @@ function Checkout() {
       setDetails((current) => ({
         ...current,
         address: current.address || address.line1,
+        apartment: current.apartment || address.line2 || "",
         city: current.city || address.city,
+        state: current.state || address.state || "",
         postcode: current.postcode || address.postcode,
+        notes: current.notes || address.notes || "",
       }));
     }).catch(() => undefined);
   }, [user?.id]);
 
   const updateDetail = (key: keyof typeof details) => (value: string) => setDetails((current) => ({ ...current, [key]: value }));
+
+  async function placeOrder() {
+    if (!user) return navigate({ to: "/auth" });
+    if (!details.name.trim() || !details.address.trim() || !details.city.trim() || !details.postcode.trim()) {
+      setNotice("Please complete your name and delivery address before placing the order.");
+      return;
+    }
+    setSaving(true);
+    setNotice("");
+    try {
+      await api.customer.saveCheckoutDetails({
+        name: details.name.trim(), phone: details.phone.trim() || undefined, company: details.company.trim() || undefined,
+        address: { label: "Home", line1: details.address.trim(), line2: details.apartment.trim() || undefined, city: details.city.trim(), state: details.state.trim() || undefined, postcode: details.postcode.trim(), notes: details.notes.trim() || undefined },
+      });
+      await updateProfile(details.name.trim());
+      saveCheckoutSession(user.id, details);
+      navigate({ to: "/tracking" });
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "We could not save your checkout details.");
+    } finally { setSaving(false); }
+  }
 
   const shipping = slot === "60min" ? 3.99 : delivery;
   const grand = subtotal + shipping + tax;
@@ -179,12 +208,10 @@ function Checkout() {
                 <Row label="Total" value={`$${grand.toFixed(2)}`} labelClass="font-bold text-base text-foreground" valueClass="font-bold text-base" />
               </div>
 
-              <Link
-                to="/tracking"
-                className="mt-5 flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors"
-              >
-                <Lock className="size-4" /> Place order · ${grand.toFixed(2)}
-              </Link>
+              <button type="button" onClick={placeOrder} disabled={saving} className="mt-5 flex w-full items-center justify-center gap-2 py-3.5 rounded-2xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors disabled:opacity-60">
+                <Lock className="size-4" /> {saving ? "Saving details…" : `Place order · $${grand.toFixed(2)}`}
+              </button>
+              {notice && <p className="mt-3 text-xs text-destructive">{notice}</p>}
               <div className="mt-3 flex items-center gap-2 text-[11px] text-muted-foreground">
                 <ShieldCheck className="size-3.5" /> Encrypted end-to-end. Cancel free within 5 minutes.
               </div>
@@ -202,6 +229,17 @@ function Checkout() {
       </div>
     </StoreLayout>
   );
+}
+
+type CheckoutSessionDetails = Pick<typeof emptyDetails, "name" | "email" | "phone" | "company" | "address" | "apartment" | "city" | "state" | "postcode" | "notes">;
+const emptyDetails = { name: "", email: "", phone: "", company: "", address: "", apartment: "", city: "", state: "", postcode: "", notes: "", cardNumber: "", expiry: "", cvc: "", cardPostcode: "" };
+const checkoutSessionKey = (userId: string) => `martify.checkout.details.${userId}`;
+function readCheckoutSession(userId: string): Partial<CheckoutSessionDetails> | null {
+  try { const value = window.sessionStorage.getItem(checkoutSessionKey(userId)); return value ? JSON.parse(value) : null; } catch { return null; }
+}
+function saveCheckoutSession(userId: string, details: typeof emptyDetails) {
+  const { cardNumber: _cardNumber, expiry: _expiry, cvc: _cvc, cardPostcode: _cardPostcode, ...safeDetails } = details;
+  window.sessionStorage.setItem(checkoutSessionKey(userId), JSON.stringify(safeDetails));
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
