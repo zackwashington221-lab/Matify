@@ -150,6 +150,7 @@ export const api = {
     orders: () => customerRequest<{ data: Order[] }>("/orders/mine"),
     addresses: () => customerRequest<{ data: CustomerAddress[] }>("/mobile/addresses"),
     saveCheckoutDetails: (payload: { name: string; phone?: string; company?: string; address: Omit<CustomerAddress, "_id" | "isDefault"> }) => customerRequest<{ data: { user: CustomerUser; address: CustomerAddress } }>("/mobile/checkout-details", { method: "PUT", body: JSON.stringify(payload) }),
+    checkout: (payload: { items: { product: string; qty: number }[]; address: string; deliverySlot: "60min" | "2h" | "evening"; paymentMethod: "card" | "wallet" | "cash" }) => customerRequest<{ data: Order }>("/orders/checkout", { method: "POST", body: JSON.stringify(payload) }),
     preferences: () => customerRequest<{ data: CustomerPreferences }>("/mobile/preferences"),
     updatePreferences: (payload: Partial<CustomerPreferences>) => customerRequest<{ data: CustomerPreferences }>("/mobile/preferences", { method: "PATCH", body: JSON.stringify(payload) }),
     cart: () => customerRequest<{ data: { items: { product: Product; qty: number }[] } }>("/mobile/cart"),

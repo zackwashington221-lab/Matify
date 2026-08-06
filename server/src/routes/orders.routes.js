@@ -1,27 +1,43 @@
 import { Router } from "express";
+import { z } from "zod";
 import { Order, Customer, Product, InventoryItem, StockMovement, ORDER_STATUSES } from "../models/index.js";
 import { asyncHandler } from "../middleware/error.js";
 import { requireAuth, requireAdmin, requireWriteAdmin } from "../middleware/auth.js";
 import { crudRouter, audit } from "../utils/crud.js";
 
 const router = Router();
+const checkoutSchema = z.object({
+  items: z.array(z.object({ product: z.string().regex(/^[a-f\d]{24}$/i), qty: z.number().int().min(1).max(20) })).min(1).max(100),
+  address: z.string().trim().min(8).max(500),
+  deliverySlot: z.enum(["60min", "2h", "evening"]).default("2h"),
+  paymentMethod: z.enum(["card", "wallet", "cash"]).default("cash"),
+});
 
 /* ---- customer-facing checkout (mobile app) ---- */
 router.post(
   "/checkout",
   requireAuth,
   asyncHandler(async (req, res) => {
-    const { items = [], address, deliveryFee = 2.99, discount = 0 } = req.body;
-    if (!items.length) return res.status(422).json({ error: "Cart is empty" });
+    const { items, address, deliverySlot, paymentMethod } = checkoutSchema.parse(req.body);
 
-    const products = await Product.find({ _id: { $in: items.map((i) => i.product) } });
+    const products = await Product.find({ _id: { $in: items.map((i) => i.product) }, status: "active" });
     const lines = items.map((i) => {
       const p = products.find((x) => String(x._id) === String(i.product));
       if (!p) throw Object.assign(new Error("Unknown product in cart"), { status: 422 });
       return { product: p._id, name: p.name, qty: Math.max(1, Number(i.qty) || 1), price: p.price };
     });
 
+    const inventory = await InventoryItem.find({ product: { $in: lines.map((line) => line.product) } });
+    for (const line of lines) {
+      const stock = inventory.find((item) => String(item.product) === String(line.product));
+      if (stock && stock.onHand - stock.reserved < line.qty) {
+        throw Object.assign(new Error(`${line.name} does not have enough stock available`), { status: 422 });
+      }
+    }
+
     const subtotal = round(lines.reduce((s, l) => s + l.price * l.qty, 0));
+    const deliveryFee = deliverySlot === "60min" || subtotal <= 35 ? 3.99 : 0;
+    const discount = 0;
     const customer = await Customer.findOneAndUpdate(
       { email: req.user.email },
       { email: req.user.email, name: req.user.name, user: req.user._id },
@@ -37,14 +53,16 @@ router.post(
       discount,
       total: round(subtotal + deliveryFee - discount),
       status: "confirmed",
-      paymentStatus: "paid",
+      paymentStatus: "unpaid",
+      paymentMethod,
+      channel: "web",
       address,
       timeline: [{ label: "Order placed", at: new Date() }],
     });
 
     // reserve stock
     for (const line of lines) {
-      const inv = await InventoryItem.findOne({ product: line.product });
+      const inv = inventory.find((item) => String(item.product) === String(line.product));
       if (inv) {
         inv.reserved += line.qty;
         await inv.save();
@@ -56,6 +74,8 @@ router.post(
       $inc: { ordersCount: 1, lifetimeValue: order.total },
       lastOrderAt: new Date(),
     });
+    req.user.cart = [];
+    await req.user.save();
 
     res.status(201).json({ data: order });
   })

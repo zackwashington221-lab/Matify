@@ -33,7 +33,7 @@ const payments = [
 ];
 
 function Checkout() {
-  const { items, count, subtotal, savings, delivery, tax, total } = useCart();
+  const { items, count, subtotal, savings, delivery, tax, clear } = useCart();
   const { user, updateProfile } = useCustomerSession();
   const navigate = useNavigate();
   const [slot, setSlot] = useState("2h");
@@ -79,6 +79,11 @@ function Checkout() {
       });
       await updateProfile(details.name.trim());
       saveCheckoutSession(user.id, details);
+      const orderItems = items.map(({ product, qty }) => product.backendId ? { product: product.backendId, qty } : null).filter((item): item is { product: string; qty: number } => Boolean(item));
+      if (!orderItems.length || orderItems.length !== items.length) throw new Error("One or more cart items are unavailable. Please refresh your cart and try again.");
+      const address = [details.address, details.apartment, details.city, details.state, details.postcode, details.notes && `Notes: ${details.notes}`].filter(Boolean).join(", ");
+      await api.customer.checkout({ items: orderItems, address, deliverySlot: slot as "60min" | "2h" | "evening", paymentMethod: payment as "card" | "wallet" | "cash" });
+      clear();
       navigate({ to: "/tracking" });
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "We could not save your checkout details.");
@@ -209,7 +214,7 @@ function Checkout() {
               </div>
 
               <button type="button" onClick={placeOrder} disabled={saving} className="mt-5 flex w-full items-center justify-center gap-2 py-3.5 rounded-2xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors disabled:opacity-60">
-                <Lock className="size-4" /> {saving ? "Saving details…" : `Place order · $${grand.toFixed(2)}`}
+                <Lock className="size-4" /> {saving ? "Placing order…" : `Place order · $${grand.toFixed(2)}`}
               </button>
               {notice && <p className="mt-3 text-xs text-destructive">{notice}</p>}
               <div className="mt-3 flex items-center gap-2 text-[11px] text-muted-foreground">
