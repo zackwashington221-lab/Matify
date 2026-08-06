@@ -36,4 +36,5 @@ server/node_modules
 mobile/node_modules
 mobile/.expo
 mobile/.env
+web/.env
 server/.env
