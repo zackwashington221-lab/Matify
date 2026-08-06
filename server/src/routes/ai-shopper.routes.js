@@ -14,7 +14,7 @@ const requestSchema = z.object({
 router.post("/shopper", requireAuth, asyncHandler(async (req, res) => {
   const { message, budget } = requestSchema.parse(req.body);
   const products = await Product.find({ status: "active" }).sort("name").lean();
-  const advice = await getShoppingAdvice({ message, products, budget: budget ?? budgetFromMessage(message) });
+  const advice = await getShoppingAdvice({ message, products, budget: budget ?? budgetFromMessage(message), preferences: req.user.preferences });
   res.json({ data: advice });
 }));
 

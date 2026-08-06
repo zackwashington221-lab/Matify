@@ -1,6 +1,6 @@
 const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models";
 
-export async function getShoppingAdvice({ message, products, budget }) {
+export async function getShoppingAdvice({ message, products, budget, preferences }) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw Object.assign(new Error("AI shopping is not configured. Set GEMINI_API_KEY."), { status: 503 });
@@ -25,6 +25,7 @@ export async function getShoppingAdvice({ message, products, budget }) {
     '{"reply":"string","recommendations":[{"productId":"string","qty":1,"reason":"string"}]}',
     "Use an empty recommendations array for general questions.",
     `User budget: ${budget == null ? "not specified" : `$${budget.toFixed(2)}`}`,
+    `Customer preferences: ${JSON.stringify(preferences || {})}`,
     `Catalog: ${JSON.stringify(catalog)}`,
     `User message: ${message}`,
   ].join("\n\n");

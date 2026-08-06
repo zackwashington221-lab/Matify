@@ -36,35 +36,40 @@ export default function Assistant() {
                 {message.recommendations.map((recommendation, position) => (
                   <View key={recommendation.product._id}>
                     {position > 0 ? <Divider style={{ marginVertical: spacing.sm }} /> : null}
-                    <Pressable
-                      onPress={() => navigation.navigate("Product", { slug: recommendation.product.slug })}
-                      style={{ flexDirection: "row", alignItems: "center", gap: spacing.md }}
-                    >
-                      <ProductImage
-                        uri={recommendation.product.imageUrl}
-                        emoji={recommendation.product.emoji}
-                        height={52}
-                        glyphSize={24}
-                        style={{ width: 52 }}
-                      />
-                      <View style={{ flex: 1, minWidth: 0 }}>
-                        <Text numberOfLines={1} style={type.label}>
-                          {recommendation.product.name} × {recommendation.qty}
-                        </Text>
-                        <Text numberOfLines={2} style={[type.caption, { marginTop: 2 }]}>
-                          {recommendation.reason}
-                        </Text>
-                      </View>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.md }}>
+                      <Pressable onPress={() => navigation.navigate("Product", { slug: recommendation.product.slug })} style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: spacing.md, minWidth: 0 }}>
+                        <ProductImage
+                          uri={recommendation.product.imageUrl}
+                          emoji={recommendation.product.emoji}
+                          height={52}
+                          glyphSize={24}
+                          style={{ width: 52 }}
+                        />
+                        <View style={{ flex: 1, minWidth: 0 }}>
+                          <Text numberOfLines={1} style={type.label}>
+                            {recommendation.product.name} × {recommendation.qty}
+                          </Text>
+                          <Text numberOfLines={2} style={[type.caption, { marginTop: 2 }]}>
+                            {recommendation.reason}
+                          </Text>
+                        </View>
+                      </Pressable>
                       <Text style={type.label}>
                         {money(recommendation.product.price * recommendation.qty)}
                       </Text>
-                    </Pressable>
+                      <Pressable onPress={() => functions.addRecommendation(recommendation)} style={addButton}>
+                        <Text style={addButtonText}>Add</Text>
+                      </Pressable>
+                    </View>
                   </View>
                 ))}
                 <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: spacing.lg }}>
                   <Badge label="Basket ready" tone="sage" />
                   <Text style={[type.subtitle, { fontSize: 16 }]}>{money(message.total || 0)}</Text>
                 </View>
+                <Pressable onPress={() => functions.addBasket(message.recommendations || [])} style={basketButton}>
+                  <Text style={basketButtonText}>Add basket to cart</Text>
+                </Pressable>
               </View>
             ) : null}
           </Card>
@@ -112,3 +117,8 @@ const sendButton = {
   alignItems: "center" as const,
   justifyContent: "center" as const,
 };
+
+const addButton = { paddingHorizontal: 11, paddingVertical: 7, borderRadius: radius.pill, backgroundColor: colors.primary };
+const addButtonText = { color: colors.onPrimary, fontSize: 12, fontWeight: "700" as const };
+const basketButton = { marginTop: spacing.md, alignItems: "center" as const, paddingVertical: 11, borderRadius: radius.md, backgroundColor: colors.primary };
+const basketButtonText = { color: colors.onPrimary, fontSize: 13, fontWeight: "700" as const };

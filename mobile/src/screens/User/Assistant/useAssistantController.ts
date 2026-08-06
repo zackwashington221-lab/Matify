@@ -1,10 +1,13 @@
 import { useState } from "react";
 import { useAskShopperMutation } from "../../../redux/Apis/Assistant";
 import type { ShoppingRecommendation } from "../../../helpers/types";
+import { useAppDispatch } from "../../../redux/hook/hook";
+import { addToCart } from "../../../redux/slice/cartSlice";
 
 type Message = { role: "ai" | "user"; text: string; recommendations?: ShoppingRecommendation[]; total?: number };
 
 export default function useAssistantController() {
+  const dispatch = useAppDispatch();
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([
     { role: "ai", text: "Hi! Ask me a grocery question, or tell me what you want to buy and your budget." },
@@ -24,8 +27,10 @@ export default function useAssistantController() {
         total: advice.total,
       }));
     } catch {
-      // The shared RTK Query middleware presents the error toast.
+      setMessages((current) => current.concat({ role: "ai", text: "I couldn't reach the shopping assistant right now. Please try again in a moment." }));
     }
   };
-  return { values: { input, messages, isLoading }, functions: { send, setInput } };
+  const addRecommendation = (recommendation: ShoppingRecommendation) => dispatch(addToCart({ product: recommendation.product, qty: recommendation.qty }));
+  const addBasket = (recommendations: ShoppingRecommendation[]) => recommendations.forEach((recommendation) => addRecommendation(recommendation));
+  return { values: { input, messages, isLoading }, functions: { send, setInput, addRecommendation, addBasket } };
 }
