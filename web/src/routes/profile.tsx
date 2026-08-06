@@ -1,103 +1,53 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { Bell, Check, LogOut, Package, Save, Settings, Sparkles } from "lucide-react";
 import { StoreLayout } from "@/components/store/StoreLayout";
-import { Heart, MapPin, CreditCard, Bell, Sparkles, HelpCircle, Settings, ChevronRight, Package, Star, LogOut } from "lucide-react";
+import { api, type CustomerPreferences, type Order } from "@/lib/api-client";
+import { useCustomerSession } from "@/lib/customer-session";
 
 export const Route = createFileRoute("/profile")({
-  head: () => ({
-    meta: [
-      { title: "You — Martify" },
-      { name: "description", content: "Your Martify account, orders, addresses, and preferences." },
-    ],
-  }),
+  head: () => ({ meta: [{ title: "You — Martify" }, { name: "description", content: "Your Martify account, orders, and preferences." }] }),
   component: Profile,
 });
 
 function Profile() {
-  return (
-    <StoreLayout>
-      <div className="mx-auto max-w-4xl px-4 lg:px-8 py-8">
-      <h1 className="font-display text-3xl font-bold tracking-tight px-5">Your account</h1>
+  const { user, loading: sessionLoading, updateProfile, logout } = useCustomerSession();
+  const navigate = useNavigate();
+  const [name, setName] = useState("");
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [preferences, setPreferences] = useState<CustomerPreferences>({ healthySwaps: false, budgetAlerts: false, weeklyBudget: 80 });
+  const [saving, setSaving] = useState(false);
+  const [notice, setNotice] = useState("");
 
-      {/* Identity card */}
-      <div className="px-5 pt-4 pb-6">
-        <div className="rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-600 p-5 text-white shadow-emerald relative overflow-hidden">
-          <div aria-hidden className="absolute -right-8 -top-8 size-40 rounded-full bg-white/10 blur-2xl" />
-          <div className="flex items-center gap-3">
-            <div className="size-16 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center text-2xl font-bold">AM</div>
-            <div>
-              <div className="text-lg font-semibold">Alex Morgan</div>
-              <div className="text-[13px] text-emerald-100">alex@morgan.co · Member since 2023</div>
-            </div>
-          </div>
-          <div className="mt-5 grid grid-cols-3 gap-2">
-            {[
-              { v: "42", l: "Orders" },
-              { v: "$1,248", l: "Saved" },
-              { v: "Gold", l: "Status" },
-            ].map((s) => (
-              <div key={s.l} className="rounded-2xl bg-white/15 backdrop-blur p-2.5 text-center">
-                <div className="text-sm font-bold">{s.v}</div>
-                <div className="text-[10px] uppercase tracking-wider text-emerald-100 mt-0.5">{s.l}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+  useEffect(() => { setName(user?.name || ""); }, [user?.name]);
+  useEffect(() => {
+    if (!user) return;
+    Promise.all([api.customer.orders(), api.customer.preferences()]).then(([orderResponse, preferenceResponse]) => { setOrders(orderResponse.data); setPreferences((current) => ({ ...current, ...preferenceResponse.data })); }).catch(() => setNotice("Some account details could not be refreshed."));
+  }, [user]);
 
-      {/* Recent order */}
-      <div className="px-5 pb-5">
-        <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Active order</div>
-        <Link to="/tracking" className="flex items-center gap-3 p-4 rounded-2xl bg-card border border-border">
-          <div className="size-11 rounded-2xl bg-primary-soft flex items-center justify-center"><Package className="size-5 text-primary" /></div>
-          <div className="flex-1">
-            <div className="text-[13px] font-semibold">Order #FR-4821</div>
-            <div className="text-[11px] text-muted-foreground">Arriving in 28 min · 4 items</div>
-          </div>
-          <div className="rounded-full bg-primary-soft text-primary text-[10px] font-semibold px-2 py-1">On the way</div>
-        </Link>
-      </div>
+  if (sessionLoading) return <StoreLayout><div className="mx-auto max-w-4xl px-4 py-20 text-center text-sm text-muted-foreground">Loading your account…</div></StoreLayout>;
+  if (!user) return <StoreLayout><div className="mx-auto max-w-xl px-4 py-24 text-center"><h1 className="font-display text-3xl font-bold">Sign in to view your account</h1><p className="mt-3 text-sm text-muted-foreground">Manage your Martify profile, orders, and shopping preferences.</p><Link to="/auth" className="mt-6 inline-flex rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">Sign in</Link></div></StoreLayout>;
 
-      {/* Menu */}
-      <div className="px-5 pb-6">
-        <div className="rounded-2xl bg-card border border-border divide-y divide-border overflow-hidden">
-          <MenuRow icon={<Package className="size-4" />} label="Orders & returns" sub="42 orders · 2 returns" />
-          <MenuRow icon={<Heart className="size-4" />} label="Wishlist" sub="18 saved items" />
-          <MenuRow icon={<MapPin className="size-4" />} label="Addresses" sub="Home · Work · +2" />
-          <MenuRow icon={<CreditCard className="size-4" />} label="Payment methods" sub="Apple Pay · Visa · Wallet" />
-        </div>
-      </div>
+  const initials = user.name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
+  const latestOrder = orders[0];
+  async function save() {
+    if (!name.trim()) return setNotice("Your name cannot be empty.");
+    setSaving(true); setNotice("");
+    try { await Promise.all([updateProfile(name.trim()), api.customer.updatePreferences(preferences)]); setNotice("Your profile has been saved."); }
+    catch (error) { setNotice(error instanceof Error ? error.message : "We could not save your profile."); }
+    finally { setSaving(false); }
+  }
+  function signOut() { logout(); navigate({ to: "/" }); }
 
-      <div className="px-5 pb-6">
-        <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Personalize</div>
-        <div className="rounded-2xl bg-card border border-border divide-y divide-border overflow-hidden">
-          <MenuRow icon={<Sparkles className="size-4 text-primary" />} label="AI preferences" sub="Diet, allergies, budget" highlight />
-          <MenuRow icon={<Bell className="size-4" />} label="Notifications" sub="Deals, order updates" />
-          <MenuRow icon={<Star className="size-4" />} label="Reviews you left" sub="12 reviews" />
-        </div>
-      </div>
+  return <StoreLayout><div className="mx-auto max-w-4xl px-4 lg:px-8 py-8"><h1 className="font-display text-3xl font-bold tracking-tight">Your account</h1>
+    <div className="mt-5 rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 text-white shadow-emerald"><div className="flex items-center gap-4"><div className="grid size-16 place-items-center rounded-2xl bg-white/20 text-xl font-bold">{initials || "M"}</div><div><div className="text-lg font-semibold">{user.name}</div><div className="text-sm text-emerald-100">{user.email}</div></div></div><div className="mt-6 grid grid-cols-2 gap-3"><Stat value={String(orders.length)} label="Orders" /><Stat value={preferences.weeklyBudget ? `$${preferences.weeklyBudget}` : "—"} label="Weekly budget" /></div></div>
 
-      <div className="px-5 pb-8">
-        <div className="rounded-2xl bg-card border border-border divide-y divide-border overflow-hidden">
-          <MenuRow icon={<HelpCircle className="size-4" />} label="Help center" />
-          <MenuRow icon={<Settings className="size-4" />} label="Settings" />
-          <MenuRow icon={<LogOut className="size-4 text-destructive" />} label="Sign out" cls="text-destructive" />
-        </div>
-        <div className="text-center text-[11px] text-muted-foreground mt-4">Martify v3.2 · Made with 🥑</div>
-      </div>
-    </div>
-    </StoreLayout>
-  );
+    <section className="mt-6 rounded-3xl border border-border bg-card p-5"><h2 className="font-display text-lg font-bold">Profile details</h2><label className="mt-4 block text-sm font-medium">Display name<input value={name} onChange={(event) => setName(event.target.value)} className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-primary" /></label></section>
+    <section className="mt-5 rounded-3xl border border-border bg-card p-5"><div className="flex items-center gap-2"><Sparkles className="size-4 text-primary" /><h2 className="font-display text-lg font-bold">AI preferences</h2></div><Toggle label="Prefer healthier swaps" checked={Boolean(preferences.healthySwaps)} onChange={(healthySwaps) => setPreferences((current) => ({ ...current, healthySwaps }))} /><Toggle label="Budget alerts" checked={Boolean(preferences.budgetAlerts)} onChange={(budgetAlerts) => setPreferences((current) => ({ ...current, budgetAlerts }))} /><label className="mt-4 block text-sm font-medium">Weekly grocery budget<input type="number" min="1" value={preferences.weeklyBudget || ""} onChange={(event) => setPreferences((current) => ({ ...current, weeklyBudget: Number(event.target.value) || undefined }))} className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-primary" /></label></section>
+    <section className="mt-5 rounded-3xl border border-border bg-card p-5"><div className="flex items-center gap-2"><Package className="size-4 text-primary" /><h2 className="font-display text-lg font-bold">Recent orders</h2></div>{latestOrder ? <Link to="/tracking" className="mt-4 flex items-center justify-between rounded-2xl bg-secondary p-4 text-sm"><span><b>{latestOrder.reference}</b><span className="ml-2 capitalize text-muted-foreground">{latestOrder.status.replaceAll("_", " ")}</span></span><span className="font-semibold">${latestOrder.total.toFixed(2)}</span></Link> : <p className="mt-3 text-sm text-muted-foreground">You have no orders yet.</p>}</section>
+    {notice && <p className="mt-4 text-sm text-muted-foreground">{notice}</p>}<div className="mt-6 flex flex-wrap gap-3"><button type="button" onClick={save} disabled={saving} className="inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground disabled:opacity-60"><Save className="size-4" />{saving ? "Saving…" : "Save profile"}</button><button type="button" onClick={signOut} className="inline-flex h-11 items-center gap-2 rounded-xl border border-border px-5 text-sm font-semibold text-destructive"><LogOut className="size-4" />Sign out</button></div><div className="mt-8 flex items-center gap-2 text-xs text-muted-foreground"><Bell className="size-3.5" /><Settings className="size-3.5" />Your session and preferences are saved securely.</div>
+  </div></StoreLayout>;
 }
 
-function MenuRow({ icon, label, sub, cls, highlight }: { icon: React.ReactNode; label: string; sub?: string; cls?: string; highlight?: boolean }) {
-  return (
-    <button className={`w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-secondary/50 transition-colors ${cls ?? ""}`}>
-      <div className={`size-9 rounded-xl flex items-center justify-center ${highlight ? "bg-primary-soft" : "bg-secondary"}`}>{icon}</div>
-      <div className="flex-1">
-        <div className="text-[14px] font-semibold">{label}</div>
-        {sub && <div className="text-[11px] text-muted-foreground mt-0.5">{sub}</div>}
-      </div>
-      <ChevronRight className="size-4 text-muted-foreground" />
-    </button>
-  );
-}
+function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (value: boolean) => void }) { return <label className="mt-4 flex cursor-pointer items-center justify-between text-sm"><span>{label}</span><button type="button" onClick={() => onChange(!checked)} className={`grid size-6 place-items-center rounded-md border ${checked ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background"}`}>{checked && <Check className="size-4" />}</button></label>; }
+function Stat({ value, label }: { value: string; label: string }) { return <div className="rounded-2xl bg-white/15 p-3 text-center"><div className="font-bold">{value}</div><div className="mt-0.5 text-[10px] uppercase tracking-wider text-emerald-100">{label}</div></div>; }

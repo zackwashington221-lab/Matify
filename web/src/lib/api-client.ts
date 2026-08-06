@@ -85,6 +85,12 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   return body as T;
 }
 
+async function customerRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const token = getCustomerToken();
+  if (!token) throw new ApiError("Please sign in to continue.", 401);
+  return request<T>(path, { ...init, headers: { ...(init.headers || {}), Authorization: `Bearer ${token}` } });
+}
+
 function qs(query?: Query) {
   if (!query) return "";
   const params = new URLSearchParams();
@@ -138,6 +144,12 @@ export const api = {
     login: (email: string, password: string) => request<{ token: string; user: CustomerUser }>("/auth/login", { method: "POST", body: JSON.stringify({ email, password }) }),
     signup: (name: string, email: string, password: string) => request<{ token: string; user: CustomerUser }>("/auth/signup", { method: "POST", body: JSON.stringify({ name, email, password }) }),
     me: (token: string) => request<{ user: CustomerUser }>("/auth/me", { headers: { Authorization: `Bearer ${token}` } }),
+  },
+  customer: {
+    updateProfile: (payload: { name: string; avatarUrl?: string }) => customerRequest<{ user: CustomerUser }>("/auth/me", { method: "PATCH", body: JSON.stringify(payload) }),
+    orders: () => customerRequest<{ data: Order[] }>("/orders/mine"),
+    preferences: () => customerRequest<{ data: CustomerPreferences }>("/mobile/preferences"),
+    updatePreferences: (payload: Partial<CustomerPreferences>) => customerRequest<{ data: CustomerPreferences }>("/mobile/preferences", { method: "PATCH", body: JSON.stringify(payload) }),
   },
 
   products: resource<Product>("/products"),
@@ -213,6 +225,7 @@ export const api = {
 export type Id = string;
 export type AdminUser = { id?: Id; _id?: Id; name: string; email: string; role: string; status?: string; mfaEnabled?: boolean; lastActiveAt?: string; avatarUrl?: string };
 export type CustomerUser = { id: Id; name: string; email: string; role: string; avatarUrl?: string };
+export type CustomerPreferences = { healthySwaps?: boolean; budgetAlerts?: boolean; weeklyBudget?: number; dietaryPreferences?: string[] };
 export type Category = { _id: Id; slug: string; name: string; emoji?: string; sortOrder?: number };
 export type Product = {
   _id: Id; slug: string; name: string; brand?: string; description?: string; price: number; compareAt?: number;

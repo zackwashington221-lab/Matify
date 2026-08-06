@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { api, getCachedCustomerUser, getCustomerToken, setCachedCustomerUser, setCustomerToken, type CustomerUser } from "@/lib/api-client";
 
-type CustomerSession = { user: CustomerUser | null; loading: boolean; login: (email: string, password: string) => Promise<void>; signup: (name: string, email: string, password: string) => Promise<void>; logout: () => void };
+type CustomerSession = { user: CustomerUser | null; loading: boolean; login: (email: string, password: string) => Promise<void>; signup: (name: string, email: string, password: string) => Promise<void>; updateProfile: (name: string) => Promise<void>; logout: () => void };
 const CustomerSessionContext = createContext<CustomerSession | null>(null);
 
 export function CustomerSessionProvider({ children }: { children: ReactNode }) {
@@ -19,6 +19,7 @@ export function CustomerSessionProvider({ children }: { children: ReactNode }) {
     user, loading,
     login: async (email, password) => save(await api.customerAuth.login(email, password)),
     signup: async (name, email, password) => save(await api.customerAuth.signup(name, email, password)),
+    updateProfile: async (name) => { const { user } = await api.customer.updateProfile({ name }); setUser(user); setCachedCustomerUser(user); },
     logout: () => { setCustomerToken(null); setCachedCustomerUser(null); setUser(null); },
   }), [user, loading]);
   return <CustomerSessionContext.Provider value={value}>{children}</CustomerSessionContext.Provider>;
