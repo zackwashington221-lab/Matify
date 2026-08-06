@@ -4,6 +4,8 @@
 const BASE_URL = (import.meta.env.VITE_API_URL as string) || "https://matify.up.railway.app/api";
 const TOKEN_KEY = "martify.admin.token";
 const USER_KEY = "martify.admin.user";
+const CUSTOMER_TOKEN_KEY = "martify.customer.token";
+const CUSTOMER_USER_KEY = "martify.customer.user";
 
 export function getToken() {
   return typeof window === "undefined" ? null : window.localStorage.getItem(TOKEN_KEY);
@@ -12,6 +14,33 @@ export function setToken(token: string | null) {
   if (typeof window === "undefined") return;
   if (token) window.localStorage.setItem(TOKEN_KEY, token);
   else window.localStorage.removeItem(TOKEN_KEY);
+}
+
+export function getCustomerToken() {
+  return typeof window === "undefined" ? null : window.localStorage.getItem(CUSTOMER_TOKEN_KEY);
+}
+
+export function setCustomerToken(token: string | null) {
+  if (typeof window === "undefined") return;
+  if (token) window.localStorage.setItem(CUSTOMER_TOKEN_KEY, token);
+  else window.localStorage.removeItem(CUSTOMER_TOKEN_KEY);
+}
+
+export function getCachedCustomerUser(): CustomerUser | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const value = window.localStorage.getItem(CUSTOMER_USER_KEY);
+    return value ? JSON.parse(value) as CustomerUser : null;
+  } catch {
+    window.localStorage.removeItem(CUSTOMER_USER_KEY);
+    return null;
+  }
+}
+
+export function setCachedCustomerUser(user: CustomerUser | null) {
+  if (typeof window === "undefined") return;
+  if (user) window.localStorage.setItem(CUSTOMER_USER_KEY, JSON.stringify(user));
+  else window.localStorage.removeItem(CUSTOMER_USER_KEY);
 }
 
 export function getCachedAdminUser(): AdminUser | null {
@@ -105,6 +134,12 @@ export const api = {
     },
   },
 
+  customerAuth: {
+    login: (email: string, password: string) => request<{ token: string; user: CustomerUser }>("/auth/login", { method: "POST", body: JSON.stringify({ email, password }) }),
+    signup: (name: string, email: string, password: string) => request<{ token: string; user: CustomerUser }>("/auth/signup", { method: "POST", body: JSON.stringify({ name, email, password }) }),
+    me: (token: string) => request<{ user: CustomerUser }>("/auth/me", { headers: { Authorization: `Bearer ${token}` } }),
+  },
+
   products: resource<Product>("/products"),
   categories: resource<Category>("/categories"),
   storefront: {
@@ -114,7 +149,10 @@ export const api = {
     categories: () => request<{ data: Category[] }>("/storefront/categories"),
   },
   ai: {
-    shopper: (message: string, budget?: number) => request<{ data: ShoppingAdvice }>("/ai/shopper", { method: "POST", body: JSON.stringify({ message, budget }) }),
+    shopper: (message: string, budget?: number) => {
+      const token = getCustomerToken();
+      return request<{ data: ShoppingAdvice }>("/ai/shopper", { method: "POST", body: JSON.stringify({ message, budget }), headers: token ? { Authorization: `Bearer ${token}` } : undefined });
+    },
   },
   inventory: {
     ...resource<InventoryItem>("/inventory"),
@@ -174,6 +212,7 @@ export const api = {
 
 export type Id = string;
 export type AdminUser = { id?: Id; _id?: Id; name: string; email: string; role: string; status?: string; mfaEnabled?: boolean; lastActiveAt?: string; avatarUrl?: string };
+export type CustomerUser = { id: Id; name: string; email: string; role: string; avatarUrl?: string };
 export type Category = { _id: Id; slug: string; name: string; emoji?: string; sortOrder?: number };
 export type Product = {
   _id: Id; slug: string; name: string; brand?: string; description?: string; price: number; compareAt?: number;

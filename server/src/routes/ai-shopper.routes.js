@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { Product } from "../models/index.js";
+import { requireAuth } from "../middleware/auth.js";
 import { asyncHandler } from "../middleware/error.js";
 import { getShoppingAdvice } from "../services/gemini-shopper.js";
 
@@ -10,9 +11,7 @@ const requestSchema = z.object({
   budget: z.number().positive().max(10_000).optional(),
 });
 
-// This advice is catalogue-only, so guest shoppers can use it from the public web store.
-// Signed-in mobile customers additionally receive recommendations based on saved preferences.
-router.post("/shopper", asyncHandler(async (req, res) => {
+router.post("/shopper", requireAuth, asyncHandler(async (req, res) => {
   const { message, budget } = requestSchema.parse(req.body);
   const products = await Product.find({ status: "active" }).sort("name").lean();
   const advice = await getShoppingAdvice({ message, products, budget: budget ?? budgetFromMessage(message), preferences: req.user?.preferences });

@@ -1,10 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { FormEvent, useState } from "react";
 import { Check, Plus, Send, Sparkles } from "lucide-react";
 import { StoreLayout } from "@/components/store/StoreLayout";
 import { api, type ShoppingAdvice } from "@/lib/api-client";
 import type { Product } from "@/lib/mock-data";
 import { useCart } from "@/lib/store-cart";
+import { useCustomerSession } from "@/lib/customer-session";
 
 export const Route = createFileRoute("/assistant")({
   head: () => ({ meta: [{ title: "AI concierge — Martify" }, { name: "description", content: "Chat with your Martify AI for meal plans, budget-friendly picks, and recipe ideas." }] }),
@@ -21,13 +22,18 @@ function Assistant() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([{ role: "ai", text: "Hi! Tell me what you want to cook or buy, and include a budget if you have one." }]);
   const [loading, setLoading] = useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const { add } = useCart();
+  const { user, loading: sessionLoading } = useCustomerSession();
+  const navigate = useNavigate();
   const suggestions = ["5 healthy dinners under $60", "Build a breakfast basket", "Cheaper alternatives", "Vegetarian meal plan"];
 
   async function send(event?: FormEvent) {
     event?.preventDefault();
     const message = input.trim();
     if (!message || loading) return;
+    if (sessionLoading) return;
+    if (!user) { setShowLoginPrompt(true); return; }
     setInput("");
     setMessages((current) => [...current, { role: "user", text: message }]);
     setLoading(true);
@@ -56,7 +62,8 @@ function Assistant() {
     </div>
 
     <div className="mt-6 flex gap-2 overflow-x-auto no-scrollbar">{suggestions.map((suggestion) => <button key={suggestion} type="button" onClick={() => setInput(suggestion)} className="shrink-0 rounded-full bg-card border border-border px-3 py-1.5 text-xs font-medium">{suggestion}</button>)}</div>
-    <form onSubmit={send} className="fixed bottom-5 inset-x-0 z-30 pointer-events-none"><div className="mx-auto max-w-3xl px-4 lg:px-8 pointer-events-auto"><div className="flex items-center gap-2 rounded-full bg-card border border-border pl-5 pr-2 py-2 shadow-pop"><input value={input} onChange={(event) => setInput(event.target.value)} placeholder="Ask anything about groceries…" className="min-w-0 flex-1 bg-transparent outline-none text-sm" disabled={loading} /><button type="submit" disabled={!input.trim() || loading} className="grid size-10 place-items-center rounded-full bg-primary text-primary-foreground disabled:opacity-50"><Send className="size-4" /></button></div></div></form>
+    <form onSubmit={send} className="fixed bottom-5 inset-x-0 z-30 pointer-events-none"><div className="mx-auto max-w-3xl px-4 lg:px-8 pointer-events-auto"><div className="flex items-center gap-2 rounded-full bg-card border border-border pl-5 pr-2 py-2 shadow-pop"><input value={input} onChange={(event) => setInput(event.target.value)} placeholder="Ask anything about groceries…" className="min-w-0 flex-1 bg-transparent outline-none text-sm" disabled={loading || sessionLoading} /><button type="submit" disabled={!input.trim() || loading || sessionLoading} className="grid size-10 place-items-center rounded-full bg-primary text-primary-foreground disabled:opacity-50"><Send className="size-4" /></button></div></div></form>
+    {showLoginPrompt && <div className="fixed inset-0 z-50 grid place-items-center bg-foreground/30 p-4"><div role="dialog" aria-modal="true" aria-labelledby="login-required-title" className="w-full max-w-sm rounded-3xl border border-border bg-card p-6 shadow-pop"><Sparkles className="size-6 text-primary" /><h2 id="login-required-title" className="mt-4 font-display text-xl font-bold">Sign in to use Martify AI</h2><p className="mt-2 text-sm leading-relaxed text-muted-foreground">Your account lets the assistant create a basket and keep your preferences secure.</p><div className="mt-6 flex justify-end gap-2"><button type="button" onClick={() => setShowLoginPrompt(false)} className="h-10 rounded-xl px-4 text-sm font-semibold hover:bg-secondary">Cancel</button><button type="button" onClick={() => navigate({ to: "/auth" })} className="h-10 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground">OK, sign in</button></div></div></div>}
   </div></StoreLayout>;
 }
 

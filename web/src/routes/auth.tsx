@@ -1,6 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Mail, Lock, Phone, Fingerprint, Apple, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { useCustomerSession } from "@/lib/customer-session";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -15,6 +16,25 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const [tab, setTab] = useState<"signin" | "signup">("signin");
   const [showPw, setShowPw] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const { login, signup } = useCustomerSession();
+  const navigate = useNavigate();
+
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    setError(""); setSubmitting(true);
+    try {
+      if (tab === "signup") await signup(name.trim(), email.trim(), password);
+      else await login(email.trim(), password);
+      navigate({ to: "/" });
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "We could not sign you in. Please try again.");
+    } finally { setSubmitting(false); }
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -47,15 +67,18 @@ function AuthPage() {
           ))}
         </div>
 
-        <form className="space-y-3" onSubmit={(e) => e.preventDefault()}>
+        <form className="space-y-3" onSubmit={submit}>
           {tab === "signup" && (
-            <Field icon={<Mail className="size-4" />} placeholder="Full name" />
+            <Field icon={<Mail className="size-4" />} placeholder="Full name" value={name} onChange={(event) => setName(event.target.value)} required />
           )}
-          <Field icon={<Mail className="size-4" />} placeholder="Email address" type="email" />
+          <Field icon={<Mail className="size-4" />} placeholder="Email address" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
           <Field
             icon={<Lock className="size-4" />}
             placeholder="Password"
             type={showPw ? "text" : "password"}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            required
             right={
               <button type="button" onClick={() => setShowPw((v) => !v)} className="text-muted-foreground">
                 {showPw ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -72,12 +95,10 @@ function AuthPage() {
             </div>
           )}
 
-          <Link
-            to="/home"
-            className="mt-4 flex items-center justify-center gap-2 h-13 py-3.5 rounded-2xl bg-primary text-primary-foreground font-semibold shadow-emerald hover:bg-primary/90 transition-all"
-          >
-            {tab === "signin" ? "Sign in" : "Create account"} <ArrowRight className="size-4" />
-          </Link>
+          {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+          <button type="submit" disabled={submitting} className="mt-4 flex w-full items-center justify-center gap-2 h-13 py-3.5 rounded-2xl bg-primary text-primary-foreground font-semibold shadow-emerald hover:bg-primary/90 transition-all disabled:opacity-60">
+            {submitting ? "Please wait…" : tab === "signin" ? "Sign in" : "Create account"} <ArrowRight className="size-4" />
+          </button>
         </form>
 
         <div className="flex items-center gap-3 my-6">
