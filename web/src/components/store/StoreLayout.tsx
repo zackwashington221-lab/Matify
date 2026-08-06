@@ -1,8 +1,8 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
 import { Menu, Search, ShoppingBag, Sparkles, Truck, User, X } from "lucide-react";
-import { categories } from "@/lib/mock-data";
 import { useCart } from "@/lib/store-cart";
+import { useStorefront } from "@/lib/storefront";
 import { cn } from "@/lib/utils";
 
 const nav = [
@@ -14,6 +14,7 @@ const nav = [
 export function StoreLayout({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname as string });
   const { count } = useCart();
+  const { categories } = useStorefront();
   const [open, setOpen] = useState(false);
 
   return (

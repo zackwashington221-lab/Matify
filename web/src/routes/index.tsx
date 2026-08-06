@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Sparkles, Truck, ShieldCheck, Clock, Star } from "lucide-react";
 import { StoreLayout } from "@/components/store/StoreLayout";
 import { ProductCard } from "@/components/store/ProductCard";
-import { categories, products } from "@/lib/mock-data";
+import { useStorefront } from "@/lib/storefront";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -19,6 +19,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Landing() {
+  const { categories, products, loading } = useStorefront();
   const deals = products.filter((p) => p.compareAt);
   const featured = products.slice(0, 6);
   const trending = products.slice(6, 12);
@@ -100,6 +101,10 @@ function Landing() {
           ))}
         </div>
       </section>
+
+      {loading && (
+        <div className="mx-auto max-w-7xl px-4 lg:px-8 -mt-10 text-xs text-muted-foreground">Refreshing today’s catalogue…</div>
+      )}
 
       {/* Deals */}
       <section className="mx-auto max-w-7xl px-4 lg:px-8 pb-16">

@@ -107,6 +107,11 @@ export const api = {
 
   products: resource<Product>("/products"),
   categories: resource<Category>("/categories"),
+  storefront: {
+    products: (query?: Query) => request<ListResponse<Product & { stock?: number }>>(`/storefront/products${qs(query)}`),
+    product: (slug: string) => request<{ data: Product & { stock?: number } }>(`/storefront/products/${encodeURIComponent(slug)}`),
+    categories: () => request<{ data: Category[] }>("/storefront/categories"),
+  },
   inventory: {
     ...resource<InventoryItem>("/inventory"),
     lowStock: () => request<{ data: InventoryItem[] }>("/inventory/low-stock"),
@@ -169,7 +174,7 @@ export type Category = { _id: Id; slug: string; name: string; emoji?: string; so
 export type Product = {
   _id: Id; slug: string; name: string; brand?: string; description?: string; price: number; compareAt?: number;
   unit?: string; emoji?: string; category?: string; rating?: number; reviews?: number; aiTag?: string;
-  organic?: boolean; status: "draft" | "active" | "archived"; tags?: string[]; gradient?: string;
+  organic?: boolean; status: "draft" | "active" | "archived"; tags?: string[]; gradient?: string; stock?: number;
 };
 export type InventoryItem = {
   _id: Id; product: Product | Id; sku: string; warehouse: string; onHand: number; reserved: number;

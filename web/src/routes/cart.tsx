@@ -3,8 +3,8 @@ import { Minus, Plus, Trash2, Tag, Sparkles, ArrowRight, Truck, ShoppingBag } fr
 import { useState } from "react";
 import { StoreLayout } from "@/components/store/StoreLayout";
 import { ProductCard } from "@/components/store/ProductCard";
-import { products } from "@/lib/mock-data";
 import { useCart } from "@/lib/store-cart";
+import { useStorefront } from "@/lib/storefront";
 
 export const Route = createFileRoute("/cart")({
   head: () => ({
@@ -22,6 +22,7 @@ export const Route = createFileRoute("/cart")({
 
 function Cart() {
   const { items, count, subtotal, savings, delivery, tax, total, setQty, remove, clear, add } = useCart();
+  const { products } = useStorefront();
   const [promo, setPromo] = useState("");
   const suggestions = products.filter((p) => !items.some((i) => i.product.id === p.id)).slice(0, 4);
 

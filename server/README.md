@@ -12,11 +12,16 @@ cd server
 cp .env.example .env      # set MONGODB_URI + JWT_SECRET
 npm install
 npm run seed              # safely loads demo catalog, orders, customers, staff into an empty database
+npm run seed:products     # adds/updates the expanded storefront catalog without deleting existing data
 npm run dev               # http://localhost:4000/api
 ```
 
 `npm run seed` never overwrites existing data. For a local-only full replacement of the
 demo data, run `npm run seed:reset` explicitly.
+
+For an existing Railway database, deploy the backend and run `npm run seed:products` once
+from the Railway service shell. It upserts the additional storefront products and their
+inventory by product slug; it does not reset customers, orders, admins, or existing products.
 
 Seeded admin login: `amara@martify.io` / `Password123!`
 

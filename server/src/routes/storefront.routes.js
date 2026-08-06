@@ -23,10 +23,13 @@ router.get(
       const rx = new RegExp(String(req.query.q).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
       query.$or = [{ name: rx }, { brand: rx }, { tags: rx }];
     }
-    const [data, total] = await Promise.all([
+    const [products, total] = await Promise.all([
       Product.find(query).sort(req.query.sort || "-rating").skip((page - 1) * limit).limit(limit),
       Product.countDocuments(query),
     ]);
+    const inventory = await InventoryItem.find({ product: { $in: products.map((product) => product._id) } }).select("product onHand reserved").lean();
+    const stockByProduct = new Map(inventory.map((item) => [String(item.product), Math.max(0, item.onHand - item.reserved)]));
+    const data = products.map((product) => ({ ...product.toJSON(), stock: stockByProduct.get(String(product._id)) || 0 }));
     res.json({ data, page, total, pages: Math.ceil(total / limit) || 1 });
   })
 );

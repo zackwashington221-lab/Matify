@@ -3,8 +3,9 @@ import { useState } from "react";
 import { Star, Minus, Plus, Truck, ShieldCheck, Leaf, Sparkles, Check } from "lucide-react";
 import { StoreLayout } from "@/components/store/StoreLayout";
 import { ProductCard } from "@/components/store/ProductCard";
-import { productById, products } from "@/lib/mock-data";
+import { productById } from "@/lib/mock-data";
 import { useCart } from "@/lib/store-cart";
+import { useStorefront } from "@/lib/storefront";
 
 export const Route = createFileRoute("/product/$id")({
   head: ({ params }) => {
@@ -25,7 +26,8 @@ export const Route = createFileRoute("/product/$id")({
 
 function ProductDetail() {
   const { id } = Route.useParams();
-  const product = productById(id);
+  const { products } = useStorefront();
+  const product = products.find((item) => item.id === id) ?? productById(id);
   const { add } = useCart();
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);

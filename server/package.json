@@ -10,7 +10,8 @@
     "start": "node src/server.js",
     "seed": "node src/seed.js",
     "seed:reset": "node src/seed.js --reset",
-    "seed:admin": "node src/seed-admin.js"
+    "seed:admin": "node src/seed-admin.js",
+    "seed:products": "node src/seed-products.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

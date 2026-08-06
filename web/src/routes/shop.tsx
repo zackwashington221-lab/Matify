@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { Search, SlidersHorizontal, Leaf, Sparkles } from "lucide-react";
 import { StoreLayout } from "@/components/store/StoreLayout";
 import { ProductCard } from "@/components/store/ProductCard";
-import { categories, products } from "@/lib/mock-data";
+import { useStorefront } from "@/lib/storefront";
 import { cn } from "@/lib/utils";
 
 type ShopSearch = { category?: string; q?: string };
@@ -34,6 +34,7 @@ const sorts = [
 ] as const;
 
 function Shop() {
+  const { categories, products, loading, usingFallback } = useStorefront();
   const { category, q } = Route.useSearch();
   const navigate = Route.useNavigate();
   const [query, setQuery] = useState(q ?? "");
@@ -79,7 +80,7 @@ function Shop() {
               {activeCategory ? activeCategory.name : "Shop all groceries"}
             </h1>
             <p className="mt-2 text-muted-foreground text-sm">
-              {results.length} items · delivered fresh to your door today
+              {loading ? "Loading live catalogue…" : `${results.length} items · delivered fresh to your door today`}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -200,6 +201,7 @@ function Shop() {
               ))}
             </div>
           )}
+          {usingFallback && !loading && <p className="mt-5 text-xs text-muted-foreground">Showing the preview catalogue while the live store reconnects.</p>}
         </div>
       </div>
     </StoreLayout>

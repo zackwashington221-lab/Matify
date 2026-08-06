@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { products, type Product } from "@/lib/mock-data";
+import type { Product } from "@/lib/mock-data";
+import { useStorefront } from "@/lib/storefront";
 
 export type CartLine = { id: string; qty: number };
 
@@ -22,6 +23,7 @@ const CartContext = createContext<CartContextValue | null>(null);
 const STORAGE_KEY = "martify.cart.v1";
 
 export function CartProvider({ children }: { children: ReactNode }) {
+  const { products } = useStorefront();
   const [lines, setLines] = useState<CartLine[]>([]);
   const [hydrated, setHydrated] = useState(false);
 
