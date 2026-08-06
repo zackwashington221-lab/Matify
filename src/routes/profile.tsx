@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { MobileShell, TopBar } from "@/components/app/MobileShell";
+import { StoreLayout } from "@/components/store/StoreLayout";
 import { Heart, MapPin, CreditCard, Bell, Sparkles, HelpCircle, Settings, ChevronRight, Package, Star, LogOut } from "lucide-react";
 
 export const Route = createFileRoute("/profile")({
@@ -14,7 +14,8 @@ export const Route = createFileRoute("/profile")({
 
 function Profile() {
   return (
-    <MobileShell>
+    <StoreLayout>
+      <div className="mx-auto max-w-4xl px-4 lg:px-8 py-8">
       <TopBar title="You" right={<button className="size-9 rounded-full bg-secondary flex items-center justify-center"><Settings className="size-4" /></button>} />
 
       {/* Identity card */}
@@ -83,7 +84,8 @@ function Profile() {
         </div>
         <div className="text-center text-[11px] text-muted-foreground mt-4">Freshly v3.2 · Made with 🥑</div>
       </div>
-    </MobileShell>
+    </div>
+    </StoreLayout>
   );
 }
 
