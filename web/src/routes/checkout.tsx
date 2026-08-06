@@ -28,7 +28,7 @@ const slots = [
 
 const payments = [
   { id: "card", label: "Credit or debit card", sub: "Visa · Mastercard · Amex" },
-  { id: "apple", label: "Apple Pay", sub: "One-tap, biometric confirmed" },
+  { id: "cash", label: "Cash on delivery", sub: "Pay the delivery partner when your order arrives" },
   { id: "wallet", label: "Martify Wallet", sub: "Balance $28.40 · earn 3% back" },
 ];
 
