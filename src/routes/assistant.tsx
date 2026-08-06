@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { MobileShell, TopBar } from "@/components/app/MobileShell";
+import { StoreLayout } from "@/components/store/StoreLayout";
 import { Sparkles, Send, Mic, Plus } from "lucide-react";
 
 export const Route = createFileRoute("/assistant")({
@@ -30,22 +30,8 @@ function Assistant() {
   const suggestions = ["Cheaper alternatives", "Add breakfast", "Vegetarian swap", "Recipe for tonight"];
 
   return (
-    <MobileShell>
-      <TopBar
-        title={
-          <div className="flex items-center gap-2">
-            <div className="size-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 text-white flex items-center justify-center shadow-emerald">
-              <Sparkles className="size-4" />
-            </div>
-            <div>
-              <div className="text-[14px] font-semibold leading-tight">Freshly AI</div>
-              <div className="text-[10px] text-emerald-600 font-medium flex items-center gap-1">
-                <span className="size-1.5 rounded-full bg-emerald-500" /> Online
-              </div>
-            </div>
-          </div>
-        }
-      />
+    <StoreLayout>
+      <div className="mx-auto max-w-3xl px-4 lg:px-8 py-8">
 
       <div className="px-5 pt-4 pb-6 space-y-4">
         {msgs.map((m, i) => (
@@ -94,7 +80,8 @@ function Assistant() {
           </div>
         </div>
       </div>
-    </MobileShell>
+    </div>
+    </StoreLayout>
   );
 }
 

@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TrackingRouteImport } from './routes/tracking'
+import { Route as ShopRouteImport } from './routes/shop'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as HomeRouteImport } from './routes/home'
@@ -50,6 +51,11 @@ import { Route as AdminBannerNewRouteImport } from './routes/admin.banner.new'
 const TrackingRoute = TrackingRouteImport.update({
   id: '/tracking',
   path: '/tracking',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShopRoute = ShopRouteImport.update({
+  id: '/shop',
+  path: '/shop',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SearchRoute = SearchRouteImport.update({
@@ -244,6 +250,7 @@ export interface FileRoutesByFullPath {
   '/home': typeof HomeRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
+  '/shop': typeof ShopRoute
   '/tracking': typeof TrackingRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/banners': typeof AdminBannersRoute
@@ -282,6 +289,7 @@ export interface FileRoutesByTo {
   '/home': typeof HomeRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
+  '/shop': typeof ShopRoute
   '/tracking': typeof TrackingRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/banners': typeof AdminBannersRoute
@@ -322,6 +330,7 @@ export interface FileRoutesById {
   '/home': typeof HomeRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
+  '/shop': typeof ShopRoute
   '/tracking': typeof TrackingRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/banners': typeof AdminBannersRoute
@@ -363,6 +372,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/profile'
     | '/search'
+    | '/shop'
     | '/tracking'
     | '/admin/analytics'
     | '/admin/banners'
@@ -401,6 +411,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/profile'
     | '/search'
+    | '/shop'
     | '/tracking'
     | '/admin/analytics'
     | '/admin/banners'
@@ -440,6 +451,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/profile'
     | '/search'
+    | '/shop'
     | '/tracking'
     | '/admin/analytics'
     | '/admin/banners'
@@ -480,6 +492,7 @@ export interface RootRouteChildren {
   HomeRoute: typeof HomeRoute
   ProfileRoute: typeof ProfileRoute
   SearchRoute: typeof SearchRoute
+  ShopRoute: typeof ShopRoute
   TrackingRoute: typeof TrackingRoute
   ProductIdRoute: typeof ProductIdRoute
 }
@@ -491,6 +504,13 @@ declare module '@tanstack/react-router' {
       path: '/tracking'
       fullPath: '/tracking'
       preLoaderRoute: typeof TrackingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shop': {
+      id: '/shop'
+      path: '/shop'
+      fullPath: '/shop'
+      preLoaderRoute: typeof ShopRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/search': {
@@ -827,6 +847,7 @@ const rootRouteChildren: RootRouteChildren = {
   HomeRoute: HomeRoute,
   ProfileRoute: ProfileRoute,
   SearchRoute: SearchRoute,
+  ShopRoute: ShopRoute,
   TrackingRoute: TrackingRoute,
   ProductIdRoute: ProductIdRoute,
 }

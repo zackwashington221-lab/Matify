@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { MobileShell, TopBar } from "@/components/app/MobileShell";
+import { StoreLayout } from "@/components/store/StoreLayout";
 import { Check, MessageCircle, Phone, Sparkles, MapPin } from "lucide-react";
 
 export const Route = createFileRoute("/tracking")({
@@ -22,8 +22,8 @@ function Tracking() {
   ];
 
   return (
-    <MobileShell>
-      <TopBar back="/home" title="Order #FR-4821" />
+    <StoreLayout>
+      <div className="mx-auto max-w-3xl px-4 lg:px-8 py-8">
 
       {/* Success hero */}
       <div className="px-5 pt-4 pb-6">
@@ -131,6 +131,7 @@ function Tracking() {
           Continue shopping
         </Link>
       </div>
-    </MobileShell>
+    </div>
+    </StoreLayout>
   );
 }

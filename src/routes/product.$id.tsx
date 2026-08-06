@@ -1,16 +1,22 @@
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { Star, Minus, Plus, Truck, ShieldCheck, Leaf, Sparkles, Check } from "lucide-react";
+import { StoreLayout } from "@/components/store/StoreLayout";
+import { ProductCard } from "@/components/store/ProductCard";
 import { productById, products } from "@/lib/mock-data";
-import { MobileShell, TopBar } from "@/components/app/MobileShell";
-import { Heart, Share2, Star, Minus, Plus, Truck, Leaf, Sparkles, ShieldCheck, ChevronRight } from "lucide-react";
+import { useCart } from "@/lib/store-cart";
 
 export const Route = createFileRoute("/product/$id")({
   head: ({ params }) => {
     const p = productById(params.id);
     return {
       meta: [
-        { title: `${p.name} — Freshly` },
-        { name: "description", content: `${p.name} by ${p.brand} · $${p.price} · ${p.unit}. Order for same-day delivery on Freshly.` },
+        { title: `${p.name} — ${p.brand} | Freshly` },
+        { name: "description", content: `Buy ${p.name} by ${p.brand} — $${p.price.toFixed(2)} per ${p.unit}. Same-day grocery delivery from Freshly.` },
+        { property: "og:title", content: `${p.name} — Freshly` },
+        { property: "og:description", content: `${p.name} by ${p.brand}, $${p.price.toFixed(2)} per ${p.unit}.` },
+        { property: "og:type", content: "product" },
+        { name: "twitter:card", content: "summary_large_image" },
       ],
     };
   },
@@ -18,179 +24,143 @@ export const Route = createFileRoute("/product/$id")({
 });
 
 function ProductDetail() {
-  const { id } = useParams({ from: "/product/$id" });
-  const p = productById(id);
+  const { id } = Route.useParams();
+  const product = productById(id);
+  const { add } = useCart();
   const [qty, setQty] = useState(1);
-  const [liked, setLiked] = useState(false);
-  const related = products.filter((x) => x.id !== p.id).slice(0, 4);
+  const [added, setAdded] = useState(false);
+  const related = products.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4);
 
   return (
-    <MobileShell>
-      <TopBar
-        back="/home"
-        title=""
-        right={
-          <div className="flex items-center gap-2">
-            <button onClick={() => setLiked((v) => !v)} className="size-9 rounded-full bg-secondary flex items-center justify-center">
-              <Heart className={`size-4 ${liked ? "fill-rose-500 stroke-rose-500" : ""}`} />
-            </button>
-            <button className="size-9 rounded-full bg-secondary flex items-center justify-center"><Share2 className="size-4" /></button>
-          </div>
-        }
-      />
+    <StoreLayout>
+      <div className="mx-auto max-w-7xl px-4 lg:px-8 py-8">
+        <nav className="text-xs text-muted-foreground flex items-center gap-2">
+          <Link to="/" className="hover:text-primary">Home</Link>
+          <span>/</span>
+          <Link to="/shop" search={{ category: product.category }} className="hover:text-primary capitalize">{product.category}</Link>
+          <span>/</span>
+          <span className="text-foreground font-medium">{product.name}</span>
+        </nav>
 
-      {/* Hero image */}
-      <div className="px-5 pt-2">
-        <div className={`relative aspect-square rounded-[36px] bg-gradient-to-br ${p.gradient} flex items-center justify-center text-[180px] shadow-card overflow-hidden`}>
-          <span>{p.emoji}</span>
-          {p.organic && (
-            <div className="absolute top-4 left-4 inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur px-3 py-1 text-xs font-semibold text-emerald-700">
-              <Leaf className="size-3" /> Organic
+        <div className="mt-6 grid lg:grid-cols-2 gap-10 lg:gap-16">
+          {/* Gallery */}
+          <div>
+            <div className={`aspect-square rounded-[2rem] border border-border bg-gradient-to-br ${product.gradient} flex items-center justify-center`}>
+              <span className="text-[10rem] leading-none">{product.emoji}</span>
             </div>
-          )}
-        </div>
-        <div className="mt-3 flex justify-center gap-1.5">
-          {[0, 1, 2, 3].map((i) => (
-            <span key={i} className={`h-1.5 rounded-full transition-all ${i === 0 ? "w-6 bg-foreground" : "w-1.5 bg-border"}`} />
-          ))}
-        </div>
-      </div>
-
-      {/* Info */}
-      <div className="px-5 pt-6 pb-4">
-        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{p.brand}</div>
-        <h1 className="text-[26px] font-bold tracking-tight mt-1 leading-tight">{p.name}</h1>
-        <div className="mt-3 flex items-center gap-3 flex-wrap">
-          <div className="inline-flex items-center gap-1 text-sm">
-            <Star className="size-4 fill-amber-400 stroke-amber-400" />
-            <span className="font-semibold">{p.rating}</span>
-            <span className="text-muted-foreground">({p.reviews.toLocaleString()})</span>
+            <div className="mt-4 grid grid-cols-4 gap-3">
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i} className={`aspect-square rounded-2xl border border-border bg-gradient-to-br ${product.gradient} flex items-center justify-center text-3xl opacity-${i === 0 ? "100" : "70"}`}>
+                  {product.emoji}
+                </div>
+              ))}
+            </div>
           </div>
-          <span className="text-muted-foreground text-sm">·</span>
-          <span className="text-sm text-muted-foreground">{p.unit}</span>
-          <span className="text-muted-foreground text-sm">·</span>
-          <span className="inline-flex items-center gap-1 text-xs text-emerald-700 font-medium">
-            <span className="size-1.5 rounded-full bg-emerald-500" /> In stock
-          </span>
-        </div>
-      </div>
 
-      {/* AI insight */}
-      <div className="px-5 pb-5">
-        <div className="rounded-2xl bg-primary-soft/60 border border-primary/10 p-4 flex gap-3">
-          <div className="size-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white shadow-emerald shrink-0">
-            <Sparkles className="size-4" />
-          </div>
-          <div className="text-[13px] leading-relaxed">
-            <span className="font-semibold text-foreground">Great pick.</span>{" "}
-            <span className="text-muted-foreground">Rich in monounsaturated fats. Pairs well with your usual sourdough and eggs — save 12% ordering together.</span>
-          </div>
-        </div>
-      </div>
+          {/* Buy box */}
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{product.brand}</div>
+            <h1 className="mt-2 font-display text-3xl lg:text-4xl font-bold tracking-tight">{product.name}</h1>
 
-      {/* Quantity + qty selector */}
-      <div className="px-5 pb-5 flex items-center justify-between">
-        <div>
-          <div className="text-xs text-muted-foreground">Total</div>
-          <div className="text-2xl font-bold tracking-tight">${(p.price * qty).toFixed(2)}</div>
-        </div>
-        <div className="inline-flex items-center gap-3 rounded-full bg-card border border-border p-1.5 shadow-soft">
-          <button
-            onClick={() => setQty((q) => Math.max(1, q - 1))}
-            className="size-9 rounded-full bg-secondary flex items-center justify-center"
-          >
-            <Minus className="size-4" />
-          </button>
-          <span className="w-6 text-center font-semibold tabular-nums">{qty}</span>
-          <button
-            onClick={() => setQty((q) => q + 1)}
-            className="size-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-emerald"
-          >
-            <Plus className="size-4" />
-          </button>
-        </div>
-      </div>
+            <div className="mt-3 flex items-center gap-3 text-sm">
+              <span className="flex items-center gap-1">
+                <Star className="size-4 fill-warning text-warning" />
+                <span className="font-semibold">{product.rating}</span>
+              </span>
+              <span className="text-muted-foreground">{product.reviews.toLocaleString()} reviews</span>
+              {product.organic && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-2.5 py-1 text-xs font-semibold text-accent-foreground">
+                  <Leaf className="size-3" /> Organic
+                </span>
+              )}
+            </div>
 
-      {/* Perks row */}
-      <div className="px-5 pb-6 grid grid-cols-3 gap-2">
-        <Perk icon={<Truck className="size-4" />} title="60 min" sub="Delivery" />
-        <Perk icon={<ShieldCheck className="size-4" />} title="Fresh" sub="Guarantee" />
-        <Perk icon={<Leaf className="size-4" />} title="Farm" sub="Direct" />
-      </div>
+            <div className="mt-6 flex items-end gap-3">
+              <span className="font-display text-4xl font-bold">${product.price.toFixed(2)}</span>
+              {product.compareAt && <span className="text-lg text-muted-foreground line-through">${product.compareAt.toFixed(2)}</span>}
+              <span className="text-sm text-muted-foreground pb-1">per {product.unit}</span>
+            </div>
 
-      {/* About */}
-      <div className="px-5 pb-6">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-2">About</h2>
-        <p className="text-[14px] leading-relaxed text-foreground/90">
-          Hand-picked at peak ripeness from sun-drenched groves. Creamy texture, nutty flavor, and just the right give when you press the skin. Ready to enjoy in 1–2 days.
-        </p>
-      </div>
+            <p className="mt-5 text-[15px] text-muted-foreground leading-relaxed">
+              Sourced from {product.brand} and shipped within hours of harvest. Kept at optimal temperature through our cold chain so
+              it arrives exactly as it left the farm — crisp, fragrant and ready for tonight's table.
+            </p>
 
-      {/* Reviews teaser */}
-      <div className="px-5 pb-6">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-[17px] font-bold">Reviews</h2>
-          <button className="text-xs font-semibold text-primary flex items-center">See all <ChevronRight className="size-3" /></button>
-        </div>
-        <div className="rounded-2xl bg-card border border-border p-4">
-          <div className="flex items-center gap-3">
-            <div className="size-10 rounded-full bg-gradient-to-br from-rose-300 to-orange-400 text-white flex items-center justify-center font-semibold">S</div>
-            <div className="flex-1">
-              <div className="text-sm font-semibold">Sarah K.</div>
-              <div className="flex items-center gap-0.5">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} className="size-3 fill-amber-400 stroke-amber-400" />
-                ))}
-                <span className="text-[11px] text-muted-foreground ml-1">2 days ago</span>
+            {product.aiTag && (
+              <div className="mt-6 rounded-2xl bg-primary-soft/60 border border-primary/10 p-4 flex gap-3">
+                <Sparkles className="size-5 text-primary shrink-0" />
+                <div className="text-[13px] leading-relaxed">
+                  <span className="font-semibold">{product.aiTag}.</span>{" "}
+                  <span className="text-muted-foreground">Freshly's assistant recommends this based on your basket and past orders.</span>
+                </div>
+              </div>
+            )}
+
+            <div className="mt-7 flex flex-wrap items-center gap-3">
+              <div className="inline-flex items-center gap-3 h-13 px-2 py-2 rounded-2xl bg-secondary">
+                <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="size-9 rounded-xl bg-card flex items-center justify-center" aria-label="Decrease quantity">
+                  <Minus className="size-4" />
+                </button>
+                <span className="w-6 text-center font-semibold tabular-nums">{qty}</span>
+                <button onClick={() => setQty((q) => q + 1)} className="size-9 rounded-xl bg-card flex items-center justify-center" aria-label="Increase quantity">
+                  <Plus className="size-4" />
+                </button>
+              </div>
+              <button
+                onClick={() => {
+                  add(product.id, qty);
+                  setAdded(true);
+                  setTimeout(() => setAdded(false), 1500);
+                }}
+                className="flex-1 min-w-[12rem] inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors"
+              >
+                {added ? <Check className="size-4" /> : <Plus className="size-4" />}
+                {added ? "Added to cart" : `Add ${qty} to cart · $${(product.price * qty).toFixed(2)}`}
+              </button>
+              <Link to="/cart" className="px-6 py-3.5 rounded-2xl bg-card border border-border font-semibold hover:bg-secondary transition-colors">
+                View cart
+              </Link>
+            </div>
+
+            <div className="mt-6 grid sm:grid-cols-2 gap-3 text-sm">
+              <div className="flex items-center gap-2 rounded-2xl bg-card border border-border px-4 py-3">
+                <Truck className="size-4 text-primary" /> Delivery today, 45–60 min
+              </div>
+              <div className="flex items-center gap-2 rounded-2xl bg-card border border-border px-4 py-3">
+                <ShieldCheck className="size-4 text-primary" /> {product.stock} in stock · fresh guarantee
               </div>
             </div>
+
+            {/* Details */}
+            <div className="mt-8 divide-y divide-border border-t border-border">
+              {[
+                { t: "Nutrition", b: "Per serving: 120 kcal · 4g protein · 9g fat · 6g carbs · 3g fibre." },
+                { t: "Storage & handling", b: "Refrigerate on arrival. Best within 5 days of delivery." },
+                { t: "Delivery & returns", b: "Free delivery over $35. Damaged or off items refunded instantly in-app." },
+              ].map((d) => (
+                <details key={d.t} className="py-4 group">
+                  <summary className="cursor-pointer list-none flex items-center justify-between font-semibold text-sm">
+                    {d.t}
+                    <Plus className="size-4 text-muted-foreground group-open:rotate-45 transition-transform" />
+                  </summary>
+                  <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{d.b}</p>
+                </details>
+              ))}
+            </div>
           </div>
-          <p className="text-[13px] text-muted-foreground mt-3 leading-relaxed">
-            Perfectly ripe every single time. Freshly's ripeness sensor thing actually works — no more brown surprises.
-          </p>
         </div>
-      </div>
 
-      {/* Related */}
-      <div className="pb-8">
-        <div className="px-5 flex items-center justify-between mb-3">
-          <h2 className="text-[17px] font-bold">Often bought together</h2>
-        </div>
-        <div className="pl-5 pr-5 flex gap-3 overflow-x-auto no-scrollbar">
-          {related.map((r) => (
-            <Link key={r.id} to="/product/$id" params={{ id: r.id }} className="shrink-0 w-32">
-              <div className={`aspect-square rounded-2xl bg-gradient-to-br ${r.gradient} flex items-center justify-center text-5xl`}>{r.emoji}</div>
-              <div className="mt-2 text-[12px] font-semibold line-clamp-1">{r.name}</div>
-              <div className="text-[12px] font-bold">${r.price.toFixed(2)}</div>
-            </Link>
-          ))}
-        </div>
+        {related.length > 0 && (
+          <section className="mt-20">
+            <h2 className="font-display text-2xl font-bold tracking-tight">Pairs well with</h2>
+            <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              {related.map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
+            </div>
+          </section>
+        )}
       </div>
-
-      {/* Sticky CTA */}
-      <div className="fixed bottom-24 inset-x-0 z-30 pointer-events-none">
-        <div className="mx-auto max-w-md px-5 pointer-events-auto">
-          <Link
-            to="/cart"
-            className="flex items-center justify-between h-14 pl-5 pr-2 rounded-full bg-primary text-primary-foreground font-semibold shadow-emerald"
-          >
-            Add {qty} to cart
-            <span className="inline-flex items-center gap-1 bg-white/20 backdrop-blur rounded-full px-4 py-2 text-sm">
-              ${(p.price * qty).toFixed(2)} <ChevronRight className="size-4" />
-            </span>
-          </Link>
-        </div>
-      </div>
-    </MobileShell>
-  );
-}
-
-function Perk({ icon, title, sub }: { icon: React.ReactNode; title: string; sub: string }) {
-  return (
-    <div className="rounded-2xl bg-secondary p-3">
-      <div className="size-8 rounded-lg bg-card flex items-center justify-center text-primary mb-2">{icon}</div>
-      <div className="text-[13px] font-semibold leading-none">{title}</div>
-      <div className="text-[11px] text-muted-foreground mt-1">{sub}</div>
-    </div>
+    </StoreLayout>
   );
 }
