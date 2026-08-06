@@ -1,6 +1,15 @@
 const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models";
 
 export async function getShoppingAdvice({ message, products, budget, preferences }) {
+  if (!isMartifyShoppingQuestion(message, products)) {
+    return {
+      reply: "I’m Martify’s shopping assistant, so I can only help with products in this store, baskets, budgets, grocery planning, and delivery. What would you like to shop for?",
+      recommendations: [],
+      total: 0,
+      budget,
+    };
+  }
+
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return catalogFallback({ message, products, budget, preferences });
@@ -18,8 +27,8 @@ export async function getShoppingAdvice({ message, products, budget, preferences
     tags: product.tags || [],
   }));
   const prompt = [
-    "You are Martify's grocery-shopping assistant.",
-    "Answer general grocery questions helpfully and briefly. Only recommend products when the user is explicitly shopping, planning a basket, or asking what to buy.",
+    "You are Martify's in-store shopping assistant.",
+    "Only handle Martify catalogue, product discovery, basket planning, grocery shopping, budgets, swaps, availability, and delivery questions. Refuse all unrelated requests in one sentence and invite the customer to shop Martify products.",
     "When recommending products, choose only exact IDs from the catalog and respect the stated budget. Never invent products, prices, discounts, or availability.",
     "Return valid JSON only in this exact shape:",
     '{"reply":"string","recommendations":[{"productId":"string","qty":1,"reason":"string"}]}',
@@ -83,11 +92,6 @@ export async function getShoppingAdvice({ message, products, budget, preferences
 // Keeps the customer experience usable when the optional Gemini integration is unavailable.
 // It only recommends products that actually exist in the active Martify catalogue.
 function catalogFallback({ message, products, budget, preferences }) {
-  const shoppingRequest = /\b(buy|basket|cart|shop|list|recommend|need|plan|budget|dinner|meal|breakfast|lunch)\b/i.test(message);
-  if (!shoppingRequest) {
-    return { reply: "I can help plan a meal, compare groceries, or build a basket from the Martify catalogue. Tell me what you need and your budget.", recommendations: [], total: 0, budget };
-  }
-
   const healthy = /\b(healthy|vegetarian|vegan|organic|protein|heart)\b/i.test(message) || preferences?.healthySwaps;
   const terms = message.toLowerCase();
   const preferred = products.filter((product) => `${product.name} ${product.brand || ""} ${product.category || ""} ${(product.tags || []).join(" ")}`.toLowerCase().includes(terms));
@@ -109,6 +113,13 @@ function catalogFallback({ message, products, budget, preferences }) {
     total: roundedTotal,
     budget,
   };
+}
+
+function isMartifyShoppingQuestion(message, products) {
+  const normalized = message.toLowerCase();
+  const storeTerms = /\b(martify|grocery|groceries|product|products|basket|cart|shop|shopping|buy|order|delivery|deliver|budget|price|deal|swap|ingredient|ingredients|meal|meals|dinner|lunch|breakfast|recipe|produce|bakery|dairy|eggs|meat|seafood|pantry|snack|snacks|beverage|drink|drinks|frozen|organic|vegan|vegetarian)\b/;
+  if (storeTerms.test(normalized)) return true;
+  return products.some((product) => String(product.name || "").toLowerCase().split(/\s+/).some((word) => word.length >= 4 && normalized.includes(word.replace(/s$/, ""))));
 }
 
 function parseJson(text) {
