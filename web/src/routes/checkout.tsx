@@ -1,172 +1,215 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { MobileShell, TopBar } from "@/components/app/MobileShell";
-import { MapPin, Clock, CreditCard, Check, ChevronRight, ShieldCheck, Sparkles } from "lucide-react";
+import { MapPin, Clock, Check, ShieldCheck, Sparkles, CreditCard, Lock } from "lucide-react";
+import { StoreLayout } from "@/components/store/StoreLayout";
+import { useCart } from "@/lib/store-cart";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
     meta: [
-      { title: "Checkout — Martify" },
-      { name: "description", content: "Confirm delivery, payment, and place your order securely." },
+      { title: "Secure checkout — Martify" },
+      { name: "description", content: "Confirm your delivery address, pick a time window and pay securely for your grocery order." },
+      { property: "og:title", content: "Secure checkout — Martify" },
+      { property: "og:description", content: "Confirm delivery, choose a window and pay securely." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Checkout,
 });
 
+const slots = [
+  { id: "60min", top: "Within 60 min", bot: "$3.99 · fastest" },
+  { id: "2h", top: "2-hour window", bot: "Free" },
+  { id: "evening", top: "Tonight 6–8pm", bot: "Free" },
+];
+
+const payments = [
+  { id: "card", label: "Credit or debit card", sub: "Visa · Mastercard · Amex" },
+  { id: "apple", label: "Apple Pay", sub: "One-tap, biometric confirmed" },
+  { id: "wallet", label: "Martify Wallet", sub: "Balance $28.40 · earn 3% back" },
+];
+
 function Checkout() {
-  const [slot, setSlot] = useState("60min");
-  const [payment, setPayment] = useState("apple");
+  const { items, count, subtotal, savings, delivery, tax, total } = useCart();
+  const [slot, setSlot] = useState("2h");
+  const [payment, setPayment] = useState("card");
+
+  const shipping = slot === "60min" ? 3.99 : delivery;
+  const grand = subtotal + shipping + tax;
 
   return (
-    <MobileShell>
-      <TopBar back="/cart" title="Checkout" />
+    <StoreLayout>
+      <div className="mx-auto max-w-7xl px-4 lg:px-8 py-10">
+        <h1 className="font-display text-3xl lg:text-4xl font-bold tracking-tight">Checkout</h1>
+        <p className="mt-2 text-sm text-muted-foreground">{count} item{count === 1 ? "" : "s"} · secure 256-bit encrypted payment</p>
 
-      {/* Stepper */}
-      <div className="px-5 pt-4 pb-2 flex items-center gap-2">
-        {["Address", "Delivery", "Payment", "Review"].map((s, i) => (
-          <div key={s} className="flex-1 flex items-center gap-2">
-            <div className={`h-1 rounded-full flex-1 ${i <= 2 ? "bg-primary" : "bg-border"}`} />
+        <div className="mt-8 grid lg:grid-cols-[1fr_24rem] gap-8 items-start">
+          <div className="space-y-6">
+            {/* Contact */}
+            <Section title="1. Contact details">
+              <div className="grid sm:grid-cols-2 gap-3">
+                <Input label="Full name" placeholder="Alex Morgan" />
+                <Input label="Email" placeholder="alex@example.com" type="email" />
+                <Input label="Phone" placeholder="(555) 018-2245" />
+                <Input label="Company (optional)" placeholder="—" />
+              </div>
+            </Section>
+
+            {/* Address */}
+            <Section title="2. Delivery address">
+              <div className="grid sm:grid-cols-2 gap-3">
+                <div className="sm:col-span-2">
+                  <Input label="Street address" placeholder="1247 Elm Street" />
+                </div>
+                <Input label="Apartment / suite" placeholder="Apt 4B" />
+                <Input label="City" placeholder="Brooklyn" />
+                <Input label="State" placeholder="NY" />
+                <Input label="ZIP code" placeholder="11201" />
+                <div className="sm:col-span-2">
+                  <Input label="Delivery notes" placeholder="Leave with the doorman" />
+                </div>
+              </div>
+              <div className="mt-4 flex items-center gap-2 rounded-2xl bg-secondary px-4 py-3 text-sm">
+                <MapPin className="size-4 text-primary" /> We deliver to this ZIP within 60 minutes.
+              </div>
+            </Section>
+
+            {/* Slot */}
+            <Section title="3. Delivery window">
+              <div className="grid sm:grid-cols-3 gap-3">
+                {slots.map((s) => {
+                  const active = slot === s.id;
+                  return (
+                    <button
+                      key={s.id}
+                      onClick={() => setSlot(s.id)}
+                      className={`p-4 rounded-2xl border text-left transition-all ${active ? "bg-primary-soft border-primary" : "bg-card border-border hover:bg-secondary"}`}
+                    >
+                      <Clock className={`size-4 mb-2 ${active ? "text-primary" : "text-muted-foreground"}`} />
+                      <div className="text-sm font-semibold">{s.top}</div>
+                      <div className="text-xs text-muted-foreground">{s.bot}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </Section>
+
+            {/* Payment */}
+            <Section title="4. Payment method">
+              <div className="space-y-3">
+                {payments.map((m) => {
+                  const active = payment === m.id;
+                  return (
+                    <button
+                      key={m.id}
+                      onClick={() => setPayment(m.id)}
+                      className={`w-full flex items-center gap-3 p-4 rounded-2xl border transition-all ${active ? "bg-primary-soft border-primary" : "bg-card border-border hover:bg-secondary"}`}
+                    >
+                      <CreditCard className={`size-5 ${active ? "text-primary" : "text-muted-foreground"}`} />
+                      <div className="flex-1 text-left">
+                        <div className="text-sm font-semibold">{m.label}</div>
+                        <div className="text-xs text-muted-foreground">{m.sub}</div>
+                      </div>
+                      <span className={`size-5 rounded-full border-2 flex items-center justify-center ${active ? "bg-primary border-primary" : "border-border"}`}>
+                        {active && <Check className="size-3 text-primary-foreground" strokeWidth={3} />}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              {payment === "card" && (
+                <div className="mt-4 grid sm:grid-cols-3 gap-3">
+                  <div className="sm:col-span-3">
+                    <Input label="Card number" placeholder="4242 4242 4242 4242" />
+                  </div>
+                  <Input label="Expiry" placeholder="08 / 28" />
+                  <Input label="CVC" placeholder="123" />
+                  <Input label="ZIP" placeholder="11201" />
+                </div>
+              )}
+            </Section>
           </div>
-        ))}
-      </div>
-      <div className="px-5 pb-4 text-xs text-muted-foreground">Step 3 of 4 · Payment</div>
 
-      {/* Address */}
-      <div className="px-5 pb-4">
-        <SectionLabel>Delivery address</SectionLabel>
-        <button className="w-full flex items-center gap-3 p-4 rounded-2xl bg-card border border-border">
-          <div className="size-10 rounded-xl bg-primary-soft flex items-center justify-center"><MapPin className="size-4 text-primary" /></div>
-          <div className="flex-1 text-left">
-            <div className="text-[13px] font-semibold">Home · 1247 Elm Street</div>
-            <div className="text-[11px] text-muted-foreground">Apt 4B, Brooklyn, NY 11201</div>
-          </div>
-          <ChevronRight className="size-4 text-muted-foreground" />
-        </button>
-      </div>
+          {/* Summary */}
+          <aside className="lg:sticky lg:top-32 space-y-4">
+            <div className="rounded-3xl bg-card border border-border p-6">
+              <h2 className="font-display text-lg font-bold">Order summary</h2>
+              <div className="mt-4 space-y-3 max-h-64 overflow-y-auto pr-1">
+                {items.map(({ product, qty }) => (
+                  <div key={product.id} className="flex items-center gap-3">
+                    <div className={`size-11 rounded-xl bg-gradient-to-br ${product.gradient} flex items-center justify-center text-xl shrink-0`}>{product.emoji}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[13px] font-semibold line-clamp-1">{product.name}</div>
+                      <div className="text-[11px] text-muted-foreground">Qty {qty} · {product.unit}</div>
+                    </div>
+                    <div className="text-sm font-semibold">${(product.price * qty).toFixed(2)}</div>
+                  </div>
+                ))}
+                {items.length === 0 && <div className="text-sm text-muted-foreground">Your cart is empty.</div>}
+              </div>
 
-      {/* Delivery slot */}
-      <div className="px-5 pb-4">
-        <SectionLabel>Delivery time</SectionLabel>
-        <div className="grid grid-cols-3 gap-2">
-          {[
-            { id: "60min", top: "60 min", bot: "$3.99" },
-            { id: "2h", top: "2 hours", bot: "Free" },
-            { id: "sched", top: "Schedule", bot: "Choose" },
-          ].map((s) => {
-            const active = slot === s.id;
-            return (
-              <button
-                key={s.id}
-                onClick={() => setSlot(s.id)}
-                className={`p-3 rounded-2xl border text-left transition-all ${
-                  active ? "bg-primary-soft border-primary" : "bg-card border-border"
-                }`}
+              <div className="mt-5 space-y-2.5 text-sm border-t border-border pt-4">
+                <Row label="Subtotal" value={`$${subtotal.toFixed(2)}`} />
+                {savings > 0 && <Row label="Savings" value={`− $${savings.toFixed(2)}`} valueClass="text-primary font-semibold" />}
+                <Row label="Delivery" value={shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`} />
+                <Row label="Estimated tax" value={`$${tax.toFixed(2)}`} />
+                <div className="h-px bg-border my-3" />
+                <Row label="Total" value={`$${grand.toFixed(2)}`} labelClass="font-bold text-base text-foreground" valueClass="font-bold text-base" />
+              </div>
+
+              <Link
+                to="/tracking"
+                className="mt-5 flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors"
               >
-                <Clock className={`size-4 mb-2 ${active ? "text-primary" : "text-muted-foreground"}`} />
-                <div className="text-[13px] font-semibold">{s.top}</div>
-                <div className="text-[11px] text-muted-foreground">{s.bot}</div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+                <Lock className="size-4" /> Place order · ${grand.toFixed(2)}
+              </Link>
+              <div className="mt-3 flex items-center gap-2 text-[11px] text-muted-foreground">
+                <ShieldCheck className="size-3.5" /> Encrypted end-to-end. Cancel free within 5 minutes.
+              </div>
+            </div>
 
-      {/* Payment methods */}
-      <div className="px-5 pb-4">
-        <SectionLabel>Payment method</SectionLabel>
-        <div className="space-y-2">
-          {[
-            { id: "apple", label: "Apple Pay", sub: "Face ID confirmed", emoji: "" },
-            { id: "card", label: "Visa · 4242", sub: "Expires 08/28", emoji: "💳" },
-            { id: "wallet", label: "Martify Wallet", sub: "Balance $28.40", emoji: "💰" },
-          ].map((m) => {
-            const active = payment === m.id;
-            return (
-              <button
-                key={m.id}
-                onClick={() => setPayment(m.id)}
-                className={`w-full flex items-center gap-3 p-4 rounded-2xl border transition-all ${
-                  active ? "bg-primary-soft border-primary" : "bg-card border-border"
-                }`}
-              >
-                <div className="size-10 rounded-xl bg-secondary flex items-center justify-center text-lg">
-                  {m.id === "apple" ? <Apple /> : m.emoji}
-                </div>
-                <div className="flex-1 text-left">
-                  <div className="text-[13px] font-semibold">{m.label}</div>
-                  <div className="text-[11px] text-muted-foreground">{m.sub}</div>
-                </div>
-                <div className={`size-5 rounded-full border-2 flex items-center justify-center ${active ? "bg-primary border-primary" : "border-border"}`}>
-                  {active && <Check className="size-3 text-primary-foreground" strokeWidth={3} />}
-                </div>
-              </button>
-            );
-          })}
+            <div className="rounded-3xl bg-primary-soft/60 border border-primary/10 p-5 flex gap-3">
+              <Sparkles className="size-5 text-primary shrink-0" />
+              <p className="text-[13px] leading-relaxed">
+                <span className="font-semibold">Pay with Martify Wallet</span>{" "}
+                <span className="text-muted-foreground">to earn 3% back — about ${(grand * 0.03).toFixed(2)} on this order.</span>
+              </p>
+            </div>
+          </aside>
         </div>
       </div>
-
-      {/* AI tip */}
-      <div className="px-5 pb-4">
-        <div className="rounded-2xl bg-card border border-border p-4 flex gap-3">
-          <div className="size-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 text-white flex items-center justify-center shadow-emerald shrink-0">
-            <Sparkles className="size-4" />
-          </div>
-          <div className="text-[13px] leading-relaxed">
-            <span className="font-semibold">Pay with Martify Wallet</span>{" "}
-            <span className="text-muted-foreground">and earn 3% back — about <span className="font-semibold text-primary">$1.20</span> on this order.</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Review */}
-      <div className="px-5 pb-4">
-        <SectionLabel>Order review</SectionLabel>
-        <div className="rounded-2xl bg-card border border-border p-4 space-y-2 text-sm">
-          <Row label="Items (4)" value="$34.96" />
-          <Row label="AI savings" value="− $4.50" cls="text-primary font-semibold" />
-          <Row label="Delivery" value={slot === "2h" ? "Free" : "$3.99"} />
-          <Row label="Tax" value="$2.87" />
-          <div className="h-px bg-border my-2" />
-          <Row label="Total" value={`$${(34.96 - 4.5 + (slot === "2h" ? 0 : 3.99) + 2.87).toFixed(2)}`} labelCls="font-bold text-base" cls="font-bold text-base" />
-        </div>
-      </div>
-
-      <div className="px-5 pb-6">
-        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-          <ShieldCheck className="size-3.5" /> Secure 256-bit checkout · encrypted end-to-end
-        </div>
-      </div>
-
-      {/* CTA */}
-      <div className="fixed bottom-24 inset-x-0 z-30 pointer-events-none">
-        <div className="mx-auto max-w-md px-5 pointer-events-auto">
-          <Link to="/tracking" className="flex items-center justify-between h-14 pl-5 pr-2 rounded-full bg-primary text-primary-foreground font-semibold shadow-emerald">
-            <span className="inline-flex items-center gap-2"><CreditCard className="size-4" /> Place order</span>
-            <span className="inline-flex items-center gap-1 bg-white/20 backdrop-blur rounded-full px-4 py-2 text-sm">
-              $37.32 <ChevronRight className="size-4" />
-            </span>
-          </Link>
-        </div>
-      </div>
-    </MobileShell>
+    </StoreLayout>
   );
 }
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">{children}</div>;
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="rounded-3xl bg-card border border-border p-6">
+      <h2 className="font-display text-lg font-bold">{title}</h2>
+      <div className="mt-4">{children}</div>
+    </section>
+  );
 }
 
-function Row({ label, value, labelCls, cls }: { label: string; value: string; labelCls?: string; cls?: string }) {
+function Input({ label, placeholder, type = "text" }: { label: string; placeholder?: string; type?: string }) {
+  return (
+    <label className="block">
+      <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
+      <input
+        type={type}
+        placeholder={placeholder}
+        className="mt-1.5 w-full h-11 px-4 rounded-2xl bg-secondary border border-transparent focus:border-primary focus:bg-card outline-none text-sm transition-colors"
+      />
+    </label>
+  );
+}
+
+function Row({ label, value, labelClass, valueClass }: { label: string; value: string; labelClass?: string; valueClass?: string }) {
   return (
     <div className="flex items-center justify-between">
-      <span className={`text-muted-foreground ${labelCls ?? ""}`}>{label}</span>
-      <span className={cls}>{value}</span>
+      <span className={`text-muted-foreground ${labelClass ?? ""}`}>{label}</span>
+      <span className={valueClass}>{value}</span>
     </div>
-  );
-}
-
-function Apple() {
-  return (
-    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.53 4.08zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
   );
 }
