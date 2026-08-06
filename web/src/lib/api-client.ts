@@ -148,6 +148,7 @@ export const api = {
   customer: {
     updateProfile: (payload: { name: string; avatarUrl?: string }) => customerRequest<{ user: CustomerUser }>("/auth/me", { method: "PATCH", body: JSON.stringify(payload) }),
     orders: () => customerRequest<{ data: Order[] }>("/orders/mine"),
+    addresses: () => customerRequest<{ data: CustomerAddress[] }>("/mobile/addresses"),
     preferences: () => customerRequest<{ data: CustomerPreferences }>("/mobile/preferences"),
     updatePreferences: (payload: Partial<CustomerPreferences>) => customerRequest<{ data: CustomerPreferences }>("/mobile/preferences", { method: "PATCH", body: JSON.stringify(payload) }),
     cart: () => customerRequest<{ data: { items: { product: Product; qty: number }[] } }>("/mobile/cart"),
@@ -227,6 +228,7 @@ export const api = {
 export type Id = string;
 export type AdminUser = { id?: Id; _id?: Id; name: string; email: string; role: string; status?: string; mfaEnabled?: boolean; lastActiveAt?: string; avatarUrl?: string };
 export type CustomerUser = { id: Id; name: string; email: string; role: string; avatarUrl?: string };
+export type CustomerAddress = { _id?: Id; label: string; line1: string; city: string; postcode: string; isDefault?: boolean };
 export type CustomerPreferences = { healthySwaps?: boolean; budgetAlerts?: boolean; weeklyBudget?: number; dietaryPreferences?: string[] };
 export type Category = { _id: Id; slug: string; name: string; emoji?: string; sortOrder?: number };
 export type Product = {

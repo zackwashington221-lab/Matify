@@ -1,8 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { MapPin, Clock, Check, ShieldCheck, Sparkles, CreditCard, Lock } from "lucide-react";
 import { StoreLayout } from "@/components/store/StoreLayout";
 import { useCart } from "@/lib/store-cart";
+import { api } from "@/lib/api-client";
+import { useCustomerSession } from "@/lib/customer-session";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -32,8 +34,27 @@ const payments = [
 
 function Checkout() {
   const { items, count, subtotal, savings, delivery, tax, total } = useCart();
+  const { user } = useCustomerSession();
   const [slot, setSlot] = useState("2h");
   const [payment, setPayment] = useState("card");
+  const [details, setDetails] = useState({ name: "", email: "", phone: "", company: "", address: "", apartment: "", city: "", state: "", postcode: "", notes: "", cardNumber: "", expiry: "", cvc: "", cardPostcode: "" });
+
+  useEffect(() => {
+    if (!user) return;
+    setDetails((current) => ({ ...current, name: current.name || user.name, email: current.email || user.email }));
+    api.customer.addresses().then(({ data }) => {
+      const address = data.find((item) => item.isDefault) || data[0];
+      if (!address) return;
+      setDetails((current) => ({
+        ...current,
+        address: current.address || address.line1,
+        city: current.city || address.city,
+        postcode: current.postcode || address.postcode,
+      }));
+    }).catch(() => undefined);
+  }, [user?.id]);
+
+  const updateDetail = (key: keyof typeof details) => (value: string) => setDetails((current) => ({ ...current, [key]: value }));
 
   const shipping = slot === "60min" ? 3.99 : delivery;
   const grand = subtotal + shipping + tax;
@@ -49,10 +70,10 @@ function Checkout() {
             {/* Contact */}
             <Section title="1. Contact details">
               <div className="grid sm:grid-cols-2 gap-3">
-                <Input label="Full name" placeholder="Alex Morgan" />
-                <Input label="Email" placeholder="alex@example.com" type="email" />
-                <Input label="Phone" placeholder="(555) 018-2245" />
-                <Input label="Company (optional)" placeholder="—" />
+                <Input label="Full name" placeholder="Alex Morgan" value={details.name} onChange={updateDetail("name")} />
+                <Input label="Email" placeholder="alex@example.com" type="email" value={details.email} onChange={updateDetail("email")} />
+                <Input label="Phone" placeholder="(555) 018-2245" value={details.phone} onChange={updateDetail("phone")} />
+                <Input label="Company (optional)" placeholder="—" value={details.company} onChange={updateDetail("company")} />
               </div>
             </Section>
 
@@ -60,14 +81,14 @@ function Checkout() {
             <Section title="2. Delivery address">
               <div className="grid sm:grid-cols-2 gap-3">
                 <div className="sm:col-span-2">
-                  <Input label="Street address" placeholder="1247 Elm Street" />
+                  <Input label="Street address" placeholder="1247 Elm Street" value={details.address} onChange={updateDetail("address")} />
                 </div>
-                <Input label="Apartment / suite" placeholder="Apt 4B" />
-                <Input label="City" placeholder="Brooklyn" />
-                <Input label="State" placeholder="NY" />
-                <Input label="ZIP code" placeholder="11201" />
+                <Input label="Apartment / suite" placeholder="Apt 4B" value={details.apartment} onChange={updateDetail("apartment")} />
+                <Input label="City" placeholder="Brooklyn" value={details.city} onChange={updateDetail("city")} />
+                <Input label="State" placeholder="NY" value={details.state} onChange={updateDetail("state")} />
+                <Input label="ZIP code" placeholder="11201" value={details.postcode} onChange={updateDetail("postcode")} />
                 <div className="sm:col-span-2">
-                  <Input label="Delivery notes" placeholder="Leave with the doorman" />
+                  <Input label="Delivery notes" placeholder="Leave with the doorman" value={details.notes} onChange={updateDetail("notes")} />
                 </div>
               </div>
               <div className="mt-4 flex items-center gap-2 rounded-2xl bg-secondary px-4 py-3 text-sm">
@@ -121,11 +142,11 @@ function Checkout() {
               {payment === "card" && (
                 <div className="mt-4 grid sm:grid-cols-3 gap-3">
                   <div className="sm:col-span-3">
-                    <Input label="Card number" placeholder="4242 4242 4242 4242" />
+                    <Input label="Card number" placeholder="4242 4242 4242 4242" value={details.cardNumber} onChange={updateDetail("cardNumber")} />
                   </div>
-                  <Input label="Expiry" placeholder="08 / 28" />
-                  <Input label="CVC" placeholder="123" />
-                  <Input label="ZIP" placeholder="11201" />
+                  <Input label="Expiry" placeholder="08 / 28" value={details.expiry} onChange={updateDetail("expiry")} />
+                  <Input label="CVC" placeholder="123" value={details.cvc} onChange={updateDetail("cvc")} />
+                  <Input label="ZIP" placeholder="11201" value={details.cardPostcode} onChange={updateDetail("cardPostcode")} />
                 </div>
               )}
             </Section>
@@ -192,13 +213,15 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function Input({ label, placeholder, type = "text" }: { label: string; placeholder?: string; type?: string }) {
+function Input({ label, placeholder, type = "text", value, onChange }: { label: string; placeholder?: string; type?: string; value: string; onChange: (value: string) => void }) {
   return (
     <label className="block">
       <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
       <input
         type={type}
         placeholder={placeholder}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
         className="mt-1.5 w-full h-11 px-4 rounded-2xl bg-secondary border border-transparent focus:border-primary focus:bg-card outline-none text-sm transition-colors"
       />
     </label>
