@@ -118,7 +118,7 @@ function catalogFallback({ message, products, budget, preferences }) {
 
 function isMartifyShoppingQuestion(message, products) {
   const normalized = message.toLowerCase();
-  const storeTerms = /\b(martify|grocery|groceries|product|products|basket|cart|shop|shopping|buy|order|delivery|deliver|budget|price|deal|swap|ingredient|ingredients|meal|meals|dinner|lunch|breakfast|recipe|produce|bakery|dairy|eggs|meat|seafood|pantry|snack|snacks|beverage|drink|drinks|frozen|organic|vegan|vegetarian)\b/;
+  const storeTerms = /\b(martify|grocery|groceries|product|products|basket|cart|shop|shopping|buy|order|delivery|deliver|budget|price|deal|swap|ingredient|ingredients|meal|meals|dinner|dinners|lunch|lunches|breakfast|breakfasts|recipe|recipes|healthy|health|produce|bakery|dairy|eggs|meat|seafood|pantry|snack|snacks|beverage|drink|drinks|frozen|organic|vegan|vegetarian)\b/;
   if (storeTerms.test(normalized)) return true;
   return products.some((product) => String(product.name || "").toLowerCase().split(/\s+/).some((word) => word.length >= 4 && normalized.includes(word.replace(/s$/, ""))));
 }
