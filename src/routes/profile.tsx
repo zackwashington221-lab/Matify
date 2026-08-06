@@ -16,7 +16,7 @@ function Profile() {
   return (
     <StoreLayout>
       <div className="mx-auto max-w-4xl px-4 lg:px-8 py-8">
-      <TopBar title="You" right={<button className="size-9 rounded-full bg-secondary flex items-center justify-center"><Settings className="size-4" /></button>} />
+      <h1 className="font-display text-3xl font-bold tracking-tight px-5">Your account</h1>
 
       {/* Identity card */}
       <div className="px-5 pt-4 pb-6">
