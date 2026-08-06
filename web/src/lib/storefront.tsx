@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { api, type Category as ApiCategory, type Product as ApiProduct } from "@/lib/api-client";
+import { api, type Banner, type Category as ApiCategory, type Product as ApiProduct, type Promotion, type StorefrontHome } from "@/lib/api-client";
 import { categories as fallbackCategories, products as fallbackProducts, type Product } from "@/lib/mock-data";
 
 type StoreCategory = { id: string; name: string; emoji: string; count: number; gradient: string };
@@ -67,4 +67,33 @@ export function useStorefront() {
   const value = useContext(StorefrontContext);
   if (!value) throw new Error("useStorefront must be used inside StorefrontProvider");
   return value;
+}
+
+type HomeCatalog = { categories: StoreCategory[]; featured: Product[]; deals: Product[]; trending: Product[]; banners: Banner[]; promotions: Pick<Promotion, "_id" | "code" | "name" | "type" | "value" | "minSpend" | "endsAt">[]; loading: boolean };
+
+function toHomeCatalog(home: StorefrontHome): Omit<HomeCatalog, "loading"> {
+  return {
+    categories: home.categories.map((category, index) => ({ id: category.slug, name: category.name, emoji: category.emoji || "🛒", count: category.count, gradient: gradients[index % gradients.length] })),
+    featured: home.featured.map(toStoreProduct),
+    deals: home.deals.map(toStoreProduct),
+    trending: home.trending.map(toStoreProduct),
+    banners: home.banners,
+    promotions: home.promotions,
+  };
+}
+
+export function useStorefrontHome(): HomeCatalog {
+  const fallback = useStorefront();
+  const [home, setHome] = useState<Omit<HomeCatalog, "loading"> | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    api.storefront.home().then((response) => {
+      if (active) setHome(toHomeCatalog(response.data));
+    }).catch(() => undefined);
+    return () => { active = false; };
+  }, []);
+
+  if (home) return { ...home, loading: false };
+  return { categories: fallback.categories, featured: fallback.products.slice(0, 4), deals: fallback.products.filter((product) => product.compareAt), trending: fallback.products.slice(6, 12), banners: [], promotions: [], loading: fallback.loading };
 }

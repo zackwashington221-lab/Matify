@@ -5,6 +5,43 @@ import { asyncHandler } from "../middleware/error.js";
 // Public storefront API consumed by the Expo mobile app (no auth required).
 const router = Router();
 
+async function withStock(products) {
+  const inventory = await InventoryItem.find({ product: { $in: products.map((product) => product._id) } }).select("product onHand reserved").lean();
+  const stockByProduct = new Map(inventory.map((item) => [String(item.product), Math.max(0, item.onHand - item.reserved)]));
+  return products.map((product) => ({ ...product.toJSON(), stock: stockByProduct.get(String(product._id)) || 0 }));
+}
+
+// One request for the customer homepage. It keeps the home composition server-driven.
+router.get(
+  "/home",
+  asyncHandler(async (_req, res) => {
+    const active = { status: "active" };
+    const [categories, categoryCounts, featured, deals, trending, banners, promotions] = await Promise.all([
+      Category.find().sort("sortOrder name").lean(),
+      Product.aggregate([{ $match: active }, { $group: { _id: "$category", count: { $sum: 1 } } }]),
+      Product.find(active).sort("-rating -reviews").limit(4),
+      Product.find({ ...active, $expr: { $gt: ["$compareAt", "$price"] } }).sort("-rating").limit(4),
+      Product.find(active).sort("-reviews -rating").limit(4),
+      Banner.find({ status: "live" }).sort("slot").lean(),
+      Promotion.find({ status: "active" }).select("code name type value minSpend endsAt").lean(),
+    ]);
+    const counts = new Map(categoryCounts.map((item) => [item._id, item.count]));
+    const [featuredWithStock, dealsWithStock, trendingWithStock] = await Promise.all([
+      withStock(featured), withStock(deals), withStock(trending),
+    ]);
+    res.json({
+      data: {
+        categories: categories.map((category) => ({ ...category, count: counts.get(category.slug) || 0 })),
+        featured: featuredWithStock,
+        deals: dealsWithStock,
+        trending: trendingWithStock,
+        banners,
+        promotions,
+      },
+    });
+  })
+);
+
 router.get(
   "/categories",
   asyncHandler(async (_req, res) => {
@@ -27,9 +64,7 @@ router.get(
       Product.find(query).sort(req.query.sort || "-rating").skip((page - 1) * limit).limit(limit),
       Product.countDocuments(query),
     ]);
-    const inventory = await InventoryItem.find({ product: { $in: products.map((product) => product._id) } }).select("product onHand reserved").lean();
-    const stockByProduct = new Map(inventory.map((item) => [String(item.product), Math.max(0, item.onHand - item.reserved)]));
-    const data = products.map((product) => ({ ...product.toJSON(), stock: stockByProduct.get(String(product._id)) || 0 }));
+    const data = await withStock(products);
     res.json({ data, page, total, pages: Math.ceil(total / limit) || 1 });
   })
 );

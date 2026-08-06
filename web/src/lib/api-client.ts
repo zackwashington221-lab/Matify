@@ -108,6 +108,7 @@ export const api = {
   products: resource<Product>("/products"),
   categories: resource<Category>("/categories"),
   storefront: {
+    home: () => request<{ data: StorefrontHome }>("/storefront/home"),
     products: (query?: Query) => request<ListResponse<Product & { stock?: number }>>(`/storefront/products${qs(query)}`),
     product: (slug: string) => request<{ data: Product & { stock?: number } }>(`/storefront/products/${encodeURIComponent(slug)}`),
     categories: () => request<{ data: Category[] }>("/storefront/categories"),
@@ -195,6 +196,7 @@ export type Customer = {
 };
 export type Promotion = { _id: Id; code: string; name?: string; type: string; value: number; minSpend?: number; usageLimit?: number; usedCount: number; status: string; startsAt?: string; endsAt?: string };
 export type Banner = { _id: Id; title: string; subtitle?: string; slot: number; ctaLabel?: string; ctaHref?: string; theme?: string; status: string; impressions: number; clicks: number; startsAt?: string; endsAt?: string };
+export type StorefrontHome = { categories: (Category & { count: number })[]; featured: (Product & { stock?: number })[]; deals: (Product & { stock?: number })[]; trending: (Product & { stock?: number })[]; banners: Banner[]; promotions: Pick<Promotion, "_id" | "code" | "name" | "type" | "value" | "minSpend" | "endsAt">[] };
 export type NotificationRecord = { _id: Id; title: string; body?: string; channel: string; audience?: string; category: string; status: string; scheduledFor?: string; sentAt?: string; stats?: { delivered?: number; opened?: number; clicked?: number } };
 export type UserNotification = { _id: Id; title: string; body?: string; category?: string; channel: string; readAt?: string; createdAt: string };
 export type ScheduledReport = { _id: Id; name: string; cadence: string; recipients: string[]; format: string; nextRunAt?: string; status: string };

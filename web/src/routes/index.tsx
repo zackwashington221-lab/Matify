@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Sparkles, Truck, ShieldCheck, Clock, Star } from "lucide-react";
 import { StoreLayout } from "@/components/store/StoreLayout";
 import { ProductCard } from "@/components/store/ProductCard";
-import { useStorefront } from "@/lib/storefront";
+import { useStorefrontHome } from "@/lib/storefront";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -19,10 +19,9 @@ export const Route = createFileRoute("/")({
 });
 
 function Landing() {
-  const { categories, products, loading } = useStorefront();
-  const deals = products.filter((p) => p.compareAt);
-  const featured = products.slice(0, 6);
-  const trending = products.slice(6, 12);
+  const { categories, featured, deals, trending, banners, promotions, loading } = useStorefrontHome();
+  const heroBanner = banners[0];
+  const promotion = promotions[0];
 
   return (
     <StoreLayout>
@@ -35,11 +34,10 @@ function Landing() {
               <Sparkles className="size-3.5" /> AI-curated grocery marketplace
             </span>
             <h1 className="mt-5 font-display text-4xl lg:text-6xl font-bold leading-[1.05] tracking-tight">
-              Real food, <span className="text-primary">smarter baskets</span>, delivered today.
+              {heroBanner?.title || "Real food,"} <span className="text-primary">{heroBanner ? "delivered today" : "smarter baskets"}</span>{heroBanner ? "." : ", delivered today."}
             </h1>
             <p className="mt-5 text-base lg:text-lg text-muted-foreground leading-relaxed max-w-xl">
-              Shop thousands of everyday essentials from local growers and artisan makers. Martify's assistant plans meals,
-              finds cheaper swaps and keeps you inside your budget.
+              {heroBanner?.subtitle || "Shop thousands of everyday essentials from local growers and artisan makers. Martify's assistant plans meals, finds cheaper swaps and keeps you inside your budget."}
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link to="/shop" className="inline-flex items-center gap-2 h-13 px-6 py-3.5 rounded-2xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors">
@@ -54,6 +52,7 @@ function Landing() {
               <Stat value="45 min" label="Average delivery" />
               <Stat value="4.9★" label="From 38k reviews" />
             </div>
+            {promotion && <div className="mt-5 text-xs font-semibold text-primary">Use code {promotion.code}{promotion.name ? ` · ${promotion.name}` : ""}</div>}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
