@@ -4,6 +4,14 @@ import { Menu, Search, ShoppingBag, Sparkles, Truck, User, X } from "lucide-reac
 import { useCart } from "@/lib/store-cart";
 import { useStorefront } from "@/lib/storefront";
 import { cn } from "@/lib/utils";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 
 const nav = [
   { to: "/shop", label: "Shop all" },
@@ -26,13 +34,14 @@ export function StoreLayout({ children }: { children: ReactNode }) {
         </div>
       </div>
 
-      <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur-xl">
+      <header className="store-chrome sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur-xl">
         <div className="mx-auto max-w-7xl px-4 lg:px-8">
           <div className="h-16 flex items-center gap-4 lg:gap-8">
             <button
               className="lg:hidden size-10 -ml-2 rounded-xl flex items-center justify-center hover:bg-secondary"
               onClick={() => setOpen((v) => !v)}
               aria-label="Toggle menu"
+              aria-expanded={open}
             >
               {open ? <X className="size-5" /> : <Menu className="size-5" />}
             </button>
@@ -51,7 +60,9 @@ export function StoreLayout({ children }: { children: ReactNode }) {
                   to={n.to}
                   className={cn(
                     "px-3 py-2 rounded-xl text-sm font-medium transition-colors",
-                    pathname.startsWith(n.to) ? "bg-primary-soft text-accent-foreground" : "text-muted-foreground hover:bg-secondary"
+                    pathname.startsWith(n.to)
+                      ? "bg-primary-soft text-accent-foreground"
+                      : "text-muted-foreground hover:bg-secondary",
                   )}
                 >
                   {n.label}
@@ -68,10 +79,18 @@ export function StoreLayout({ children }: { children: ReactNode }) {
             </Link>
 
             <div className="ml-auto flex items-center gap-1">
-              <Link to="/assistant" className="hidden sm:flex size-10 rounded-xl items-center justify-center hover:bg-secondary" aria-label="AI assistant">
+              <Link
+                to="/assistant"
+                className="hidden sm:flex size-10 rounded-xl items-center justify-center hover:bg-secondary"
+                aria-label="AI assistant"
+              >
                 <Sparkles className="size-5 text-primary" />
               </Link>
-              <Link to="/profile" className="size-10 rounded-xl flex items-center justify-center hover:bg-secondary" aria-label="Account">
+              <Link
+                to="/profile"
+                className="size-10 rounded-xl flex items-center justify-center hover:bg-secondary"
+                aria-label="Account"
+              >
                 <User className="size-5" />
               </Link>
               <Link
@@ -101,31 +120,47 @@ export function StoreLayout({ children }: { children: ReactNode }) {
             ))}
           </div>
         </div>
+      </header>
 
-        {open && (
-          <div className="lg:hidden border-t border-border bg-background px-4 py-3 space-y-1">
-            {[...nav, { to: "/shop", label: "Categories" } as const].map((n) => (
-              <Link key={n.label} to={n.to} onClick={() => setOpen(false)} className="block px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-secondary">
-                {n.label}
-              </Link>
-            ))}
-            <div className="flex flex-wrap gap-2 pt-2">
-              {categories.map((c) => (
+      <Drawer open={open} onOpenChange={setOpen} shouldScaleBackground>
+        <DrawerContent className="store-sheet lg:hidden max-h-[82dvh] rounded-t-xl border-border bg-background/95 px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] backdrop-blur-2xl">
+          <DrawerHeader className="px-0 pt-3 text-left">
+            <DrawerTitle className="font-display text-xl">Browse Martify</DrawerTitle>
+            <DrawerDescription>Choose a destination or department.</DrawerDescription>
+          </DrawerHeader>
+          <nav className="mt-2 grid gap-1" aria-label="Mobile navigation">
+            {nav.map((n) => (
+              <DrawerClose key={n.to} asChild>
                 <Link
-                  key={c.id}
-                  to="/shop"
-                  search={{ category: c.id }}
-                  onClick={() => setOpen(false)}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-medium"
+                  to={n.to}
+                  className="rounded-lg px-3 py-3 text-sm font-semibold hover:bg-secondary"
                 >
-                  <span>{c.emoji}</span>
-                  {c.name}
+                  {n.label}
                 </Link>
+              </DrawerClose>
+            ))}
+          </nav>
+          <div className="mt-5 border-t border-border pt-5">
+            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Departments
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2 overflow-y-auto pb-2">
+              {categories.map((c) => (
+                <DrawerClose key={c.id} asChild>
+                  <Link
+                    to="/shop"
+                    search={{ category: c.id }}
+                    className="flex items-center gap-2 rounded-lg bg-secondary px-3 py-2.5 text-sm font-medium"
+                  >
+                    <span>{c.emoji}</span>
+                    {c.name}
+                  </Link>
+                </DrawerClose>
               ))}
             </div>
           </div>
-        )}
-      </header>
+        </DrawerContent>
+      </Drawer>
 
       <main className="flex-1">{children}</main>
 
@@ -133,16 +168,31 @@ export function StoreLayout({ children }: { children: ReactNode }) {
         <div className="mx-auto max-w-7xl px-4 lg:px-8 py-14 grid gap-10 md:grid-cols-2 lg:grid-cols-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className="size-8 rounded-xl bg-primary text-primary-foreground font-display font-bold flex items-center justify-center">F</span>
+              <span className="size-8 rounded-xl bg-primary text-primary-foreground font-display font-bold flex items-center justify-center">
+                F
+              </span>
               <span className="font-display font-bold">Martify</span>
             </div>
             <p className="mt-3 text-sm text-muted-foreground leading-relaxed max-w-xs">
-              An AI grocery marketplace — thoughtful picks, honest pricing, and same-day delivery from local growers.
+              An AI grocery marketplace — thoughtful picks, honest pricing, and same-day delivery
+              from local growers.
             </p>
           </div>
           <FooterCol title="Shop" links={categories.slice(0, 5).map((c) => c.name)} />
-          <FooterCol title="Company" links={["About us", "Careers", "Sustainability", "Press", "Partner with us"]} />
-          <FooterCol title="Support" links={["Help center", "Delivery areas", "Returns & refunds", "Contact", "Track an order"]} />
+          <FooterCol
+            title="Company"
+            links={["About us", "Careers", "Sustainability", "Press", "Partner with us"]}
+          />
+          <FooterCol
+            title="Support"
+            links={[
+              "Help center",
+              "Delivery areas",
+              "Returns & refunds",
+              "Contact",
+              "Track an order",
+            ]}
+          />
         </div>
         <div className="border-t border-border">
           <div className="mx-auto max-w-7xl px-4 lg:px-8 h-14 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
@@ -162,10 +212,15 @@ export function StoreLayout({ children }: { children: ReactNode }) {
 function FooterCol({ title, links }: { title: string; links: string[] }) {
   return (
     <div>
-      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{title}</div>
+      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {title}
+      </div>
       <ul className="mt-3 space-y-2 text-sm">
         {links.map((l) => (
-          <li key={l} className="text-foreground/80 hover:text-primary transition-colors cursor-pointer">
+          <li
+            key={l}
+            className="text-foreground/80 hover:text-primary transition-colors cursor-pointer"
+          >
             {l}
           </li>
         ))}
