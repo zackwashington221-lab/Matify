@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Sparkles, Truck, ShieldCheck, Clock, Star } from "lucide-react";
 import { StoreLayout } from "@/components/store/StoreLayout";
 import { ProductCard } from "@/components/store/ProductCard";
+import { HomeSkeleton, InlineLoader } from "@/components/store/LoadingState";
 import { useStorefrontHome } from "@/lib/storefront";
 
 export const Route = createFileRoute("/")({
@@ -34,9 +35,7 @@ function Landing() {
   if (!content) {
     return (
       <StoreLayout>
-        <div className="mx-auto max-w-7xl px-4 lg:px-8 py-24 text-center text-sm text-muted-foreground">
-          Loading storefront…
-        </div>
+        <HomeSkeleton />
       </StoreLayout>
     );
   }
@@ -135,8 +134,8 @@ function Landing() {
       </section>
 
       {loading && (
-        <div className="mx-auto max-w-7xl px-4 lg:px-8 -mt-10 text-xs text-muted-foreground">
-          Refreshing today’s catalogue…
+        <div className="mx-auto -mt-10 flex max-w-7xl px-4 lg:px-8">
+          <InlineLoader label="Refreshing today’s catalogue" />
         </div>
       )}
 
